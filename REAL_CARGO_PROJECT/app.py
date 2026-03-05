@@ -66,7 +66,7 @@ def login():
         
         if user and user.check_password(password):
             if not user.is_active:
-                flash('Your account has been deactivated. Please contact support.')
+                flash('Your account has been deactivated. Please contact an administrator.')
                 return redirect(url_for('login'))
                 
             login_user(user)
