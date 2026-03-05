@@ -71,6 +71,10 @@
     let pickup = L.marker([{{ delivery.pickup_lat }}, {{ delivery.pickup_lng }}], {icon: greenIcon}).addTo(map).bindPopup('Pickup');
     let dropoff = L.marker([{{ delivery.dropoff_lat }}, {{ delivery.dropoff_lng }}], {icon: redIcon}).addTo(map).bindPopup('Drop-off');
     
+    // Fit map to markers
+    const group = new L.featureGroup([pickup, dropoff]);
+    map.fitBounds(group.getBounds(), {padding: [50, 50]});
+    
     let driverMarker;
     let liveRouteLine;
 
@@ -79,14 +83,14 @@
             const pos = [data.lat, data.lng];
             
             // Update Driver Marker
-            if (driverMarker) {
-                driverMarker.setLatLng(pos);
-            } else {
+            if (!driverMarker) {
                 const driverIcon = L.icon({
                     iconUrl: 'https://cdn-icons-png.flaticon.com/512/2555/2555013.png',
                     iconSize: [40, 40]
                 });
                 driverMarker = L.marker(pos, {icon: driverIcon}).addTo(map).bindPopup('Driver Location');
+            } else {
+                driverMarker.setLatLng(pos);
             }
             
             // Draw Live Route Path
@@ -100,7 +104,8 @@
             }
             
             // Update Status & ETA
-            document.getElementById('statusText').innerText = data.status == 'moving' ? 'In Motion' : 'Stopped';
+            const statusLabel = data.status === 'moving' ? 'In Motion' : data.status;
+            document.getElementById('statusText').innerText = statusLabel;
             document.getElementById('statusPulse').className = data.status == 'moving' ? 
                 'spinner-grow spinner-grow-sm text-success me-2' : 
                 'spinner-grow spinner-grow-sm text-warning me-2';
@@ -109,8 +114,9 @@
                 document.getElementById('etaText').innerText = `${data.eta} (${data.distance} away)`;
             }
             
-            // Keep driver in view
-            map.panTo(pos);
+            // Keep driver and target in view
+            const trackingGroup = new L.featureGroup([driverMarker, pickup, dropoff]);
+            map.fitBounds(trackingGroup.getBounds(), {padding: [50, 50]});
         }
     });
 </script>
