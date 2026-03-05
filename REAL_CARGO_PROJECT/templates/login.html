@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-md-5">
+        <div class="card border-0 shadow-lg p-4 p-md-5 rounded-4">
+            <div class="text-center mb-5">
+                <div class="bg-primary-subtle d-inline-block p-3 rounded-circle mb-3">
+                    <i class="fas fa-lock fa-2x text-primary"></i>
+                </div>
+                <h2 class="fw-bold">Welcome Back</h2>
+                <p class="text-muted">Login to manage your deliveries</p>
+            </div>
+            
+            <form method="POST">
+                <div class="mb-4">
+                    <label class="form-label small text-uppercase fw-bold text-muted">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="far fa-envelope text-muted"></i></span>
+                        <input type="email" name="email" class="form-control floating-input border-start-0 ps-0" placeholder="name@example.com" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <label class="form-label small text-uppercase fw-bold text-muted">Password</label>
+                        <a href="#" class="small text-decoration-none">Forgot Password?</a>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-key text-muted"></i></span>
+                        <input type="password" name="password" class="form-control floating-input border-start-0 ps-0" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="rememberMe">
+                    <label class="form-check-label small text-muted" for="rememberMe">
+                        Keep me logged in
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm mb-4">
+                    Sign In
+                </button>
+            </form>
+            
+            <div class="text-center">
+                <p class="text-muted small mb-0">New to CargoFind? <a href="{{ url_for('register') }}" class="fw-bold text-decoration-none">Create an account</a></p>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <p class="small text-muted">&copy; 2026 CargoFind Cameroon. Secure Logistics Platform.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

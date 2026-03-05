@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card p-4 mb-4 border-primary">
+            <h3>Tracking Delivery #{{ delivery.id }}</h3>
+            <hr>
+            <div class="mb-3">
+                <h6>Status</h6>
+                <div class="d-flex align-items-center">
+                    <div id="statusPulse" class="spinner-grow spinner-grow-sm text-primary me-2"></div>
+                    <span id="statusText" class="fw-bold h5 mb-0">{{ delivery.status }}</span>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <h6>Estimated Time</h6>
+                <p id="etaText" class="h4 text-primary">Calculating...</p>
+            </div>
+
+            <div class="row small">
+                <div class="col-6">
+                    <strong>Pickup:</strong><br>
+                    {{ delivery.pickup_location }}
+                </div>
+                <div class="col-6">
+                    <strong>Drop-off:</strong><br>
+                    {{ delivery.dropoff_location }}
+                </div>
+            </div>
+            
+            <hr>
+            <div class="d-flex align-items-center">
+                <i class="fas fa-truck fa-2x text-primary me-3"></i>
+                <div>
+                    <h6 class="mb-0">{{ delivery.driver.full_name if delivery.driver else 'Waiting for driver...' }}</h6>
+                    <p class="text-muted small mb-0">{{ delivery.driver.vehicle_type | capitalize if delivery.driver }} - {{ delivery.driver.vehicle_id if delivery.driver }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary w-100">Back to Dashboard</a>
+    </div>
+    <div class="col-md-8">
+        <div id="trackMap" style="height: 600px; border-radius: 15px;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const socket = io();
+    const deliveryId = {{ delivery.id }};
+    
+    let map = L.map('trackMap').setView([{{ delivery.pickup_lat }}, {{ delivery.pickup_lng }}], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const greenIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
+    const redIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
+    let pickup = L.marker([{{ delivery.pickup_lat }}, {{ delivery.pickup_lng }}], {icon: greenIcon}).addTo(map).bindPopup('Pickup');
+    let dropoff = L.marker([{{ delivery.dropoff_lat }}, {{ delivery.dropoff_lng }}], {icon: redIcon}).addTo(map).bindPopup('Drop-off');
+    
+    let driverMarker;
+    let liveRouteLine;
+
+    socket.on('location_changed', function(data) {
+        if (data.delivery_id == deliveryId) {
+            const pos = [data.lat, data.lng];
+            
+            // Update Driver Marker
+            if (driverMarker) {
+                driverMarker.setLatLng(pos);
+            } else {
+                const driverIcon = L.icon({
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/2555/2555013.png',
+                    iconSize: [40, 40]
+                });
+                driverMarker = L.marker(pos, {icon: driverIcon}).addTo(map).bindPopup('Driver Location');
+            }
+            
+            // Draw Live Route Path
+            if (data.route) {
+                if (liveRouteLine) map.removeLayer(liveRouteLine);
+                liveRouteLine = L.polyline(data.route, {
+                    color: '#0d6efd',
+                    weight: 6,
+                    opacity: 0.8
+                }).addTo(map);
+            }
+            
+            // Update Status & ETA
+            document.getElementById('statusText').innerText = data.status == 'moving' ? 'In Motion' : 'Stopped';
+            document.getElementById('statusPulse').className = data.status == 'moving' ? 
+                'spinner-grow spinner-grow-sm text-success me-2' : 
+                'spinner-grow spinner-grow-sm text-warning me-2';
+            
+            if (data.eta) {
+                document.getElementById('etaText').innerText = `${data.eta} (${data.distance} away)`;
+            }
+            
+            // Keep driver in view
+            map.panTo(pos);
+        }
+    });
+</script>
+{% endblock %}

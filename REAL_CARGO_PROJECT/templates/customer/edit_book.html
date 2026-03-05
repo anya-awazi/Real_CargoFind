@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-5">
+        <div class="card p-4">
+            <h3>Edit Delivery Request #{{ delivery.id }}</h3>
+            <form id="bookingForm" method="POST">
+                <div class="mb-3 position-relative">
+                    <label class="form-label">Pickup Location</label>
+                    <input type="text" id="pickup_input" name="pickup_location" class="form-control" value="{{ delivery.pickup_location }}" required autocomplete="off">
+                    <div id="pickup_results" class="list-group position-absolute w-100 z-3"></div>
+                    <input type="hidden" id="pickup_lat" name="pickup_lat" value="{{ delivery.pickup_lat }}">
+                    <input type="hidden" id="pickup_lng" name="pickup_lng" value="{{ delivery.pickup_lng }}">
+                </div>
+                
+                <div class="mb-3 position-relative">
+                    <label class="form-label">Drop-off Location</label>
+                    <input type="text" id="dropoff_input" name="dropoff_location" class="form-control" value="{{ delivery.dropoff_location }}" required autocomplete="off">
+                    <div id="dropoff_results" class="list-group position-absolute w-100 z-3"></div>
+                    <input type="hidden" id="dropoff_lat" name="dropoff_lat" value="{{ delivery.dropoff_lat }}">
+                    <input type="hidden" id="dropoff_lng" name="dropoff_lng" value="{{ delivery.dropoff_lng }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Goods Description</label>
+                    <textarea name="goods_description" class="form-control" rows="2" required>{{ delivery.goods_description }}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Weight (kg)</label>
+                        <input type="number" name="weight" id="weight" class="form-control" step="0.1" value="{{ delivery.weight }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Vehicle Type</label>
+                        <select name="vehicle_type" id="vehicle_type" class="form-select">
+                            <option value="bike" {% if delivery.vehicle_type == 'bike' %}selected{% endif %}>Bike (150 XAF/km)</option>
+                            <option value="car" {% if delivery.vehicle_type == 'car' %}selected{% endif %}>Car (250 XAF/km)</option>
+                            <option value="van" {% if delivery.vehicle_type == 'van' %}selected{% endif %}>Van (350 XAF/km)</option>
+                            <option value="truck" {% if delivery.vehicle_type == 'truck' %}selected{% endif %}>Truck (500 XAF/km)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Options</label>
+                    <div class="form-check">
+                        <input class="form-check-input cost-trigger" type="checkbox" name="heavy_goods" id="heavy_goods">
+                        <label class="form-check-label">Heavy Goods (+1000 XAF)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input cost-trigger" type="checkbox" name="fragile_goods" id="fragile_goods">
+                        <label class="form-check-label">Fragile Handling (+500 XAF)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input cost-trigger" type="checkbox" name="urgent_delivery" id="urgent_delivery">
+                        <label class="form-check-label">Urgent Delivery (+1000 XAF)</label>
+                    </div>
+                </div>
+
+                <div class="card bg-light p-3 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Distance:</span>
+                        <div>
+                            <span id="distance_text">{{ delivery.distance_km }} km</span>
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">(Min. 1 km charge applies)</small>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold text-primary h5 mt-2">
+                        <span>Total Cost:</span>
+                        <span id="total_cost_text">{{ delivery.total_cost }} XAF</span>
+                    </div>
+                    <input type="hidden" name="distance_km" id="distance_km" value="{{ delivery.distance_km }}">
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">Save Changes</button>
+                    <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div id="map" style="height: 600px;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+<script>
+    let map = L.map('map').setView([{{ delivery.pickup_lat }}, {{ delivery.pickup_lng }}], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    let routingControl;
+    let distanceKm = {{ delivery.distance_km }};
+
+    function updatePrice() {
+        const vehicleType = document.getElementById('vehicle_type').value;
+        const heavy = document.getElementById('heavy_goods').checked;
+        const fragile = document.getElementById('fragile_goods').checked;
+        const urgent = document.getElementById('urgent_delivery').checked;
+
+        fetch('/api/calculate_price', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                distance: distanceKm,
+                vehicle_type: vehicleType,
+                heavy: heavy,
+                fragile: fragile,
+                urgent: urgent
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('total_cost_text').innerText = data.total_cost + ' XAF';
+        });
+    }
+
+    function searchLocation(query, resultsId, latId, lngId, inputId) {
+        if (query.length < 3) return;
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=cm`)
+            .then(res => res.json())
+            .then(data => {
+                const results = document.getElementById(resultsId);
+                results.innerHTML = '';
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'list-group-item list-group-item-action';
+                    div.innerText = item.display_name;
+                    div.onclick = () => {
+                        document.getElementById(inputId).value = item.display_name;
+                        document.getElementById(latId).value = item.lat;
+                        document.getElementById(lngId).value = item.lon;
+                        results.innerHTML = '';
+                        updateRoute();
+                    };
+                    results.appendChild(div);
+                });
+            });
+    }
+
+    document.getElementById('pickup_input').oninput = (e) => searchLocation(e.target.value, 'pickup_results', 'pickup_lat', 'pickup_lng', 'pickup_input');
+    document.getElementById('dropoff_input').oninput = (e) => searchLocation(e.target.value, 'dropoff_results', 'dropoff_lat', 'dropoff_lng', 'dropoff_input');
+
+    document.getElementById('vehicle_type').onchange = updatePrice;
+    document.querySelectorAll('.cost-trigger').forEach(el => el.onchange = updatePrice);
+
+    function updateRoute() {
+        const pLat = document.getElementById('pickup_lat').value;
+        const pLng = document.getElementById('pickup_lng').value;
+        const dLat = document.getElementById('dropoff_lat').value;
+        const dLng = document.getElementById('dropoff_lng').value;
+
+        if (routingControl) map.removeControl(routingControl);
+
+        if (pLat && pLng && dLat && dLng) {
+            routingControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(pLat, pLng),
+                    L.latLng(dLat, dLng)
+                ],
+                routeWhileDragging: false,
+                addWaypoints: false,
+                show: false
+            }).addTo(map);
+
+            routingControl.on('routesfound', function(e) {
+                const routes = e.routes;
+                const summary = routes[0].summary;
+                distanceKm = (summary.totalDistance / 1000).toFixed(2);
+                document.getElementById('distance_text').innerText = distanceKm + ' km';
+                document.getElementById('distance_km').value = distanceKm;
+                updatePrice();
+            });
+        }
+    }
+
+    // Initial route load
+    updateRoute();
+</script>
+{% endblock %}

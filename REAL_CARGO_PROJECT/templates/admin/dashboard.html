@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Admin Command Center</h2>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3 bg-white border-0 shadow-sm text-center">
+            <h6 class="text-muted">Total Revenue</h6>
+            <h3 class="fw-bold text-success">{{ revenue }} XAF</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 bg-white border-0 shadow-sm text-center">
+            <h6 class="text-muted">Total Users</h6>
+            <h3 class="fw-bold">{{ total_users }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 bg-white border-0 shadow-sm text-center">
+            <h6 class="text-muted">Active Deliveries</h6>
+            <h3 class="fw-bold text-primary">{{ active_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 bg-white border-0 shadow-sm text-center">
+            <h6 class="text-muted">Drivers</h6>
+            <h3 class="fw-bold">{{ total_drivers }}</h3>
+            {% if pending_drivers_count > 0 %}
+            <a href="{{ url_for('admin_pending_drivers') }}" class="badge bg-warning text-dark text-decoration-none">
+                {{ pending_drivers_count }} Pending Approval
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card p-4">
+            <h5>Live Operations Map</h5>
+            <div id="adminMap" style="height: 500px; border-radius: 10px;"></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <h5>Recent Activities</h5>
+            <ul class="list-group list-group-flush">
+                {% for d in active_deliveries %}
+                    <li class="list-group-item px-0">
+                        <strong>#{{ d.id }}</strong> - {{ d.status }}<br>
+                        <small class="text-muted">{{ d.pickup_location[:20] }}... -> {{ d.dropoff_location[:20] }}...</small>
+                    </li>
+                {% endfor %}
+            </ul>
+            <a href="{{ url_for('admin_users') }}" class="btn btn-primary mt-auto">Manage All Users</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let map = L.map('adminMap').setView([4.0511, 9.7679], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const greenIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
+    const redIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
+    const activeDeliveries = [
+        {% for d in active_deliveries %}
+        {
+            id: {{ d.id }},
+            pickup: [{{ d.pickup_lat }}, {{ d.pickup_lng }}],
+            dropoff: [{{ d.dropoff_lat }}, {{ d.dropoff_lng }}],
+            status: '{{ d.status }}'
+        },
+        {% endfor %}
+    ];
+
+    activeDeliveries.forEach(d => {
+        L.marker(d.pickup, {icon: greenIcon}).addTo(map).bindPopup(`Delivery #${d.id} Pickup`);
+        L.marker(d.dropoff, {icon: redIcon}).addTo(map).bindPopup(`Delivery #${d.id} Drop-off`);
+        
+        L.polyline([d.pickup, d.dropoff], {color: 'blue', opacity: 0.5, dashArray: '5, 10'}).addTo(map);
+    });
+</script>
+{% endblock %}

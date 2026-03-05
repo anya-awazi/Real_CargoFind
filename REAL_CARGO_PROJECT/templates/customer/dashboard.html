@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold mb-0">Active Deliveries</h3>
+            <a href="{{ url_for('book_delivery') }}" class="btn btn-primary rounded-pill">
+                <i class="fas fa-plus me-2"></i>New Booking
+            </a>
+        </div>
+
+        {% for deliv in active %}
+            <div class="card mb-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">Delivery #{{ deliv.id }}</h5>
+                            <p class="text-muted small mb-0"><i class="far fa-calendar-alt me-1"></i>{{ deliv.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+                        </div>
+                        <span class="badge rounded-pill {% if deliv.status == 'Pending' %}bg-warning-subtle text-warning border border-warning{% elif deliv.status == 'Delivered' %}bg-success-subtle text-success border border-success{% else %}bg-primary-subtle text-primary border border-primary{% endif %} px-3">
+                            {{ deliv.status }}
+                        </span>
+                    </div>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success-subtle p-2 rounded-3 me-3">
+                                    <i class="fas fa-map-marker-alt text-success"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Pickup</small>
+                                    <span class="small text-truncate d-inline-block" style="max-width: 200px;">{{ deliv.pickup_location }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-danger-subtle p-2 rounded-3 me-3">
+                                    <i class="fas fa-flag-checkered text-danger"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Drop-off</small>
+                                    <span class="small text-truncate d-inline-block" style="max-width: 200px;">{{ deliv.dropoff_location }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 pt-3 border-top">
+                        <a href="{{ url_for('track_delivery', delivery_id=deliv.id) }}" class="btn btn-primary rounded-pill px-4">
+                            <i class="fas fa-location-arrow me-2"></i>Track Live
+                        </a>
+                        {% if deliv.status == 'Pending' %}
+                            <a href="{{ url_for('edit_delivery', delivery_id=deliv.id) }}" class="btn btn-outline-warning rounded-pill px-4">
+                                <i class="fas fa-edit me-2"></i>Edit
+                            </a>
+                        {% endif %}
+                        {% if deliv.status == 'Delivered' and deliv.payment_status == 'Unpaid' %}
+                            <button class="btn btn-success rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#paymentModal{{ deliv.id }}">
+                                <i class="fas fa-wallet me-2"></i>Pay Now
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Modal -->
+            <div class="modal fade" id="paymentModal{{ deliv.id }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 rounded-4">
+                        <form action="{{ url_for('process_payment', delivery_id=deliv.id) }}" method="POST">
+                            <div class="modal-header border-0 pb-0">
+                                <h5 class="fw-bold">Payment for #{{ deliv.id }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="text-center mb-4">
+                                    <h2 class="fw-bold text-primary">{{ deliv.total_cost }} XAF</h2>
+                                    <p class="text-muted small">Total amount to pay</p>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-uppercase">Payment Method</label>
+                                    <select name="payment_method" class="form-select floating-input" required>
+                                        <option value="MTN MoMo">MTN Mobile Money</option>
+                                        <option value="Orange Money">Orange Money</option>
+                                        <option value="Cash">Cash on Delivery</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-uppercase">Phone Number</label>
+                                    <input type="tel" class="form-control floating-input" placeholder="6..." required>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                                <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow">Confirm Payment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="card p-5 text-center border-0 bg-white">
+                <div class="opacity-25 mb-3">
+                    <i class="fas fa-box-open fa-4x"></i>
+                </div>
+                <h5 class="text-muted">No active deliveries</h5>
+                <p class="text-muted small">Your active shipping requests will appear here.</p>
+                <a href="{{ url_for('book_delivery') }}" class="btn btn-primary rounded-pill px-4 mt-2">Book Your First Delivery</a>
+            </div>
+        {% endfor %}
+
+        <h4 class="fw-bold mt-5 mb-4">Delivery History</h4>
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr class="small text-uppercase text-muted">
+                            <th class="ps-4">ID</th>
+                            <th>Date</th>
+                            <th>Destination</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        {% for deliv in past %}
+                            <tr class="small">
+                                <td class="ps-4 fw-bold">#{{ deliv.id }}</td>
+                                <td>{{ deliv.created_at.strftime('%d %b %Y') }}</td>
+                                <td class="text-truncate" style="max-width: 150px;">{{ deliv.dropoff_location }}</td>
+                                <td class="fw-bold text-primary">{{ deliv.total_cost }} XAF</td>
+                                <td>
+                                    {% if deliv.payment_status == 'Paid' %}
+                                        <span class="badge bg-success-subtle text-success border border-success px-2">Paid</span>
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning px-2">Unpaid</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        {% if deliv.payment_status == 'Unpaid' %}
+                                            <button class="btn btn-success btn-sm rounded-pill px-3 me-2" data-bs-toggle="modal" data-bs-target="#paymentModal{{ deliv.id }}">Pay</button>
+                                        {% endif %}
+                                        <a href="{{ url_for('view_invoice', delivery_id=deliv.id) }}" class="btn btn-light btn-sm rounded-circle" title="Invoice">
+                                            <i class="fas fa-file-invoice"></i>
+                                        </a>
+                                        {% if not deliv.rating %}
+                                            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#rateModal{{ deliv.id }}">Rate</button>
+                                        {% else %}
+                                            <div class="text-warning small text-nowrap">
+                                                {% for i in range(5) %}
+                                                    <i class="{% if i < deliv.rating %}fas{% else %}far{% endif %} fa-star"></i>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% for deliv in past %}
+            <!-- Payment Modal -->
+            <div class="modal fade" id="paymentModal{{ deliv.id }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 rounded-4">
+                        <form action="{{ url_for('process_payment', delivery_id=deliv.id) }}" method="POST">
+                            <div class="modal-header border-0 pb-0">
+                                <h5 class="fw-bold">Payment for #{{ deliv.id }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="text-center mb-4">
+                                    <h2 class="fw-bold text-primary">{{ deliv.total_cost }} XAF</h2>
+                                    <p class="text-muted small">Total amount to pay</p>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-uppercase">Payment Method</label>
+                                    <select name="payment_method" class="form-select floating-input" required>
+                                        <option value="MTN MoMo">MTN Mobile Money</option>
+                                        <option value="Orange Money">Orange Money</option>
+                                        <option value="Cash">Cash on Delivery</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-uppercase">Phone Number</label>
+                                    <input type="tel" name="phone" class="form-control floating-input" placeholder="6..." required>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                                <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow">Confirm Payment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rate Modal -->
+            <div class="modal fade" id="rateModal{{ deliv.id }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 rounded-4">
+                        <form action="{{ url_for('rate_delivery', delivery_id=deliv.id) }}" method="POST">
+                            <div class="modal-header border-0 pb-0">
+                                <h5 class="fw-bold">Rate Delivery #{{ deliv.id }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-4 text-center">
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold small text-uppercase">How was the experience?</label>
+                                </div>
+                                <div class="star-rating mb-4">
+                                    <input type="radio" id="star5-{{ deliv.id }}" name="rating" value="5" required/><label for="star5-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                                    <input type="radio" id="star4-{{ deliv.id }}" name="rating" value="4" /><label for="star4-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                                    <input type="radio" id="star3-{{ deliv.id }}" name="rating" value="3" /><label for="star3-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                                    <input type="radio" id="star2-{{ deliv.id }}" name="rating" value="2" /><label for="star2-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                                    <input type="radio" id="star1-{{ deliv.id }}" name="rating" value="1" /><label for="star1-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                                </div>
+                                <div class="mb-3 text-start">
+                                    <label class="form-label fw-bold small text-uppercase">Additional Feedback</label>
+                                    <textarea name="feedback" class="form-control floating-input" rows="3" placeholder="Tell us more..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                                <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold">Submit Review</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 mb-4 p-4 shadow-sm">
+            <h5 class="fw-bold mb-4">Notifications</h5>
+            <div class="list-group list-group-flush">
+                {% for n in notifications %}
+                    <div class="list-group-item px-0 border-0 mb-3 d-flex align-items-start">
+                        <div class="bg-primary-subtle p-2 rounded-circle me-3" style="width: 35px; height: 35px; min-width: 35px; text-align: center;">
+                            <i class="fas fa-bell text-primary small"></i>
+                        </div>
+                        <div>
+                            <p class="mb-1 small" style="line-height: 1.4;">{{ n.message }}</p>
+                            <span class="text-muted" style="font-size: 0.7rem;">{{ n.created_at.strftime('%H:%M, %d %b') }}</span>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted small">No new notifications</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card border-0 p-4 bg-primary text-white shadow-lg">
+            <div class="d-flex align-items-center mb-3">
+                <i class="fas fa-headset fa-2x me-3 opacity-75"></i>
+                <h5 class="mb-0 fw-bold">Support 24/7</h5>
+            </div>
+            <p class="small opacity-75 mb-4">Having issues with a delivery? Our team is always here to help.</p>
+            <button class="btn btn-light w-100 rounded-pill fw-bold text-primary py-2">Get Help Now</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card p-4 mb-4 stats-card bg-primary text-white border-0">
+            <h6 class="opacity-75">Available Balance</h6>
+            <h2 class="fw-bold">{{ current_user.wallet.balance if current_user.wallet else 0 }} XAF</h2>
+            <button class="btn btn-light btn-sm mt-3 fw-bold" data-bs-toggle="modal" data-bs-target="#payoutModal">Request Payout</button>
+        </div>
+        <div class="card p-4 mb-4">
+            <h5>Performance</h5>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted">Total Earned:</span>
+                <span class="fw-bold text-success">{{ current_user.wallet.total_earned if current_user.wallet else 0 }} XAF</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span class="text-muted">Completed Jobs:</span>
+                <span class="fw-bold">{{ completed_count }}</span>
+            </div>
+        </div>
+        <div class="card p-4 mb-4">
+            <h5>Vehicle Status</h5>
+            <p class="mb-1 text-muted small">Type: <strong>{{ current_user.vehicle_type | capitalize }}</strong></p>
+            <p class="mb-1 text-muted small">Plate: <strong>{{ current_user.vehicle_id }}</strong></p>
+            <hr>
+            <p class="mb-0">Status: 
+                {% if current_user.is_approved %}
+                    <span class="badge bg-success-subtle text-success border border-success px-3">Approved</span>
+                {% else %}
+                    <span class="badge bg-warning-subtle text-warning border border-warning px-3">Pending</span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="card p-4 mb-4">
+            <h5>Payout Requests</h5>
+            <div class="overflow-auto" style="max-height: 200px;">
+                <ul class="list-group list-group-flush small">
+                    {% for p in payout_requests %}
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-bold">{{ p.amount }} XAF</span><br>
+                                <span class="text-muted">{{ p.created_at.strftime('%Y-%m-%d') }}</span>
+                            </div>
+                            <span class="badge {% if p.status == 'Pending' %}bg-warning{% elif p.status == 'Processed' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ p.status }}
+                            </span>
+                        </li>
+                    {% else %}
+                        <p class="text-muted small mb-0">No payout requests yet.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <a href="{{ url_for('available_jobs') }}" class="btn btn-primary btn-lg w-100 mb-4 {% if not current_user.is_approved %}disabled{% endif %}">
+            <i class="fas fa-search me-2"></i> Find New Jobs
+        </a>
+    </div>
+
+    <!-- Payout Modal -->
+    <div class="modal fade" id="payoutModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Request Payout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('request_payout') }}" method="POST">
+                    <div class="modal-body">
+                        <p class="text-muted small">Minimum payout amount: 5,000 XAF</p>
+                        <div class="mb-3">
+                            <label class="form-label">Amount (XAF)</label>
+                            <input type="number" name="amount" class="form-control floating-input" min="5000" max="{{ current_user.wallet.balance if current_user.wallet else 0 }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Withdrawal Method</label>
+                            <select name="payment_method" class="form-select floating-input" required>
+                                <option value="MoMo">MTN Mobile Money</option>
+                                <option value="Orange">Orange Money</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-4">Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        {% if active_job %}
+            <div class="card p-4 border-primary">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3>Active Delivery #{{ active_job.id }}</h3>
+                    <span class="badge bg-warning text-dark">{{ active_job.status }}</span>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-4">
+                        <h6><i class="fas fa-map-marker-alt text-success"></i> Pickup</h6>
+                        <p class="small">{{ active_job.pickup_location }}</p>
+                    </div>
+                    <div class="col-4">
+                        <h6><i class="fas fa-flag-checkered text-danger"></i> Drop-off</h6>
+                        <p class="small">{{ active_job.dropoff_location }}</p>
+                    </div>
+                    <div class="col-4">
+                        <h6><i class="fas fa-phone text-primary"></i> Customer</h6>
+                        <p class="small"><a href="tel:{{ active_job.customer.phone }}" class="text-decoration-none">{{ active_job.customer.phone }}</a></p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6>Update Status</h6>
+                    <div class="d-flex gap-2">
+                        <form action="{{ url_for('update_status', delivery_id=active_job.id) }}" method="POST" class="d-flex gap-2 flex-grow-1">
+                            <select name="status" class="form-select">
+                                <option value="Accepted" {% if active_job.status == 'Accepted' %}selected{% endif %}>Accepted</option>
+                                <option value="Picked Up" {% if active_job.status == 'Picked Up' %}selected{% endif %}>Picked Up</option>
+                                <option value="In Transit" {% if active_job.status == 'In Transit' %}selected{% endif %}>In Transit</option>
+                                <option value="Traffic Delay" {% if active_job.status == 'Traffic Delay' %}selected{% endif %}>Traffic Delay</option>
+                                <option value="Delivered" {% if active_job.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </form>
+                        
+                        {% if active_job.status == 'Delivered' and active_job.payment_status == 'Unpaid' %}
+                            <form action="{{ url_for('mark_paid', delivery_id=active_job.id) }}" method="POST">
+                                <button type="submit" class="btn btn-success">Mark Paid (Cash)</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div id="driverMap" style="height: 300px; border-radius: 10px;"></div>
+                <p class="mt-2 text-muted small"><i class="fas fa-info-circle"></i> Your location is being shared with the customer while you are in transit.</p>
+            </div>
+        {% else %}
+            <div class="card p-5 text-center">
+                <i class="fas fa-search-location fa-4x text-muted mb-3"></i>
+                <h4>No active jobs</h4>
+                <p class="text-muted">Browse available jobs to start earning.</p>
+                <a href="{{ url_for('available_jobs') }}" class="btn btn-primary mt-3">Browse Jobs</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+{% if active_job %}
+<script>
+    const socket = io();
+    const deliveryId = {{ active_job.id }};
+    const jobStatus = "{{ active_job.status }}";
+    
+    // Target location depends on status
+    const targetLat = (jobStatus === 'Accepted') ? {{ active_job.pickup_lat }} : {{ active_job.dropoff_lat }};
+    const targetLng = (jobStatus === 'Accepted') ? {{ active_job.pickup_lng }} : {{ active_job.dropoff_lng }};
+    const targetLabel = (jobStatus === 'Accepted') ? 'Pickup' : 'Drop-off';
+
+    const greenIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
+    const redIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
+    let map = L.map('driverMap').setView([{{ active_job.pickup_lat }}, {{ active_job.pickup_lng }}], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    let pickup = L.marker([{{ active_job.pickup_lat }}, {{ active_job.pickup_lng }}], {icon: greenIcon}).addTo(map).bindPopup('Pickup');
+    let dropoff = L.marker([{{ active_job.dropoff_lat }}, {{ active_job.dropoff_lng }}], {icon: redIcon}).addTo(map).bindPopup('Drop-off');
+    
+    let routingControl;
+    let driverMarker;
+
+    function updateNavigation(lat, lng) {
+        if (routingControl) map.removeControl(routingControl);
+
+        routingControl = L.Routing.control({
+            waypoints: [
+                L.latLng(lat, lng),
+                L.latLng(targetLat, targetLng)
+            ],
+            lineOptions: {
+                styles: [{ color: '#0d6efd', weight: 6, opacity: 0.8 }] // Highlighted blue route
+            },
+            createMarker: function() { return null; }, // We handle markers manually
+            show: false,
+            addWaypoints: false
+        }).addTo(map);
+
+        routingControl.on('routesfound', function(e) {
+            const routes = e.routes;
+            const summary = routes[0].summary;
+            const distance = (summary.totalDistance / 1000).toFixed(1) + ' km';
+            const eta = Math.round(summary.totalTime / 60) + ' mins';
+
+            // Send full navigation update to server
+            socket.emit('update_location', {
+                delivery_id: deliveryId,
+                lat: lat,
+                lng: lng,
+                status: 'moving',
+                distance: distance,
+                eta: eta,
+                route: routes[0].coordinates // Send coordinates for live path drawing
+            });
+        });
+    }
+
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition((position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            
+            if (driverMarker) {
+                driverMarker.setLatLng([lat, lng]);
+            } else {
+                const driverIcon = L.icon({
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/2555/2555013.png',
+                    iconSize: [32, 32]
+                });
+                driverMarker = L.marker([lat, lng], {icon: driverIcon}).addTo(map).bindPopup('You are here');
+            }
+
+            updateNavigation(lat, lng);
+        }, (error) => {
+            console.error("Error getting location", error);
+        }, {
+            enableHighAccuracy: true,
+            maximumAge: 10000
+        });
+    }
+</script>
+{% endif %}
+{% endblock %}

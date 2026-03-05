@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice #{{ delivery.id }} - CargoFind</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            .no-print { display: none; }
+            body { background: white; }
+        }
+        .invoice-box {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 30px;
+            border: 1px solid #eee;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="invoice-box shadow-sm">
+        <div class="d-flex justify-content-between mb-5">
+            <div>
+                <h2 class="text-primary fw-bold">CargoFind</h2>
+                <p class="text-muted">Fast & Reliable Logistics<br>Douala, Cameroon</p>
+            </div>
+            <div class="text-end">
+                <h4>INVOICE</h4>
+                <p>#CF-{{ delivery.id }}<br>Date: {{ delivery.created_at.strftime('%Y-%m-%d') }}</p>
+            </div>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-6">
+                <p class="text-muted mb-1">Billed To:</p>
+                <strong>{{ delivery.customer.full_name }}</strong><br>
+                {{ delivery.customer.email }}<br>
+                {{ delivery.customer.phone }}
+            </div>
+            <div class="col-6 text-end">
+                <p class="text-muted mb-1">Transporter:</p>
+                <strong>{{ delivery.driver.full_name }}</strong><br>
+                {{ delivery.driver.vehicle_type | capitalize }} - {{ delivery.driver.vehicle_id }}
+            </div>
+        </div>
+
+        <table class="table table-bordered">
+            <thead class="bg-light">
+                <tr>
+                    <th>Description</th>
+                    <th class="text-center">Distance</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <strong>Delivery Service</strong><br>
+                        <small class="text-muted">From: {{ delivery.pickup_location }}</small><br>
+                        <small class="text-muted">To: {{ delivery.dropoff_location }}</small>
+                    </td>
+                    <td class="text-center">{{ delivery.distance_km }} km</td>
+                    <td class="text-end">{{ delivery.total_cost }} XAF</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="2" class="text-end">Total Amount</th>
+                    <th class="text-end text-primary h4">{{ delivery.total_cost }} XAF</th>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="mt-5 border-top pt-3">
+            <p class="small text-muted text-center">Payment Status: <strong>{{ delivery.payment_status }}</strong> ({{ delivery.payment_method }})</p>
+            <p class="small text-muted text-center">Thank you for choosing CargoFind for your logistics needs.</p>
+        </div>
+
+        <div class="text-center mt-4 no-print">
+            <button onclick="window.print()" class="btn btn-primary me-2">Print Invoice</button>
+            <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

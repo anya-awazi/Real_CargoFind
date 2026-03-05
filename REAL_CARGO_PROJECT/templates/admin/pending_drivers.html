@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Pending Driver Approvals</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if drivers %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Vehicle Type</th>
+                            <th>Vehicle ID</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for driver in drivers %}
+                        <tr>
+                            <td>{{ driver.full_name }}</td>
+                            <td>{{ driver.email }}</td>
+                            <td>{{ driver.phone }}</td>
+                            <td><span class="badge bg-info text-dark text-capitalize">{{ driver.vehicle_type }}</span></td>
+                            <td>{{ driver.vehicle_id }}</td>
+                            <td>
+                                <a href="{{ url_for('approve_driver', user_id=driver.id) }}" class="btn btn-success btn-sm">Approve</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-person-check display-4 text-muted"></i>
+                <p class="mt-2">No pending driver approvals at the moment.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

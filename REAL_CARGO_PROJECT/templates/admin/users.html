@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>User Management</h2>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+</div>
+
+<div class="card p-4">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email / Phone</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>
+                        <div class="fw-bold">{{ user.full_name }}</div>
+                        {% if user.role == 'driver' %}
+                            <small class="text-muted">{{ user.vehicle_type | capitalize }} - {{ user.vehicle_id }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div>{{ user.email }}</div>
+                        <small class="text-muted">{{ user.phone }}</small>
+                    </td>
+                    <td>
+                        <span class="badge {% if user.role == 'admin' %}bg-danger{% elif user.role == 'driver' %}bg-success{% else %}bg-primary{% endif %}">
+                            {{ user.role | capitalize }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if user.is_active %}
+                            <span class="text-success"><i class="fas fa-check-circle"></i> Active</span>
+                        {% else %}
+                            <span class="text-danger"><i class="fas fa-times-circle"></i> Suspended</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.role != 'admin' %}
+                            <a href="{{ url_for('toggle_user_status', user_id=user.id) }}" class="btn btn-sm {% if user.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                                {% if user.is_active %}Suspend{% else %}Activate{% endif %}
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
