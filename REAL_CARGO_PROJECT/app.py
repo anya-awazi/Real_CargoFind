@@ -562,14 +562,14 @@ def handle_location_update(data):
         room = f'delivery_{delivery_id}'
         emit('location_changed', data, room=room)
 
+with app.app_context():
+    db.create_all()
+    # Create default admin if not exists
+    if not User.query.filter_by(role='admin').first():
+        admin = User(email='admin@cargofind.com', phone='000000000', full_name='System Admin', role='admin')
+        admin.set_password('admin123')
+        db.session.add(admin)
+        db.session.commit()
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        # Create default admin if not exists
-        if not User.query.filter_by(role='admin').first():
-            admin = User(email='admin@cargofind.com', phone='000000000', full_name='System Admin', role='admin')
-            admin.set_password('admin123')
-            db.session.add(admin)
-            db.session.commit()
-            
     socketio.run(app, debug=True)

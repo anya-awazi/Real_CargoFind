@@ -4,3 +4,5 @@ Flask-Login
 Flask-SocketIO
 Werkzeug
 gunicorn
+eventlet
+gevent-websocket

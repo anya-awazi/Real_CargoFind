@@ -20,6 +20,10 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)
     is_approved = db.Column(db.Boolean, default=False) # Admin approval
     
+    # Location tracking
+    current_lat = db.Column(db.Float)
+    current_lng = db.Column(db.Float)
+    
     # Relationships
     deliveries_as_customer = db.relationship('Delivery', backref='customer', foreign_keys='Delivery.customer_id')
     deliveries_as_driver = db.relationship('Delivery', backref='driver', foreign_keys='Delivery.driver_id')
