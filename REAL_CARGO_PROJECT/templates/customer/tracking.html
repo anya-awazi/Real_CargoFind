@@ -53,9 +53,6 @@
     const socket = io();
     const deliveryId = {{ delivery.id }};
     
-    // Join room for delivery updates
-    socket.emit('join_delivery', { delivery_id: deliveryId });
-    
     let map = L.map('trackMap').setView([{{ delivery.pickup_lat }}, {{ delivery.pickup_lng }}], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
@@ -83,6 +80,8 @@
 
     socket.on('connect', () => {
         console.log('Socket.io connected for delivery:', deliveryId);
+        // Join room for delivery updates (re-join if reconnected)
+        socket.emit('join_delivery', { delivery_id: deliveryId });
     });
 
     socket.on('location_changed', function(data) {

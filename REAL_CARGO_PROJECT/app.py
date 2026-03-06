@@ -6,8 +6,9 @@ from werkzeug.security import generate_password_hash
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cargofind.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'cargofind.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -15,7 +16,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Render proxy support - use eventlet if available (production), otherwise fallback to default
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode=None)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -417,11 +419,6 @@ def mark_paid(delivery_id):
         flash('Payment marked as received.')
     return redirect(url_for('driver_dashboard'))
 
-@socketio.on('update_location')
-def handle_location_update(data):
-    # data: {'delivery_id': 1, 'lat': 4.0, 'lng': 9.0, 'status': 'moving', 'eta': '10 mins', 'distance': '2.5 km'}
-    emit('location_changed', data, broadcast=True)
-
 @app.route('/customer/invoice/<int:delivery_id>')
 @login_required
 def view_invoice(delivery_id):
@@ -573,3 +570,4 @@ with app.app_context():
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
+

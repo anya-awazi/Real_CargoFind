@@ -159,8 +159,11 @@
     const deliveryId = {{ active_job.id }};
     const jobStatus = "{{ active_job.status }}";
     
-    // Join room for delivery updates
-    socket.emit('join_delivery', { delivery_id: deliveryId });
+    socket.on('connect', () => {
+        console.log('Driver connected to Socket.io');
+        // Join room for delivery updates (re-join if reconnected)
+        socket.emit('join_delivery', { delivery_id: deliveryId });
+    });
     
     // Target location depends on status
     const targetLat = (jobStatus === 'Accepted') ? {{ active_job.pickup_lat }} : {{ active_job.dropoff_lat }};
@@ -249,6 +252,8 @@
             updateNavigation(lat, lng);
         }, (error) => {
             console.error("Error getting location", error);
+            const msg = error.code === 1 ? "Permission denied. Please allow location access to share your progress with the customer." : "Error getting location. Please check your GPS settings.";
+            alert(msg);
         }, {
             enableHighAccuracy: true,
             maximumAge: 10000
