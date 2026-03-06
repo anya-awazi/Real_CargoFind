@@ -111,7 +111,20 @@ def track_delivery(delivery_id):
     delivery = Delivery.query.get_or_404(delivery_id)
     if delivery.customer_id != current_user.id:
         return redirect(url_for('index'))
-    return render_template('customer/tracking.html', delivery=delivery)
+    
+    # Get driver's current coordinates if a driver is assigned
+    driver_lat = None
+    driver_lng = None
+    if delivery.driver_id:
+        driver = User.query.get(delivery.driver_id)
+        if driver:
+            driver_lat = driver.current_lat
+            driver_lng = driver.current_lng
+            
+    return render_template('customer/tracking.html', 
+                           delivery=delivery, 
+                           driver_lat=driver_lat, 
+                           driver_lng=driver_lng)
 
 @app.route('/customer/pay/<int:delivery_id>', methods=['POST'])
 @login_required

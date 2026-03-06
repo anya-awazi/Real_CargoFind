@@ -71,12 +71,24 @@
     let pickup = L.marker([{{ delivery.pickup_lat }}, {{ delivery.pickup_lng }}], {icon: greenIcon}).addTo(map).bindPopup('Pickup');
     let dropoff = L.marker([{{ delivery.dropoff_lat }}, {{ delivery.dropoff_lng }}], {icon: redIcon}).addTo(map).bindPopup('Drop-off');
     
-    // Fit map to markers
-    const group = new L.featureGroup([pickup, dropoff]);
-    map.fitBounds(group.getBounds(), {padding: [50, 50]});
-    
     let driverMarker;
     let liveRouteLine;
+    
+    // Initialize marker if driver location exists (from server)
+    {% if driver_lat and driver_lng %}
+    const initialDriverPos = [{{ driver_lat }}, {{ driver_lng }}];
+    const driverIcon = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/2555/2555013.png',
+        iconSize: [40, 40]
+    });
+    driverMarker = L.marker(initialDriverPos, {icon: driverIcon}).addTo(map).bindPopup('Driver Location');
+    {% endif %}
+
+    // Fit map to markers
+    const groupItems = [pickup, dropoff];
+    if (driverMarker) groupItems.push(driverMarker);
+    const group = new L.featureGroup(groupItems);
+    map.fitBounds(group.getBounds(), {padding: [50, 50]});
 
     socket.on('connect', () => {
         console.log('Socket.io connected for delivery:', deliveryId);
