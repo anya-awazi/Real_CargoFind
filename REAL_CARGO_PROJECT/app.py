@@ -30,10 +30,10 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        email = request.form.get('email')
-        phone = request.form.get('phone')
+        email = request.form.get('email', '').strip().lower()
+        phone = request.form.get('phone', '').strip()
         password = request.form.get('password')
-        full_name = request.form.get('full_name')
+        full_name = request.form.get('full_name', '').strip()
         role = request.form.get('role', 'customer')
         
         user_exists = User.query.filter((User.email == email) | (User.phone == phone)).first()
@@ -62,9 +62,10 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')
+        identifier = request.form.get('email', '').strip().lower()
         password = request.form.get('password')
-        user = User.query.filter_by(email=email).first()
+        
+        user = User.query.filter((User.email == identifier) | (User.phone == identifier)).first()
         
         if user and user.check_password(password):
             if not user.is_active:
