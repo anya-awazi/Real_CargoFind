@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Delivery, Notification, Wallet, PayoutRequest
 from werkzeug.security import generate_password_hash
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room, leave_room
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -15,7 +15,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -531,6 +531,36 @@ def approve_payout(payout_id):
         
         flash(f'Payout for {payout.user.full_name} marked as processed.')
     return redirect(url_for('admin_payouts'))
+
+# --- SocketIO Events ---
+@socketio.on('join_delivery')
+def on_join_delivery(data):
+    delivery_id = data.get('delivery_id')
+    if delivery_id:
+        room = f'delivery_{delivery_id}'
+        join_room(room)
+        print(f'User joined room: {room}')
+
+@socketio.on('leave_delivery')
+def on_leave_delivery(data):
+    delivery_id = data.get('delivery_id')
+    if delivery_id:
+        room = f'delivery_{delivery_id}'
+        leave_room(room)
+        print(f'User left room: {room}')
+
+@socketio.on('update_location')
+def handle_location_update(data):
+    delivery_id = data.get('delivery_id')
+    if delivery_id:
+        # Update driver location in database
+        if current_user.is_authenticated and current_user.role == 'driver':
+            current_user.current_lat = data.get('lat')
+            current_user.current_lng = data.get('lng')
+            db.session.commit()
+            
+        room = f'delivery_{delivery_id}'
+        emit('location_changed', data, room=room)
 
 if __name__ == '__main__':
     with app.app_context():

@@ -159,6 +159,9 @@
     const deliveryId = {{ active_job.id }};
     const jobStatus = "{{ active_job.status }}";
     
+    // Join room for delivery updates
+    socket.emit('join_delivery', { delivery_id: deliveryId });
+    
     // Target location depends on status
     const targetLat = (jobStatus === 'Accepted') ? {{ active_job.pickup_lat }} : {{ active_job.dropoff_lat }};
     const targetLng = (jobStatus === 'Accepted') ? {{ active_job.pickup_lng }} : {{ active_job.dropoff_lng }};
@@ -234,6 +237,14 @@
                 });
                 driverMarker = L.marker([lat, lng], {icon: driverIcon}).addTo(map).bindPopup('You are here');
             }
+
+            // Emit location update immediately
+            socket.emit('update_location', {
+                delivery_id: deliveryId,
+                lat: lat,
+                lng: lng,
+                status: 'moving'
+            });
 
             updateNavigation(lat, lng);
         }, (error) => {

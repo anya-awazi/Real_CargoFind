@@ -53,6 +53,9 @@
     const socket = io();
     const deliveryId = {{ delivery.id }};
     
+    // Join room for delivery updates
+    socket.emit('join_delivery', { delivery_id: deliveryId });
+    
     let map = L.map('trackMap').setView([{{ delivery.pickup_lat }}, {{ delivery.pickup_lng }}], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
@@ -78,46 +81,53 @@
     let driverMarker;
     let liveRouteLine;
 
+    socket.on('connect', () => {
+        console.log('Socket.io connected for delivery:', deliveryId);
+    });
+
     socket.on('location_changed', function(data) {
-        if (data.delivery_id == deliveryId) {
-            const pos = [data.lat, data.lng];
-            
-            // Update Driver Marker
-            if (!driverMarker) {
-                const driverIcon = L.icon({
-                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/2555/2555013.png',
-                    iconSize: [40, 40]
-                });
-                driverMarker = L.marker(pos, {icon: driverIcon}).addTo(map).bindPopup('Driver Location');
-            } else {
-                driverMarker.setLatLng(pos);
-            }
-            
-            // Draw Live Route Path
-            if (data.route) {
-                if (liveRouteLine) map.removeLayer(liveRouteLine);
-                liveRouteLine = L.polyline(data.route, {
-                    color: '#0d6efd',
-                    weight: 6,
-                    opacity: 0.8
-                }).addTo(map);
-            }
-            
-            // Update Status & ETA
-            const statusLabel = data.status === 'moving' ? 'In Motion' : data.status;
+        console.log('Location update received:', data);
+        const pos = [data.lat, data.lng];
+        
+        // Update Driver Marker
+        if (!driverMarker) {
+            const driverIcon = L.icon({
+                iconUrl: 'https://cdn-icons-png.flaticon.com/512/2555/2555013.png',
+                iconSize: [40, 40]
+            });
+            driverMarker = L.marker(pos, {icon: driverIcon}).addTo(map).bindPopup('Driver Location');
+        } else {
+            driverMarker.setLatLng(pos);
+        }
+        
+        // Draw Live Route Path
+        if (data.route) {
+            if (liveRouteLine) map.removeLayer(liveRouteLine);
+            liveRouteLine = L.polyline(data.route, {
+                color: '#0d6efd',
+                weight: 6,
+                opacity: 0.8
+            }).addTo(map);
+        }
+        
+        // Update Status & ETA
+        const statusLabel = data.status === 'moving' ? 'In Motion' : data.status;
+        if (document.getElementById('statusText')) {
             document.getElementById('statusText').innerText = statusLabel;
+        }
+        if (document.getElementById('statusPulse')) {
             document.getElementById('statusPulse').className = data.status == 'moving' ? 
                 'spinner-grow spinner-grow-sm text-success me-2' : 
                 'spinner-grow spinner-grow-sm text-warning me-2';
-            
-            if (data.eta) {
-                document.getElementById('etaText').innerText = `${data.eta} (${data.distance} away)`;
-            }
-            
-            // Keep driver and target in view
-            const trackingGroup = new L.featureGroup([driverMarker, pickup, dropoff]);
-            map.fitBounds(trackingGroup.getBounds(), {padding: [50, 50]});
         }
+        
+        if (data.eta && document.getElementById('etaText')) {
+            document.getElementById('etaText').innerText = `${data.eta} (${data.distance} away)`;
+        }
+        
+        // Keep driver and target in view
+        const trackingGroup = new L.featureGroup([driverMarker, pickup, dropoff]);
+        map.fitBounds(trackingGroup.getBounds(), {padding: [50, 50]});
     });
 </script>
 {% endblock %}
