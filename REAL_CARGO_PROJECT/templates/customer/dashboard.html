@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row g-4">
+<div class="row g-4 animate-up">
     <div class="col-lg-8">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="fw-bold mb-0">Active Deliveries</h3>
@@ -52,51 +52,21 @@
                         <a href="{{ url_for('track_delivery', delivery_id=deliv.id) }}" class="btn btn-primary rounded-pill px-4">
                             <i class="fas fa-location-arrow me-2"></i>Track Live
                         </a>
-                        {% if deliv.status == 'Pending' %}
+                        {% if deliv.status == 'Pending' and not deliv.driver_id %}
                             <a href="{{ url_for('edit_delivery', delivery_id=deliv.id) }}" class="btn btn-outline-warning rounded-pill px-4">
                                 <i class="fas fa-edit me-2"></i>Edit
                             </a>
+                            <form action="{{ url_for('cancel_delivery', delivery_id=deliv.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this request?')">
+                                <button type="submit" class="btn btn-outline-danger rounded-pill px-4">
+                                    <i class="fas fa-trash-alt me-2"></i>Delete
+                                </button>
+                            </form>
                         {% endif %}
-                        {% if deliv.status == 'Delivered' and deliv.payment_status == 'Unpaid' %}
-                            <button class="btn btn-success rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#paymentModal{{ deliv.id }}">
+                        {% if deliv.payment_status == 'Unpaid' and deliv.driver_id %}
+                            <a href="{{ url_for('checkout', delivery_id=deliv.id) }}" class="btn btn-success rounded-pill px-4">
                                 <i class="fas fa-wallet me-2"></i>Pay Now
-                            </button>
+                            </a>
                         {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Payment Modal -->
-            <div class="modal fade" id="paymentModal{{ deliv.id }}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content border-0 rounded-4">
-                        <form action="{{ url_for('process_payment', delivery_id=deliv.id) }}" method="POST">
-                            <div class="modal-header border-0 pb-0">
-                                <h5 class="fw-bold">Payment for #{{ deliv.id }}</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body p-4">
-                                <div class="text-center mb-4">
-                                    <h2 class="fw-bold text-primary">{{ deliv.total_cost }} XAF</h2>
-                                    <p class="text-muted small">Total amount to pay</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold small text-uppercase">Payment Method</label>
-                                    <select name="payment_method" class="form-select floating-input" required>
-                                        <option value="MTN MoMo">MTN Mobile Money</option>
-                                        <option value="Orange Money">Orange Money</option>
-                                        <option value="Cash">Cash on Delivery</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold small text-uppercase">Phone Number</label>
-                                    <input type="tel" class="form-control floating-input" placeholder="6..." required>
-                                </div>
-                            </div>
-                            <div class="modal-footer border-0 pt-0">
-                                <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow">Confirm Payment</button>
-                            </div>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -135,14 +105,18 @@
                                 <td>
                                     {% if deliv.payment_status == 'Paid' %}
                                         <span class="badge bg-success-subtle text-success border border-success px-2">Paid</span>
+                                    {% elif deliv.payment_method == 'Cash' and deliv.payment_status == 'Pending' %}
+                                        <span class="badge bg-info-subtle text-info border border-info px-2">Pay in Cash</span>
+                                    {% elif deliv.payment_status == 'Pending' %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning px-2">Pending</span>
                                     {% else %}
                                         <span class="badge bg-warning-subtle text-warning border border-warning px-2">Unpaid</span>
                                     {% endif %}
                                 </td>
                                 <td class="text-end pe-4">
                                     <div class="d-flex justify-content-end gap-1">
-                                        {% if deliv.payment_status == 'Unpaid' %}
-                                            <button class="btn btn-success btn-sm rounded-pill px-3 me-2" data-bs-toggle="modal" data-bs-target="#paymentModal{{ deliv.id }}">Pay</button>
+                                        {% if deliv.payment_status == 'Unpaid' and deliv.driver_id %}
+                                            <a href="{{ url_for('checkout', delivery_id=deliv.id) }}" class="btn btn-success btn-sm rounded-pill px-3 me-2">Pay</a>
                                         {% endif %}
                                         <a href="{{ url_for('view_invoice', delivery_id=deliv.id) }}" class="btn btn-light btn-sm rounded-circle" title="Invoice">
                                             <i class="fas fa-file-invoice"></i>
@@ -159,82 +133,11 @@
                                     </div>
                                 </td>
                             </tr>
-
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
-
-        {% for deliv in past %}
-            <!-- Payment Modal -->
-            <div class="modal fade" id="paymentModal{{ deliv.id }}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content border-0 rounded-4">
-                        <form action="{{ url_for('process_payment', delivery_id=deliv.id) }}" method="POST">
-                            <div class="modal-header border-0 pb-0">
-                                <h5 class="fw-bold">Payment for #{{ deliv.id }}</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body p-4">
-                                <div class="text-center mb-4">
-                                    <h2 class="fw-bold text-primary">{{ deliv.total_cost }} XAF</h2>
-                                    <p class="text-muted small">Total amount to pay</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold small text-uppercase">Payment Method</label>
-                                    <select name="payment_method" class="form-select floating-input" required>
-                                        <option value="MTN MoMo">MTN Mobile Money</option>
-                                        <option value="Orange Money">Orange Money</option>
-                                        <option value="Cash">Cash on Delivery</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold small text-uppercase">Phone Number</label>
-                                    <input type="tel" name="phone" class="form-control floating-input" placeholder="6..." required>
-                                </div>
-                            </div>
-                            <div class="modal-footer border-0 pt-0">
-                                <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow">Confirm Payment</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Rate Modal -->
-            <div class="modal fade" id="rateModal{{ deliv.id }}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content border-0 rounded-4">
-                        <form action="{{ url_for('rate_delivery', delivery_id=deliv.id) }}" method="POST">
-                            <div class="modal-header border-0 pb-0">
-                                <h5 class="fw-bold">Rate Delivery #{{ deliv.id }}</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body p-4 text-center">
-                                <div class="mb-2">
-                                    <label class="form-label fw-bold small text-uppercase">How was the experience?</label>
-                                </div>
-                                <div class="star-rating mb-4">
-                                    <input type="radio" id="star5-{{ deliv.id }}" name="rating" value="5" required/><label for="star5-{{ deliv.id }}"><i class="fas fa-star"></i></label>
-                                    <input type="radio" id="star4-{{ deliv.id }}" name="rating" value="4" /><label for="star4-{{ deliv.id }}"><i class="fas fa-star"></i></label>
-                                    <input type="radio" id="star3-{{ deliv.id }}" name="rating" value="3" /><label for="star3-{{ deliv.id }}"><i class="fas fa-star"></i></label>
-                                    <input type="radio" id="star2-{{ deliv.id }}" name="rating" value="2" /><label for="star2-{{ deliv.id }}"><i class="fas fa-star"></i></label>
-                                    <input type="radio" id="star1-{{ deliv.id }}" name="rating" value="1" /><label for="star1-{{ deliv.id }}"><i class="fas fa-star"></i></label>
-                                </div>
-                                <div class="mb-3 text-start">
-                                    <label class="form-label fw-bold small text-uppercase">Additional Feedback</label>
-                                    <textarea name="feedback" class="form-control floating-input" rows="3" placeholder="Tell us more..."></textarea>
-                                </div>
-                            </div>
-                            <div class="modal-footer border-0 pt-0">
-                                <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold">Submit Review</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
     </div>
 
     <div class="col-lg-4">
@@ -258,7 +161,76 @@
                 {% endfor %}
             </div>
         </div>
-
     </div>
 </div>
+
+<!-- All Rate Modals -->
+{% for deliv in past %}
+    {% if not deliv.rating %}
+    <div class="modal fade" id="rateModal{{ deliv.id }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4">
+                <form action="{{ url_for('rate_delivery', delivery_id=deliv.id) }}" method="POST">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="fw-bold">Rate Delivery #{{ deliv.id }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4 text-center">
+                        <div class="mb-2">
+                            <label class="form-label fw-bold small text-uppercase">How was the experience?</label>
+                        </div>
+                        <div class="star-rating mb-4">
+                            <input type="radio" id="star5-{{ deliv.id }}" name="rating" value="5" class="rating-radio" data-text="Excellent! ⭐⭐⭐⭐⭐" required/><label for="star5-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                            <input type="radio" id="star4-{{ deliv.id }}" name="rating" value="4" class="rating-radio" data-text="Very Good! ⭐⭐⭐⭐"/><label for="star4-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                            <input type="radio" id="star3-{{ deliv.id }}" name="rating" value="3" class="rating-radio" data-text="Good! ⭐⭐⭐"/><label for="star3-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                            <input type="radio" id="star2-{{ deliv.id }}" name="rating" value="2" class="rating-radio" data-text="Fair! ⭐⭐"/><label for="star2-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                            <input type="radio" id="star1-{{ deliv.id }}" name="rating" value="1" class="rating-radio" data-text="Poor! ⭐"/><label for="star1-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                        </div>
+                        <div id="rating-text-{{ deliv.id }}" class="text-primary fw-bold mb-4 small">Select a rating</div>
+                        <div class="mb-3 text-start">
+                            <label class="form-label fw-bold small text-uppercase">Additional Feedback</label>
+                            <textarea name="feedback" class="form-control floating-input" rows="3" placeholder="Tell us more..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold">Submit Review</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Star rating interactivity
+        const radios = document.querySelectorAll('.rating-radio');
+        radios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const deliveryId = this.id.split('-')[1];
+                const feedbackText = this.getAttribute('data-text');
+                const labelElement = document.getElementById(`rating-text-${deliveryId}`);
+                if (labelElement) {
+                    labelElement.innerText = feedbackText;
+                    labelElement.classList.add('animate-pulse');
+                    setTimeout(() => labelElement.classList.remove('animate-pulse'), 500);
+                }
+            });
+        });
+    });
+</script>
+<style>
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    .animate-pulse {
+        animation: pulse 0.5s ease-in-out;
+    }
+</style>
 {% endblock %}

@@ -1,25 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="hero-section text-center text-lg-start">
+<div class="hero-section text-center text-lg-start animate-up">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-6 px-4">
-                <span class="badge bg-primary-subtle text-primary mb-3 px-3 py-2 rounded-pill fw-bold">#1 Logistics Platform in Cameroon</span>
                 <h1 class="display-3 fw-bold mb-4" style="letter-spacing: -1.5px; line-height: 1.1;">Move Anything, <br><span class="text-primary">Anywhere</span> Instantly.</h1>
                 <p class="lead text-muted mb-5 pe-lg-5">CargoFind connects you with thousands of verified drivers for fast, secure, and transparent deliveries across the country.</p>
                 <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
-                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg shadow-lg">Start Shipping Now</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg shadow-lg">Book a Truck Today</a>
                     <a href="#how-it-works" class="btn btn-outline-dark btn-lg">How it Works</a>
                 </div>
                 
                 <div class="mt-5 d-flex align-items-center gap-4 justify-content-center justify-content-lg-start">
                     <div class="d-flex -space-x-2">
-                        <img src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px; margin-right: -15px;">
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px; margin-right: -15px;">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px;">
+                        <img src="https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px; margin-right: -15px; object-fit: cover;">
+                        <img src="https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px; margin-right: -15px; object-fit: cover;">
+                        <img src="https://images.unsplash.com/photo-1531384441138-2736e62e0919?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px; margin-right: -15px; object-fit: cover;">
+                        <img src="https://images.unsplash.com/photo-1530268729831-4b0b9e170218?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px; margin-right: -15px; object-fit: cover;">
+                        <img src="https://images.unsplash.com/photo-1512484776495-a09d92e87c3b?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px; object-fit: cover;">
                     </div>
-                    <p class="small text-muted mb-0"><strong>500+</strong> drivers active today</p>
+                    <p class="small text-muted mb-0"><strong>100+</strong> drivers active today</p>
                 </div>
             </div>
             <div class="col-lg-6 mt-5 mt-lg-0 px-4">
@@ -32,7 +33,7 @@
                             </div>
                             <div>
                                 <h6 class="mb-0 fw-bold">Live Tracking</h6>
-                                <small class="text-muted">Active delivery #8421</small>
+                                <small class="text-muted">Active delivery</small>
                             </div>
                         </div>
                     </div>
@@ -75,13 +76,84 @@
                 <p class="text-muted">Watch your delivery move on the map in real-time. Full transparency from pickup to delivery.</p>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4 border-0">
+                <div class="bg-info-subtle rounded-4 p-3 mb-4 d-inline-block" style="width: 60px;">
+                    <i class="fas fa-wallet fa-2x text-info"></i>
+                </div>
+                <h4>Secure Payments</h4>
+                <p class="text-muted">Pay easily via MTN MoMo or Orange Money directly through our secure platform.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4 border-0">
+                <div class="bg-danger-subtle rounded-4 p-3 mb-4 d-inline-block" style="width: 60px;">
+                    <i class="fas fa-user-shield fa-2x text-danger"></i>
+                </div>
+                <h4>Verified Drivers</h4>
+                <p class="text-muted">Every driver is strictly vetted and background-checked to ensure your goods are in safe hands.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4 border-0">
+                <div class="bg-secondary-subtle rounded-4 p-3 mb-4 d-inline-block" style="width: 60px;">
+                    <i class="fas fa-bell fa-2x text-secondary"></i>
+                </div>
+                <h4>Instant Alerts</h4>
+                <p class="text-muted">Get real-time SMS and app notifications at every stage of your delivery journey.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    </div>
+</div>
+
+<div class="container mb-5 pb-5">
+    <div class="row align-items-center mb-5">
+        <div class="col-md-8">
+            <h2 class="fw-bold">What Our Customers Say</h2>
+            <p class="text-muted">Real stories from the people who trust CargoFind.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ url_for('testimonials') }}" class="btn btn-outline-primary rounded-pill">View All Testimonials</a>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm glass-morphism p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <img src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=60&h=60&fit=crop" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                    <h6 class="mb-0 fw-bold">Marie Ngo</h6>
+                </div>
+                <p class="small text-muted mb-0">"CargoFind has transformed how I move my business inventory. The real-time tracking is incredible!"</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm glass-morphism p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <img src="https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=60&h=60&fit=crop" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                    <h6 class="mb-0 fw-bold">Samuel Eto</h6>
+                </div>
+                <p class="small text-muted mb-0">"As a driver, I find more jobs easily. The payout system is fast and reliable. Best app in Cameroon!"</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm glass-morphism p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <img src="https://images.unsplash.com/photo-1507152832244-10d45c7eda57?w=60&h=60&fit=crop" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                    <h6 class="mb-0 fw-bold">Amadou Bello</h6>
+                </div>
+                <p class="small text-muted mb-0">"Very easy to use. I requested a truck for moving house and it was matched instantly."</p>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="bg-primary text-white py-5 rounded-5 mx-3 mb-5 shadow-lg overflow-hidden position-relative">
     <div class="container text-center py-4">
         <h2 class="display-5 fw-bold mb-4">Are you a Transporter?</h2>
-        <p class="lead mb-4 opacity-75">Join our network of drivers and start earning with your bike, car, van, or truck today.</p>
+        <p class="lead mb-4 opacity-75">Join our network of drivers and start earning with your car, van, or truck today.</p>
         <a href="{{ url_for('register', role='driver') }}" class="btn btn-light btn-lg px-5 fw-bold text-primary rounded-pill">Become a Driver</a>
     </div>
 </div>

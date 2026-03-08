@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, Delivery, Notification, Wallet, PayoutRequest
+from models import db, User, Delivery, Notification, Wallet
 from werkzeug.security import generate_password_hash
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
@@ -23,9 +23,45 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode=None)
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+def save_notification(user_id, message, link=None):
+    notif = Notification(user_id=user_id, message=message, link=link)
+    db.session.add(notif)
+    db.session.commit()
+
+@app.route('/notifications')
+@login_required
+def notifications():
+    user_notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    # Mark all as read when viewed
+    for notif in user_notifications:
+        notif.is_read = True
+    db.session.commit()
+    return render_template('notifications.html', notifications=user_notifications)
+
+@app.route('/notifications/clear', methods=['POST'])
+@login_required
+def clear_notifications():
+    Notification.query.filter_by(user_id=current_user.id).delete()
+    db.session.commit()
+    flash('All notifications cleared.', 'success')
+    return redirect(url_for('notifications'))
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/testimonials')
+def testimonials():
+    return render_template('testimonials.html')
+
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    if request.method == 'POST':
+        # Logic to handle the contact form submission
+        # In a real scenario, this would send an email or store the message in a DB
+        flash('Thank you for your message! Our support team will get back to you shortly.', 'success')
+        return redirect(url_for('index'))
+    return render_template('contact.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -73,6 +109,7 @@ def login():
                 return redirect(url_for('login'))
                 
             login_user(user)
+            save_notification(user.id, "Welcome back to CargoFind! You have successfully logged in.")
             if user.role == 'driver' and not user.is_approved:
                 flash('Note: Your driver account is pending admin approval. You will be able to accept jobs once approved.')
             
@@ -126,24 +163,59 @@ def track_delivery(delivery_id):
                            driver_lat=driver_lat, 
                            driver_lng=driver_lng)
 
+@app.route('/checkout/<int:delivery_id>')
+@login_required
+def checkout(delivery_id):
+    delivery = Delivery.query.get_or_404(delivery_id)
+    if delivery.customer_id != current_user.id:
+        return redirect(url_for('customer_dashboard'))
+    return render_template('customer/checkout.html', delivery=delivery)
+
 @app.route('/customer/pay/<int:delivery_id>', methods=['POST'])
 @login_required
 def process_payment(delivery_id):
     delivery = Delivery.query.get_or_404(delivery_id)
-    if delivery.customer_id == current_user.id and delivery.status == 'Delivered':
-        delivery.payment_status = 'Paid'
-        delivery.payment_method = request.form.get('payment_method')
+    if delivery.customer_id == current_user.id:
+        method = request.form.get('payment_method')
+        delivery.payment_method = method
         
-        # Credit driver wallet
-        if delivery.driver_id:
-            driver = User.query.get(delivery.driver_id)
-            if not driver.wallet:
-                driver.wallet = Wallet(user_id=driver.id)
-            driver.wallet.balance += delivery.total_cost
-            driver.wallet.total_earned += delivery.total_cost
+        if method == 'Cash':
+            delivery.payment_status = 'Pending'
+            save_notification(current_user.id, f"You selected 'Pay in Cash' for delivery #{delivery.id}. Please pay the driver upon arrival.")
+            flash('Payment preference saved. Please pay the driver in cash.', 'info')
+        else:
+            # Mocking a successful mobile money transaction
+            delivery.payment_status = 'Paid'
+            
+            # Credit driver wallet if driver is assigned
+            if delivery.driver_id:
+                driver = User.query.get(delivery.driver_id)
+                if not driver.wallet:
+                    driver.wallet = Wallet(user_id=driver.id)
+                driver.wallet.balance += delivery.total_cost
+                driver.wallet.total_earned += delivery.total_cost
+                
+            save_notification(current_user.id, f"Mobile Money payment of {delivery.total_cost} XAF for delivery #{delivery.id} was successful.")
+            flash(f'Payment of {delivery.total_cost} XAF via {method} was successful!', 'success')
             
         db.session.commit()
-        flash('Payment successful! Thank you for using CargoFind.')
+    return redirect(url_for('customer_dashboard'))
+
+@app.route('/customer/cancel/<int:delivery_id>', methods=['POST'])
+@login_required
+def cancel_delivery(delivery_id):
+    delivery = Delivery.query.get_or_404(delivery_id)
+    if delivery.customer_id != current_user.id:
+        flash('Unauthorized action.', 'danger')
+        return redirect(url_for('customer_dashboard'))
+    
+    if delivery.status != 'Pending' or delivery.driver_id is not None:
+        flash('Cannot cancel this request because it has already been accepted by a driver.', 'warning')
+        return redirect(url_for('customer_dashboard'))
+    
+    db.session.delete(delivery)
+    db.session.commit()
+    flash('Delivery request cancelled successfully.', 'success')
     return redirect(url_for('customer_dashboard'))
 
 @app.route('/customer/rate/<int:delivery_id>', methods=['POST'])
@@ -205,7 +277,7 @@ def book_delivery():
         
         # Calculate cost
         base_fare = 500
-        rates = {'bike': 150, 'car': 250, 'van': 350, 'truck': 500}
+        rates = {'car': 250, 'van': 350, 'truck': 500}
         total_cost = base_fare + (rates.get(vehicle_type, 250) * effective_distance)
         
         if request.form.get('heavy_goods'): total_cost += 1000
@@ -231,6 +303,8 @@ def book_delivery():
         db.session.add(new_delivery)
         db.session.commit()
         
+        save_notification(current_user.id, f"Your delivery request to {dropoff_loc} has been successfully booked. Cost: {total_cost} XAF")
+        
         flash(f'Delivery booked successfully! Total Cost: {total_cost} XAF')
         return redirect(url_for('customer_dashboard'))
 
@@ -249,7 +323,7 @@ def calculate_price():
     vehicle_type = data.get('vehicle_type', 'car')
     
     base_fare = 500
-    rates = {'bike': 150, 'car': 250, 'van': 350, 'truck': 500}
+    rates = {'car': 250, 'van': 350, 'truck': 500}
     total_cost = base_fare + (rates.get(vehicle_type, 250) * effective_distance)
     
     if data.get('heavy'): total_cost += 1000
@@ -268,13 +342,12 @@ def driver_dashboard():
     active_job = Delivery.query.filter_by(driver_id=current_user.id).filter(Delivery.status != 'Delivered').first()
     completed_jobs = Delivery.query.filter_by(driver_id=current_user.id, status='Delivered').all()
     total_earnings = sum(job.total_cost for job in completed_jobs if job.payment_status == 'Paid')
-    payout_requests = PayoutRequest.query.filter_by(user_id=current_user.id).order_by(PayoutRequest.created_at.desc()).all()
     
     return render_template('driver/dashboard.html', 
                            active_job=active_job, 
                            completed_count=len(completed_jobs), 
-                           earnings=total_earnings,
-                           payout_requests=payout_requests)
+                           completed_list=completed_jobs,
+                           earnings=total_earnings)
 
 @app.route('/driver/jobs')
 @login_required
@@ -421,15 +494,16 @@ def mark_paid(delivery_id):
     delivery = Delivery.query.get_or_404(delivery_id)
     if delivery.driver_id == current_user.id:
         delivery.payment_status = 'Paid'
-        delivery.payment_method = 'Cash (Collected by Driver)'
+        delivery.payment_method = 'Cash'
         
-        # Credit driver wallet (internal tracking)
+        # Credit driver wallet
         if not current_user.wallet:
             current_user.wallet = Wallet(user_id=current_user.id)
         current_user.wallet.balance += delivery.total_cost
         current_user.wallet.total_earned += delivery.total_cost
         
         db.session.commit()
+        save_notification(delivery.customer_id, f"The driver confirmed receipt of {delivery.total_cost} XAF in cash for delivery #{delivery.id}. Thank you!")
         flash('Payment marked as received.')
     return redirect(url_for('driver_dashboard'))
 
@@ -476,7 +550,7 @@ def edit_delivery(delivery_id):
         
         # Recalculate cost
         base_fare = 500
-        rates = {'bike': 150, 'car': 250, 'van': 350, 'truck': 500}
+        rates = {'car': 250, 'van': 350, 'truck': 500}
         total_cost = base_fare + (rates.get(delivery.vehicle_type, 250) * effective_distance)
         
         if request.form.get('heavy_goods'): total_cost += 1000
@@ -490,58 +564,6 @@ def edit_delivery(delivery_id):
         return redirect(url_for('customer_dashboard'))
 
     return render_template('customer/edit_book.html', delivery=delivery)
-
-@app.route('/driver/payout', methods=['POST'])
-@login_required
-def request_payout():
-    if current_user.role != 'driver':
-        return redirect(url_for('index'))
-    
-    amount = float(request.form.get('amount', 0))
-    method = request.form.get('payment_method')
-    
-    if not current_user.wallet or current_user.wallet.balance < amount:
-        flash('Insufficient balance in your wallet.')
-        return redirect(url_for('driver_dashboard'))
-    
-    if amount < 5000:
-        flash('Minimum payout amount is 5,000 XAF.')
-        return redirect(url_for('driver_dashboard'))
-    
-    # Deduct from wallet immediately to prevent double withdrawal
-    current_user.wallet.balance -= amount
-    
-    new_payout = PayoutRequest(user_id=current_user.id, amount=amount, payment_method=method)
-    db.session.add(new_payout)
-    db.session.commit()
-    
-    flash('Payout request submitted successfully! Admin will process it shortly.')
-    return redirect(url_for('driver_dashboard'))
-
-@app.route('/admin/payouts')
-@login_required
-def admin_payouts():
-    if current_user.role != 'admin':
-        return redirect(url_for('index'))
-    payouts = PayoutRequest.query.order_by(PayoutRequest.created_at.desc()).all()
-    return render_template('admin/payouts.html', payouts=payouts)
-
-@app.route('/admin/payout/approve/<int:payout_id>')
-@login_required
-def approve_payout(payout_id):
-    if current_user.role != 'admin':
-        return redirect(url_for('index'))
-    payout = PayoutRequest.query.get_or_404(payout_id)
-    if payout.status == 'Pending':
-        payout.status = 'Processed'
-        
-        # Notify driver
-        notif = Notification(user_id=payout.user_id, message=f'Your payout request of {payout.amount} XAF has been processed!')
-        db.session.add(notif)
-        db.session.commit()
-        
-        flash(f'Payout for {payout.user.full_name} marked as processed.')
-    return redirect(url_for('admin_payouts'))
 
 # --- SocketIO Events ---
 @socketio.on('join_delivery')

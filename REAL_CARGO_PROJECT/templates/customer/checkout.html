@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center animate-up">
+    <div class="col-lg-10">
+        <div class="mb-4">
+            <a href="{{ url_for('customer_dashboard') }}" class="text-decoration-none text-muted">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <div class="row g-4">
+            <!-- Order Summary -->
+            <div class="col-md-5 order-md-2">
+                <div class="card border-0 shadow-sm rounded-4 p-4 sticky-top" style="top: 100px;">
+                    <h5 class="fw-bold mb-4">Order Summary</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Delivery #{{ delivery.id }}</span>
+                        <span class="fw-bold text-primary">XAF {{ delivery.total_cost }}</span>
+                    </div>
+                    <hr class="my-4 opacity-50">
+                    <div class="mb-3">
+                        <small class="text-muted d-block text-uppercase fw-bold ls-1 mb-2" style="font-size: 0.65rem;">Route</small>
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <div class="bg-success-subtle p-2 rounded-circle">
+                                <i class="fas fa-map-marker-alt text-success" style="font-size: 0.8rem;"></i>
+                            </div>
+                            <span class="small">{{ delivery.pickup_location }}</span>
+                        </div>
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="bg-danger-subtle p-2 rounded-circle">
+                                <i class="fas fa-flag-checkered text-danger" style="font-size: 0.8rem;"></i>
+                            </div>
+                            <span class="small">{{ delivery.dropoff_location }}</span>
+                        </div>
+                    </div>
+                    <div class="bg-light rounded-3 p-3 mt-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">Total Amount</span>
+                            <h3 class="fw-bold text-primary mb-0">XAF {{ delivery.total_cost }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="col-md-7 order-md-1">
+                <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5">
+                    <h3 class="fw-bold mb-2">Checkout</h3>
+                    <p class="text-muted mb-5">Select your preferred payment method to secure your delivery.</p>
+
+                    <form action="{{ url_for('process_payment', delivery_id=delivery.id) }}" method="POST">
+                        <div class="payment-options mb-5">
+                            <!-- MTN MoMo -->
+                            <div class="payment-card mb-3 opacity-50">
+                                <input type="radio" name="payment_method" value="MTN MoMo" id="momo" class="btn-check" disabled>
+                                <label class="btn btn-outline-light d-flex align-items-center justify-content-between p-4 rounded-4 text-start border-2 w-100" for="momo" style="cursor: not-allowed;">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-white rounded-3 p-1 me-3 border" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; overflow: hidden; background-color: #ffcc00 !important;">
+                                            <img src="https://logo.clearbit.com/mtn.com" alt="MTN" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none';">
+                                            <span class="fw-bold" style="font-size: 12px; color: black; position: absolute;">MTN</span>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-dark">MTN Mobile Money <span class="badge bg-secondary ms-2" style="font-size: 0.6rem;">Coming Soon</span></h6>
+                                            <small class="text-muted">Instant processing</small>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-lock text-muted"></i>
+                                </label>
+                            </div>
+
+                            <!-- Orange Money -->
+                            <div class="payment-card mb-3 opacity-50">
+                                <input type="radio" name="payment_method" value="Orange Money" id="orange" class="btn-check" disabled>
+                                <label class="btn btn-outline-light d-flex align-items-center justify-content-between p-4 rounded-4 text-start border-2 w-100" for="orange" style="cursor: not-allowed;">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-white rounded-3 p-1 me-3 border" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; overflow: hidden; background-color: #ff6600 !important; position: relative;">
+                                            <img src="https://logo.clearbit.com/orange.com" alt="Orange" style="width: 100%; height: 100%; object-fit: contain; position: relative; z-index: 2;" onerror="this.style.display='none';">
+                                            <span class="fw-bold text-white" style="font-size: 12px; position: absolute; z-index: 1;">OM</span>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-dark">Orange Money <span class="badge bg-secondary ms-2" style="font-size: 0.6rem;">Coming Soon</span></h6>
+                                            <small class="text-muted">Instant processing</small>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-lock text-muted"></i>
+                                </label>
+                            </div>
+
+                            <!-- Cash -->
+                            <div class="payment-card mb-3">
+                                <input type="radio" name="payment_method" value="Cash" id="cash" class="btn-check" checked>
+                                <label class="btn btn-outline-light d-flex align-items-center justify-content-between p-4 rounded-4 text-start border-2 w-100" for="cash">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-success rounded-3 p-2 me-3" style="width: 50px;">
+                                            <i class="fas fa-money-bill-wave text-white fa-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-dark">Pay in Cash</h6>
+                                            <small class="text-muted">Pay the driver directly</small>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-check-circle text-primary check-icon"></i>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="momo-fields" class="mb-5 animate-up" style="display: none;">
+                            <label class="form-label fw-bold small text-uppercase ls-1">Mobile Money Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0 rounded-start-4 px-3">+237</span>
+                                <input type="tel" name="phone" class="form-control border-0 bg-light rounded-end-4 p-3" placeholder="6...">
+                            </div>
+                            <small class="text-muted mt-2 d-block">A prompt will be sent to this phone to confirm the transaction.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill py-3 fw-bold shadow-lg mt-4">
+                            Complete Transaction
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .payment-options .btn-outline-light {
+        border-color: #f1f3f5;
+        background: #f8f9fa;
+        transition: all 0.2s ease;
+    }
+    .payment-options .btn-check:checked + .btn-outline-light {
+        border-color: #0d6efd;
+        background: #f0f7ff;
+    }
+    .payment-options .check-icon {
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all 0.2s ease;
+    }
+    .payment-options .btn-check:checked + .btn-outline-light .check-icon {
+        opacity: 1;
+        transform: scale(1);
+    }
+    .ls-1 { letter-spacing: 1px; }
+</style>
+
+<script>
+    document.querySelectorAll('input[name="payment_method"]').forEach(input => {
+        input.addEventListener('change', function() {
+            const fields = document.getElementById('momo-fields');
+            const phoneInput = fields.querySelector('input');
+            if (this.value === 'Cash') {
+                fields.style.display = 'none';
+                phoneInput.required = false;
+            } else {
+                fields.style.display = 'block';
+                phoneInput.required = true;
+            }
+        });
+    });
+</script>
+{% endblock %}

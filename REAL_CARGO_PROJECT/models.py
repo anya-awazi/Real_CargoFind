@@ -15,7 +15,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False) # 'customer', 'driver', 'admin'
     
     # Driver specific fields
-    vehicle_type = db.Column(db.String(50)) # 'bike', 'car', 'van', 'truck'
+    vehicle_type = db.Column(db.String(50)) # 'car', 'van', 'truck'
     vehicle_id = db.Column(db.String(50))
     is_active = db.Column(db.Boolean, default=True)
     is_approved = db.Column(db.Boolean, default=False) # Admin approval
@@ -29,7 +29,6 @@ class User(UserMixin, db.Model):
     deliveries_as_driver = db.relationship('Delivery', backref='driver', foreign_keys='Delivery.driver_id')
     notifications = db.relationship('Notification', backref='user', lazy=True)
     wallet = db.relationship('Wallet', backref='user', uselist=False)
-    payout_requests = db.relationship('PayoutRequest', backref='user', lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -87,12 +86,4 @@ class Wallet(db.Model):
     balance = db.Column(db.Float, default=0.0)
     total_earned = db.Column(db.Float, default=0.0)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-class PayoutRequest(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    amount = db.Column(db.Float, nullable=False)
-    payment_method = db.Column(db.String(50), nullable=False) # MoMo, Orange
-    status = db.Column(db.String(20), default='Pending') # Pending, Processed, Rejected
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center mb-5">
+        <h1 class="display-4 fw-bold">Contact Support</h1>
+        <p class="lead text-muted">We're here to help! Please fill out the form below and we'll get back to you as soon as possible.</p>
+    </div>
+</div>
+
+<div class="row justify-content-center mb-5">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm glass-morphism p-4 p-md-5">
+            <form action="{{ url_for('contact') }}" method="POST">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label fw-bold">Full Name</label>
+                        <input type="text" class="form-control rounded-pill px-4" id="name" name="name" placeholder="Enter your name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label fw-bold">Email Address</label>
+                        <input type="email" class="form-control rounded-pill px-4" id="email" name="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="col-12 mt-4">
+                        <label for="subject" class="form-label fw-bold">Subject</label>
+                        <input type="text" class="form-control rounded-pill px-4" id="subject" name="subject" placeholder="What is this about?" required>
+                    </div>
+                    <div class="col-12 mt-4">
+                        <label for="message" class="form-label fw-bold">Message</label>
+                        <textarea class="form-control rounded-4 px-4 py-3" id="message" name="message" rows="5" placeholder="Tell us how we can help..." required></textarea>
+                    </div>
+                    <div class="col-12 mt-5 text-center">
+                        <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow w-100">Send Message</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5 text-center">
+    <div class="col-md-4 mb-4">
+        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+            <i class="fas fa-phone fa-lg text-primary"></i>
+        </div>
+        <h5 class="fw-bold">Call Us</h5>
+        <p class="text-muted">+237 670 89 04 64</p>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+            <i class="fas fa-envelope fa-lg text-primary"></i>
+        </div>
+        <h5 class="fw-bold">Email Support</h5>
+        <p class="text-muted">support@cargofind.cm</p>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+            <i class="fas fa-map-marker-alt fa-lg text-primary"></i>
+        </div>
+        <h5 class="fw-bold">Office</h5>
+        <p class="text-muted">Yaoundé, Cameroon</p>
+    </div>
+</div>
+{% endblock %}

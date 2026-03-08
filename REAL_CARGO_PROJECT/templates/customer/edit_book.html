@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
+<div class="row animate-up">
     <div class="col-md-5">
         <div class="card p-4">
             <h3>Edit Delivery Request #{{ delivery.id }}</h3>
@@ -35,7 +35,6 @@
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Vehicle Type</label>
                         <select name="vehicle_type" id="vehicle_type" class="form-select">
-                            <option value="bike" {% if delivery.vehicle_type == 'bike' %}selected{% endif %}>Bike (150 XAF/km)</option>
                             <option value="car" {% if delivery.vehicle_type == 'car' %}selected{% endif %}>Car (250 XAF/km)</option>
                             <option value="van" {% if delivery.vehicle_type == 'van' %}selected{% endif %}>Van (350 XAF/km)</option>
                             <option value="truck" {% if delivery.vehicle_type == 'truck' %}selected{% endif %}>Truck (500 XAF/km)</option>
