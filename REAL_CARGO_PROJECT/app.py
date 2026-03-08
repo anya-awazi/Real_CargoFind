@@ -229,11 +229,11 @@ def rate_delivery(delivery_id):
                 delivery.rating = int(rating_val)
                 delivery.feedback = request.form.get('feedback')
                 db.session.commit()
-                flash('Thank you for your feedback!')
+                flash('Thank you for your feedback!', 'success')
             else:
-                flash('Please select a rating')
+                flash('Please select a rating', 'warning')
         except (ValueError, TypeError):
-            flash('Invalid rating value')
+            flash('Invalid rating value', 'danger')
     return redirect(url_for('customer_dashboard'))
 
 @app.route('/customer/book', methods=['GET', 'POST'])
@@ -340,13 +340,18 @@ def driver_dashboard():
         return redirect(url_for('index'))
     
     active_job = Delivery.query.filter_by(driver_id=current_user.id).filter(Delivery.status != 'Delivered').first()
-    completed_jobs = Delivery.query.filter_by(driver_id=current_user.id, status='Delivered').all()
-    total_earnings = sum(job.total_cost for job in completed_jobs if job.payment_status == 'Paid')
+    
+    # Separation: Delivered but not paid, vs Delivered and fully Paid (History)
+    unpaid_jobs = Delivery.query.filter_by(driver_id=current_user.id, status='Delivered').filter(Delivery.payment_status != 'Paid').all()
+    history_jobs = Delivery.query.filter_by(driver_id=current_user.id, status='Delivered').filter(Delivery.payment_status == 'Paid').all()
+    
+    total_earnings = sum(job.total_cost for job in history_jobs)
     
     return render_template('driver/dashboard.html', 
                            active_job=active_job, 
-                           completed_count=len(completed_jobs), 
-                           completed_list=completed_jobs,
+                           unpaid_jobs=unpaid_jobs,
+                           history_jobs=history_jobs,
+                           completed_count=len(history_jobs), 
                            earnings=total_earnings)
 
 @app.route('/driver/jobs')

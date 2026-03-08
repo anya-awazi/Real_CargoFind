@@ -5,22 +5,12 @@
     <div class="col-md-4">
         <div class="card p-4 mb-4 stats-card bg-primary text-white border-0">
             <h6 class="opacity-75">Total Cash Collected</h6>
-            <h2 class="fw-bold">{{ current_user.wallet.balance if current_user.wallet else 0 }} XAF</h2>
-        </div>
-        <div class="card p-4 mb-4 border-0 shadow-sm bg-white">
-            <h5 class="fw-bold mb-3"><i class="fas fa-chart-line text-success me-2"></i>Earnings Summary</h5>
-            <div class="d-flex justify-content-between mb-2">
-                <span class="text-muted">Total Lifetime:</span>
-                <span class="fw-bold text-dark">{{ current_user.wallet.total_earned if current_user.wallet else 0 }} XAF</span>
-            </div>
-            <div class="d-flex justify-content-between mb-2">
-                <span class="text-muted">Current Balance:</span>
-                <span class="fw-bold text-primary">{{ current_user.wallet.balance if current_user.wallet else 0 }} XAF</span>
-            </div>
-            <div class="d-flex justify-content-between">
-                <span class="text-muted">Jobs Completed:</span>
-                <span class="fw-bold text-dark">{{ completed_count }}</span>
-            </div>
+            <h2 class="fw-bold mb-3">{{ earnings }} XAF</h2>
+            <hr class="opacity-25">
+            <a href="javascript:void(0)" onclick="toggleHistory()" class="text-white text-decoration-none d-flex justify-content-between align-items-center">
+                <span class="small">Jobs Completed:</span>
+                <span class="fw-bold h5 mb-0">{{ completed_count }} <i class="fas fa-chevron-right ms-1" style="font-size: 0.7rem;"></i></span>
+            </a>
         </div>
         <div class="card p-4 mb-4">
             <h5>Vehicle Status</h5>
@@ -41,11 +31,12 @@
     </div>
 
     <div class="col-md-8">
+        <!-- 1. Active Jobs (Status not Delivered) -->
         {% if active_job %}
-            <div class="card p-4 border-primary">
+            <div class="card p-4 border-primary shadow-sm mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3>Active Delivery #{{ active_job.id }}</h3>
-                    <span class="badge bg-warning text-dark">{{ active_job.status }}</span>
+                    <h3 class="fw-bold text-primary">Active Delivery #{{ active_job.id }}</h3>
+                    <span class="badge bg-primary px-3 rounded-pill">{{ active_job.status }}</span>
                 </div>
                 
                 <div class="row mb-3">
@@ -59,102 +50,190 @@
                     </div>
                     <div class="col-4">
                         <h6><i class="fas fa-phone text-primary"></i> Customer</h6>
-                        <p class="small"><a href="tel:{{ active_job.customer.phone }}" class="text-decoration-none">{{ active_job.customer.phone }}</a></p>
+                        <p class="small"><a href="tel:{{ active_job.customer.phone }}" class="text-decoration-none fw-bold">{{ active_job.customer.phone }}</a></p>
                     </div>
                 </div>
 
                 <div class="mb-4">
                     <h6>Update Status</h6>
-                    <div class="d-flex flex-column gap-3">
-                        <form action="{{ url_for('update_status', delivery_id=active_job.id) }}" method="POST" class="d-flex gap-2">
-                            <select name="status" class="form-select">
-                                <option value="Accepted" {% if active_job.status == 'Accepted' %}selected{% endif %}>Accepted</option>
-                                <option value="Picked Up" {% if active_job.status == 'Picked Up' %}selected{% endif %}>Picked Up</option>
-                                <option value="In Transit" {% if active_job.status == 'In Transit' %}selected{% endif %}>In Transit</option>
-                                <option value="Traffic Delay" {% if active_job.status == 'Traffic Delay' %}selected{% endif %}>Traffic Delay</option>
-                                <option value="Delivered" {% if active_job.status == 'Delivered' %}selected{% endif %}>Delivered</option>
-                            </select>
-                            <button type="submit" class="btn btn-primary">Update</button>
-                        </form>
-                        
-                        {% if active_job.payment_method == 'Cash' and active_job.payment_status == 'Pending' %}
-                            <div class="alert alert-info py-2 px-3 mb-0 d-flex align-items-center justify-content-between rounded-3">
-                                <span class="small fw-bold"><i class="fas fa-money-bill-wave me-2"></i>CUSTOMER CHOSE TO PAY IN CASH</span>
-                                <form action="{{ url_for('mark_paid', delivery_id=active_job.id) }}" method="POST">
-                                    <button type="submit" class="btn btn-success btn-sm fw-bold">Confirm Cash Received</button>
-                                </form>
-                            </div>
-                        {% elif active_job.payment_status == 'Paid' %}
-                            <div class="alert alert-success py-2 px-3 mb-0 rounded-3">
-                                <span class="small fw-bold"><i class="fas fa-check-circle me-2"></i>ALREADY PAID VIA MOBILE MONEY</span>
-                            </div>
-                        {% endif %}
-                    </div>
+                    <form action="{{ url_for('update_status', delivery_id=active_job.id) }}" method="POST" class="d-flex gap-2">
+                        <select name="status" class="form-select rounded-pill">
+                            <option value="Accepted" {% if active_job.status == 'Accepted' %}selected{% endif %}>Accepted</option>
+                            <option value="Picked Up" {% if active_job.status == 'Picked Up' %}selected{% endif %}>Picked Up</option>
+                            <option value="In Transit" {% if active_job.status == 'In Transit' %}selected{% endif %}>In Transit</option>
+                            <option value="Traffic Delay" {% if active_job.status == 'Traffic Delay' %}selected{% endif %}>Traffic Delay</option>
+                            <option value="Delivered" {% if active_job.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">Update</button>
+                    </form>
                 </div>
 
-                <div id="driverMap" style="height: 300px; border-radius: 10px;"></div>
-                <p class="mt-2 text-muted small"><i class="fas fa-info-circle"></i> Your location is being shared with the customer while you are in transit.</p>
-            </div>
-        {% else %}
-            <div class="card p-5 text-center border-0 shadow-sm bg-white mb-4">
-                <i class="fas fa-search-location fa-4x text-muted mb-3 opacity-25"></i>
-                <h4 class="fw-bold text-muted">No active jobs</h4>
-                <p class="text-muted">Browse available jobs to start earning.</p>
-                <a href="{{ url_for('available_jobs') }}" class="btn btn-primary rounded-pill px-4 mt-2">Browse Jobs</a>
+                <div id="driverMap" style="height: 250px; border-radius: 15px;" class="shadow-sm"></div>
             </div>
         {% endif %}
 
-        <h4 class="fw-bold mt-5 mb-4">Completed Jobs & Earnings</h4>
-        <div class="card border-0 shadow-sm overflow-hidden">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr class="small text-uppercase text-muted">
-                            <th class="ps-4">ID</th>
-                            <th>Date</th>
-                            <th>Destination</th>
-                            <th>Amount</th>
-                            <th class="text-end pe-4">Payment</th>
-                        </tr>
-                    </thead>
-                    <tbody class="border-top-0">
-                        {% for job in completed_list %}
+        <!-- 2. Unpaid Deliveries (Delivered but Pending Cash) -->
+        {% if unpaid_jobs %}
+            <h5 class="fw-bold mb-3 mt-4 text-warning"><i class="fas fa-money-bill-wave me-2"></i>Awaiting Cash Payment</h5>
+            {% for job in unpaid_jobs %}
+                <div class="card border-warning shadow-sm mb-3 p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold">Delivery #{{ job.id }}</span><br>
+                            <span class="text-muted small">To: {{ job.dropoff_location[:50] }}...</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="h5 fw-bold text-dark d-block mb-2">{{ job.total_cost }} XAF</span>
+                            <form action="{{ url_for('mark_paid', delivery_id=job.id) }}" method="POST">
+                                <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Confirm Cash Received</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Placeholder if nothing pending -->
+        {% if not active_job and not unpaid_jobs %}
+            <div class="card p-5 text-center border-0 shadow-sm bg-white mb-4">
+                <i class="fas fa-search-location fa-4x text-muted mb-3 opacity-25"></i>
+                <h4 class="fw-bold text-muted">All caught up!</h4>
+                <p class="text-muted">Browse available jobs to start your next delivery.</p>
+                <a href="{{ url_for('available_jobs') }}" class="btn btn-primary rounded-pill px-5 mt-2 shadow">Browse Jobs</a>
+            </div>
+        {% endif %}
+
+        <!-- 3. Completed History (Hidden by default, shown on click) -->
+        <div id="completedHistory" style="display: none;" class="animate-up">
+            <div class="d-flex justify-content-between align-items-center mt-5 mb-4">
+                <h4 class="fw-bold mb-0 text-success"><i class="fas fa-history me-2"></i>Completed Jobs History</h4>
+                <button onclick="toggleHistory()" class="btn btn-light btn-sm rounded-pill px-3 shadow-sm"><i class="fas fa-times me-1"></i> Close</button>
+            </div>
+            <div class="card border-0 shadow-sm overflow-hidden mb-5">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr class="small text-uppercase text-muted">
+                                <th class="ps-4">ID</th>
+                                <th>Date</th>
+                                <th>Destination</th>
+                                <th class="text-end pe-4">Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in history_jobs %}
                             <tr class="small">
-                                <td class="ps-4 fw-bold">#{{ job.id }}</td>
-                                <td>{{ job.created_at.strftime('%d %b %Y') }}</td>
-                                <td class="text-truncate" style="max-width: 150px;">{{ job.dropoff_location }}</td>
-                                <td class="fw-bold text-success">{{ job.total_cost }} XAF</td>
-                                <td class="text-end pe-4">
-                                    {% if job.payment_status == 'Paid' %}
-                                        <span class="badge bg-success-subtle text-success border border-success px-2">Received ({{ job.payment_method }})</span>
-                                    {% else %}
-                                        <div class="d-flex flex-column align-items-end gap-1">
-                                            <span class="badge bg-warning-subtle text-warning border border-warning px-2 mb-1">Unpaid</span>
-                                            {% if job.payment_method == 'Cash' %}
-                                                <form action="{{ url_for('mark_paid', delivery_id=job.id) }}" method="POST">
-                                                    <button type="submit" class="btn btn-success btn-xs py-0 px-2" style="font-size: 0.7rem;">Confirm Cash</button>
-                                                </form>
-                                            {% endif %}
+                                    <td class="ps-4 fw-bold">#{{ job.id }}</td>
+                                    <td>{{ job.created_at.strftime('%d %b %Y') }}</td>
+                                    <td class="text-truncate" style="max-width: 200px;">{{ job.dropoff_location }}</td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex flex-column align-items-end">
+                                            <span class="fw-bold text-success">{{ job.total_cost }} XAF</span>
+                                            <button class="btn btn-link btn-sm text-primary p-0 text-decoration-none" data-bs-toggle="modal" data-bs-target="#jobModal{{ job.id }}">View Details</button>
                                         </div>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">No completed jobs yet.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block modals %}
+<!-- History Modals -->
+{% for job in history_jobs %}
+<div class="modal fade" id="jobModal{{ job.id }}" tabindex="-1" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold">Job Summary #{{ job.id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-4">
+                    <span class="badge bg-success-subtle text-success border border-success px-3 rounded-pill mb-2">Paid & Delivered</span>
+                    <h2 class="fw-bold text-dark">{{ job.total_cost }} XAF</h2>
+                    <small class="text-muted">Collected on {{ job.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+                </div>
+
+                {% if job.rating %}
+                <div class="mb-4 p-3 bg-warning-subtle rounded-4 border border-warning-subtle animate-up">
+                    <h6 class="text-uppercase small fw-bold text-warning mb-2"><i class="fas fa-star me-2"></i>Customer Rating</h6>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="text-warning h4 mb-0">
+                            {% for i in range(5) %}
+                                <i class="{% if i < job.rating %}fas{% else %}far{% endif %} fa-star"></i>
+                            {% endfor %}
+                        </div>
+                        <span class="fw-bold text-dark">({{ job.rating }}/5)</span>
+                    </div>
+                    {% if job.feedback %}
+                        <p class="mb-0 small text-dark-emphasis italic">"{{ job.feedback }}"</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="p-3 bg-light rounded-3">
+                            <h6 class="text-uppercase small fw-bold text-muted mb-2"><i class="fas fa-box me-2"></i>Goods Description</h6>
+                            <p class="mb-0 small">{{ job.goods_description }}</p>
+                            {% if job.weight %}
+                            <span class="badge bg-secondary-subtle text-secondary mt-2">{{ job.weight }} kg</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-6">
+                        <h6 class="text-uppercase small fw-bold text-muted mb-1"><i class="fas fa-map-marker-alt text-success me-2"></i>Pickup</h6>
+                        <p class="small mb-0">{{ job.pickup_location }}</p>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-uppercase small fw-bold text-muted mb-1"><i class="fas fa-flag-checkered text-danger me-2"></i>Drop-off</h6>
+                        <p class="small mb-0">{{ job.dropoff_location }}</p>
+                    </div>
+
+                    <div class="col-12 border-top pt-3">
+                        <h6 class="text-uppercase small fw-bold text-muted mb-2"><i class="fas fa-user-circle me-2"></i>Customer Info</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="mb-0 fw-bold">{{ job.customer.full_name }}</p>
+                                <p class="mb-0 small text-muted">{{ job.customer.phone }}</p>
+                            </div>
+                            <a href="tel:{{ job.customer.phone }}" class="btn btn-primary btn-sm rounded-pill px-3">Call Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light w-100 rounded-pill py-2" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
 {% endblock %}
 
 {% block scripts %}
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+<script>
+    function toggleHistory() {
+        const historyDiv = document.getElementById('completedHistory');
+        if (historyDiv.style.display === 'none') {
+            historyDiv.style.display = 'block';
+            historyDiv.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            historyDiv.style.display = 'none';
+        }
+    }
+</script>
 
 {% if active_job %}
 <script>

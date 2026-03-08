@@ -123,7 +123,7 @@ body {
     animation: fadeInUp 0.6s ease-out forwards;
 }
 
-/* Star Rating System */
+/* Modern Star Rating System */
 .star-rating {
     display: flex;
     flex-direction: row-reverse;
@@ -137,16 +137,27 @@ body {
 
 .star-rating label {
     cursor: pointer;
-    font-size: 2.8rem;
+    font-size: 3rem;
     color: #e9ecef;
-    transition: var(--transition-base);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .star-rating label:hover,
 .star-rating label:hover ~ label,
 .star-rating input:checked ~ label {
     color: #fdcb6e;
-    transform: scale(1.1);
+    transform: scale(1.15);
+    text-shadow: 0 0 10px rgba(253, 203, 110, 0.3);
+}
+
+.star-rating label:active {
+    transform: scale(0.9);
+}
+
+#rating-label {
+    min-height: 24px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 /* Table Enhancements */
@@ -177,6 +188,7 @@ body {
     z-index: 9999;
     max-width: 350px;
     width: 100%;
+    pointer-events: none; /* Allow clicks through the container */
 }
 
 .custom-alert {
@@ -185,13 +197,14 @@ body {
     border: none;
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    padding: 1rem 1.25rem;
+    padding: 1.25rem 3.5rem 1.25rem 1.25rem; /* Extra right padding for close button */
     margin-bottom: 12px;
     display: flex;
     align-items: center;
     animation: slideInRight 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
-    overflow: hidden;
+    overflow: visible; /* Don't clip close button */
+    pointer-events: auto; /* Enable clicks for the alert itself */
 }
 
 .custom-alert::before {
@@ -234,14 +247,20 @@ body {
 }
 
 .custom-alert .btn-close {
-    font-size: 0.7rem;
-    opacity: 0.5;
+    position: absolute;
+    top: 50%;
+    right: 1.25rem;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    opacity: 0.6;
     transition: var(--transition-base);
+    padding: 1rem; /* Increase clickable area */
+    margin: -1rem; /* Offset padding to keep icon in place */
 }
 
 .custom-alert .btn-close:hover {
     opacity: 1;
-    transform: rotate(90deg);
+    transform: translateY(-50%) rotate(90deg);
 }
 
 @keyframes slideInRight {

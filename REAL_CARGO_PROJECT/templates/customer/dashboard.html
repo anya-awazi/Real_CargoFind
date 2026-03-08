@@ -122,11 +122,11 @@
                                             <i class="fas fa-file-invoice"></i>
                                         </a>
                                         {% if not deliv.rating %}
-                                            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#rateModal{{ deliv.id }}">Rate</button>
+                                            <button class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#rateModal{{ deliv.id }}">Rate Delivery</button>
                                         {% else %}
-                                            <div class="text-warning small text-nowrap">
+                                            <div class="text-warning small text-nowrap d-flex align-items-center bg-light px-2 py-1 rounded-pill">
                                                 {% for i in range(5) %}
-                                                    <i class="{% if i < deliv.rating %}fas{% else %}far{% endif %} fa-star"></i>
+                                                    <i class="{% if i < deliv.rating %}fas{% else %}far{% endif %} fa-star fa-xs"></i>
                                                 {% endfor %}
                                             </div>
                                         {% endif %}
@@ -164,36 +164,43 @@
     </div>
 </div>
 
-<!-- All Rate Modals -->
+{% endblock %}
+
+{% block modals %}
+<!-- Modern Rating Modals -->
 {% for deliv in past %}
     {% if not deliv.rating %}
-    <div class="modal fade" id="rateModal{{ deliv.id }}" tabindex="-1">
+    <div class="modal fade" id="rateModal{{ deliv.id }}" tabindex="-1" data-bs-backdrop="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 rounded-4">
+            <div class="modal-content border-0 rounded-5 shadow-lg overflow-hidden">
+                <div class="modal-header border-0 bg-primary text-white p-4">
+                    <div>
+                        <h4 class="fw-bold mb-1">Rate Delivery #{{ deliv.id }}</h4>
+                        <p class="small mb-0 opacity-75">Your feedback helps us improve our service!</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
                 <form action="{{ url_for('rate_delivery', delivery_id=deliv.id) }}" method="POST">
-                    <div class="modal-header border-0 pb-0">
-                        <h5 class="fw-bold">Rate Delivery #{{ deliv.id }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-4 text-center">
-                        <div class="mb-2">
-                            <label class="form-label fw-bold small text-uppercase">How was the experience?</label>
+                    <div class="modal-body p-4 p-md-5 text-center">
+                        <div class="mb-4">
+                            <h6 class="text-uppercase fw-bold text-muted small ls-1 mb-3">How was your driver?</h6>
+                            <div class="star-rating mb-3">
+                                <input type="radio" id="star5-{{ deliv.id }}" name="rating" value="5" class="rating-radio" data-text="Excellent! ⭐⭐⭐⭐⭐" required/><label for="star5-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                                <input type="radio" id="star4-{{ deliv.id }}" name="rating" value="4" class="rating-radio" data-text="Very Good! ⭐⭐⭐⭐"/><label for="star4-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                                <input type="radio" id="star3-{{ deliv.id }}" name="rating" value="3" class="rating-radio" data-text="Good! ⭐⭐⭐"/><label for="star3-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                                <input type="radio" id="star2-{{ deliv.id }}" name="rating" value="2" class="rating-radio" data-text="Fair! ⭐⭐"/><label for="star2-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                                <input type="radio" id="star1-{{ deliv.id }}" name="rating" value="1" class="rating-radio" data-text="Poor! ⭐"/><label for="star1-{{ deliv.id }}"><i class="fas fa-star"></i></label>
+                            </div>
+                            <div id="rating-text-{{ deliv.id }}" class="text-primary fw-bold mb-4" style="font-size: 1.1rem; min-height: 1.5rem;">Select Stars</div>
                         </div>
-                        <div class="star-rating mb-4">
-                            <input type="radio" id="star5-{{ deliv.id }}" name="rating" value="5" class="rating-radio" data-text="Excellent! ⭐⭐⭐⭐⭐" required/><label for="star5-{{ deliv.id }}"><i class="fas fa-star"></i></label>
-                            <input type="radio" id="star4-{{ deliv.id }}" name="rating" value="4" class="rating-radio" data-text="Very Good! ⭐⭐⭐⭐"/><label for="star4-{{ deliv.id }}"><i class="fas fa-star"></i></label>
-                            <input type="radio" id="star3-{{ deliv.id }}" name="rating" value="3" class="rating-radio" data-text="Good! ⭐⭐⭐"/><label for="star3-{{ deliv.id }}"><i class="fas fa-star"></i></label>
-                            <input type="radio" id="star2-{{ deliv.id }}" name="rating" value="2" class="rating-radio" data-text="Fair! ⭐⭐"/><label for="star2-{{ deliv.id }}"><i class="fas fa-star"></i></label>
-                            <input type="radio" id="star1-{{ deliv.id }}" name="rating" value="1" class="rating-radio" data-text="Poor! ⭐"/><label for="star1-{{ deliv.id }}"><i class="fas fa-star"></i></label>
-                        </div>
-                        <div id="rating-text-{{ deliv.id }}" class="text-primary fw-bold mb-4 small">Select a rating</div>
-                        <div class="mb-3 text-start">
-                            <label class="form-label fw-bold small text-uppercase">Additional Feedback</label>
-                            <textarea name="feedback" class="form-control floating-input" rows="3" placeholder="Tell us more..."></textarea>
+
+                        <div class="text-start">
+                            <label class="form-label fw-bold text-muted small text-uppercase ls-1">Share your experience (Optional)</label>
+                            <textarea name="feedback" class="form-control rounded-4 p-3 border-2" rows="3" placeholder="What did you like about the service?"></textarea>
                         </div>
                     </div>
-                    <div class="modal-footer border-0 pt-0">
-                        <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold">Submit Review</button>
+                    <div class="modal-footer border-0 p-4 pt-0">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill py-3 fw-bold shadow">Submit Review</button>
                     </div>
                 </form>
             </div>
@@ -201,13 +208,12 @@
     </div>
     {% endif %}
 {% endfor %}
-
 {% endblock %}
 
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Star rating interactivity
+        // Interactivity for stars
         const radios = document.querySelectorAll('.rating-radio');
         radios.forEach(radio => {
             radio.addEventListener('change', function() {
@@ -216,21 +222,37 @@
                 const labelElement = document.getElementById(`rating-text-${deliveryId}`);
                 if (labelElement) {
                     labelElement.innerText = feedbackText;
-                    labelElement.classList.add('animate-pulse');
-                    setTimeout(() => labelElement.classList.remove('animate-pulse'), 500);
+                    labelElement.classList.add('animate-up');
+                    setTimeout(() => labelElement.classList.remove('animate-up'), 500);
+                }
+            });
+
+            // Hover effect for labels
+            const label = document.querySelector(`label[for="${radio.id}"]`);
+            label.addEventListener('mouseenter', () => {
+                const deliveryId = radio.id.split('-')[1];
+                const tempText = radio.getAttribute('data-text');
+                const labelElement = document.getElementById(`rating-text-${deliveryId}`);
+                if (labelElement && !document.querySelector(`input[name="rating"]:checked`)) {
+                    labelElement.innerText = tempText;
+                    labelElement.classList.add('opacity-50');
+                }
+            });
+            
+            label.addEventListener('mouseleave', () => {
+                const deliveryId = radio.id.split('-')[1];
+                const labelElement = document.getElementById(`rating-text-${deliveryId}`);
+                const checked = document.querySelector(`input[name="rating"][id*="${deliveryId}"]:checked`);
+                if (labelElement) {
+                    labelElement.classList.remove('opacity-50');
+                    if (checked) {
+                        labelElement.innerText = checked.getAttribute('data-text');
+                    } else {
+                        labelElement.innerText = 'Select Stars';
+                    }
                 }
             });
         });
     });
 </script>
-<style>
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-    .animate-pulse {
-        animation: pulse 0.5s ease-in-out;
-    }
-</style>
 {% endblock %}

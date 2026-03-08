@@ -13,34 +13,6 @@
         /* Small overrides for base layout */
         .navbar-brand { font-weight: 700 !important; letter-spacing: -0.5px; }
         .nav-link { font-weight: 500; margin-left: 10px; }
-
-        /* Modern Star Rating */
-        .star-rating {
-            display: flex;
-            flex-direction: row-reverse;
-            justify-content: center;
-        }
-        .star-rating input {
-            position: absolute;
-            left: -9999px;
-        }
-        .star-rating label {
-            font-size: 2.5rem;
-            color: #ddd;
-            cursor: pointer;
-            transition: color 0.2s ease-in-out;
-            padding: 0 5px;
-            position: relative;
-            z-index: 1;
-        }
-        .star-rating input:checked ~ label,
-        .star-rating label:hover,
-        .star-rating label:hover ~ label {
-            color: #ffc107;
-        }
-        .star-rating label:active {
-            transform: scale(0.9);
-        }
     </style>
 </head>
 <body>
@@ -103,9 +75,11 @@
         {% endwith %}
     </div>
 
-    <div class="container mt-4 animate-up">
+    <div class="container mt-4">
         {% block content %}{% endblock %}
     </div>
+
+    {% block modals %}{% endblock %}
 
     <footer class="bg-dark text-white py-4 mt-5">
         <div class="container text-center">
