@@ -12,7 +12,7 @@
                 <p class="text-muted">Join the fastest logistics network in Cameroon</p>
             </div>
             
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <div class="row g-3 mb-4">
                     <div class="col-md-12">
                         <label class="form-label small text-uppercase fw-bold text-muted">Full Name</label>
@@ -72,9 +72,46 @@
                             <option value="truck">Truck (Over 1000kg)</option>
                         </select>
                     </div>
-                    <div class="mb-0">
+                    <div class="mb-3">
                         <label class="form-label small text-uppercase fw-bold text-muted">Vehicle ID / Plate Number</label>
                         <input type="text" name="vehicle_id" class="form-control floating-input" placeholder="e.g. NW 123 AA">
+                    </div>
+
+                    <h6 class="fw-bold mb-3 text-primary mt-4"><i class="fas fa-shield-alt me-2"></i>Security Verification</h6>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase fw-bold text-muted">National ID Card (Front)</label>
+                        <input type="file" name="id_card" id="id_card" class="form-control" accept="image/*">
+                        <small class="text-muted">Clear photo of your ID card</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase fw-bold text-muted">Driver's License</label>
+                        <input type="file" name="license" id="license" class="form-control" accept="image/*">
+                        <small class="text-muted">Valid license for your vehicle type</small>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label small text-uppercase fw-bold text-muted">Face Verification (Live Selfie)</label>
+                        <div id="camera-container" class="mb-3">
+                            <video id="video" width="100%" height="auto" class="rounded-3 shadow-sm" autoplay playsinline style="background: #000; display: none;"></video>
+                            <canvas id="canvas" style="display:none;"></canvas>
+                            <img id="photo-preview" class="img-fluid rounded-3 shadow-sm mb-2" style="display:none;">
+                            <input type="hidden" name="selfie_data" id="selfie_data">
+                            
+                            <div class="d-grid gap-2">
+                                <button type="button" id="start-camera" class="btn btn-outline-secondary btn-sm rounded-pill mt-2">
+                                    <i class="fas fa-camera me-1"></i> Enable Camera for Selfie
+                                </button>
+                                <button type="button" id="capture-photo" class="btn btn-primary btn-sm rounded-pill mt-2" style="display:none;">
+                                    <i class="fas fa-camera-retro me-1"></i> Capture Selfie
+                                </button>
+                                <button type="button" id="retake-photo" class="btn btn-outline-warning btn-sm rounded-pill mt-2" style="display:none;">
+                                    <i class="fas fa-redo me-1"></i> Retake
+                                </button>
+                            </div>
+                        </div>
+                        <small class="text-muted">Align your face in the center of the frame</small>
                     </div>
                 </div>
                 
@@ -95,6 +132,69 @@ function toggleDriverFields() {
     const isDriver = document.getElementById('role_driver').checked;
     const driverFields = document.getElementById('driverFields');
     driverFields.style.display = isDriver ? 'block' : 'none';
+    
+    const inputs = driverFields.querySelectorAll('input:not(#selfie_data), select');
+    inputs.forEach(input => {
+        if (isDriver) {
+            input.setAttribute('required', 'required');
+        } else {
+            input.removeAttribute('required');
+        }
+    });
+
+    if (isDriver) {
+        // Camera logic
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const startBtn = document.getElementById('start-camera');
+        const captureBtn = document.getElementById('capture-photo');
+        const retakeBtn = document.getElementById('retake-photo');
+        const preview = document.getElementById('photo-preview');
+        const selfieDataInput = document.getElementById('selfie_data');
+        let stream = null;
+
+        startBtn.onclick = async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = stream;
+                video.style.display = 'block';
+                startBtn.style.display = 'none';
+                captureBtn.style.display = 'block';
+            } catch (err) {
+                alert("Could not access camera: " + err);
+            }
+        };
+
+        captureBtn.onclick = () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const data = canvas.toDataURL('image/jpeg');
+            selfieDataInput.value = data;
+            preview.src = data;
+            preview.style.display = 'block';
+            video.style.display = 'none';
+            captureBtn.style.display = 'none';
+            retakeBtn.style.display = 'block';
+            
+            // Stop camera stream
+            stream.getTracks().forEach(track => track.stop());
+        };
+
+        retakeBtn.onclick = async () => {
+            preview.style.display = 'none';
+            selfieDataInput.value = '';
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = stream;
+                video.style.display = 'block';
+                captureBtn.style.display = 'block';
+                retakeBtn.style.display = 'none';
+            } catch (err) {
+                alert("Could not access camera: " + err);
+            }
+        };
+    }
 }
 </script>
 

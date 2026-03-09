@@ -6,3 +6,6 @@ Werkzeug
 gunicorn
 eventlet
 gevent-websocket
+face-recognition
+opencv-python-headless
+numpy

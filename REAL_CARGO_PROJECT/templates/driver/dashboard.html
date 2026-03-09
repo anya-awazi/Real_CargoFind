@@ -56,15 +56,21 @@
 
                 <div class="mb-4">
                     <h6>Update Status</h6>
-                    <form action="{{ url_for('update_status', delivery_id=active_job.id) }}" method="POST" class="d-flex gap-2">
-                        <select name="status" class="form-select rounded-pill">
-                            <option value="Accepted" {% if active_job.status == 'Accepted' %}selected{% endif %}>Accepted</option>
-                            <option value="Picked Up" {% if active_job.status == 'Picked Up' %}selected{% endif %}>Picked Up</option>
-                            <option value="In Transit" {% if active_job.status == 'In Transit' %}selected{% endif %}>In Transit</option>
-                            <option value="Traffic Delay" {% if active_job.status == 'Traffic Delay' %}selected{% endif %}>Traffic Delay</option>
-                            <option value="Delivered" {% if active_job.status == 'Delivered' %}selected{% endif %}>Delivered</option>
-                        </select>
-                        <button type="submit" class="btn btn-primary rounded-pill px-4">Update</button>
+                    <form action="{{ url_for('update_status', delivery_id=active_job.id) }}" method="POST" class="d-flex flex-column gap-2">
+                        <div class="d-flex gap-2">
+                            <select name="status" id="statusSelect" class="form-select rounded-pill">
+                                <option value="Accepted" {% if active_job.status == 'Accepted' %}selected{% endif %}>Accepted</option>
+                                <option value="Picked Up" {% if active_job.status == 'Picked Up' %}selected{% endif %}>Picked Up</option>
+                                <option value="In Transit" {% if active_job.status == 'In Transit' %}selected{% endif %}>In Transit</option>
+                                <option value="Traffic Delay" {% if active_job.status == 'Traffic Delay' %}selected{% endif %}>Traffic Delay</option>
+                                <option value="Delivered" {% if active_job.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">Update</button>
+                        </div>
+                        <div id="otpSection" style="display: none;">
+                            <input type="text" name="otp_code" class="form-control rounded-pill" placeholder="Enter 6-digit Security OTP from Customer" maxlength="6">
+                            <small class="text-muted ps-2">Ask customer for the verification code</small>
+                        </div>
                     </form>
                 </div>
 
@@ -240,6 +246,24 @@
     const socket = io();
     const deliveryId = {{ active_job.id }};
     const jobStatus = "{{ active_job.status }}";
+    
+    // OTP Logic Toggle
+    const statusSelect = document.getElementById('statusSelect');
+    const otpSection = document.getElementById('otpSection');
+    
+    function toggleOTP(status) {
+        if (status === 'Picked Up' || status === 'Delivered') {
+            otpSection.style.display = 'block';
+        } else {
+            otpSection.style.display = 'none';
+        }
+    }
+    
+    // Initial check
+    toggleOTP(statusSelect.value);
+    
+    // Change listener
+    statusSelect.addEventListener('change', (e) => toggleOTP(e.target.value));
     
     socket.on('connect', () => {
         console.log('Driver connected to Socket.io');

@@ -17,6 +17,13 @@ class User(UserMixin, db.Model):
     # Driver specific fields
     vehicle_type = db.Column(db.String(50)) # 'car', 'van', 'truck'
     vehicle_id = db.Column(db.String(50))
+    
+    # Verification documents
+    id_card_url = db.Column(db.String(255))
+    selfie_url = db.Column(db.String(255))
+    license_url = db.Column(db.String(255))
+    is_verified = db.Column(db.Boolean, default=False)
+    
     is_active = db.Column(db.Boolean, default=True)
     is_approved = db.Column(db.Boolean, default=False) # Admin approval
     
@@ -67,6 +74,10 @@ class Delivery(db.Model):
     # Payment fields
     payment_status = db.Column(db.String(20), default='Unpaid') # Unpaid, Paid
     payment_method = db.Column(db.String(50)) # MoMo, Orange, Cash
+    
+    # Secure Handover (OTP)
+    pickup_otp = db.Column(db.String(6))
+    delivery_otp = db.Column(db.String(6))
     
     # Review
     rating = db.Column(db.Integer)

@@ -19,6 +19,7 @@
                             <th>Phone</th>
                             <th>Vehicle Type</th>
                             <th>Vehicle ID</th>
+                            <th>Documents</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -30,6 +31,19 @@
                             <td>{{ driver.phone }}</td>
                             <td><span class="badge bg-info text-dark text-capitalize">{{ driver.vehicle_type }}</span></td>
                             <td>{{ driver.vehicle_id }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    {% if driver.id_card_url %}
+                                        <a href="{{ url_for('static', filename='uploads/' + driver.id_card_url) }}" target="_blank" class="btn btn-outline-primary" title="National ID">ID</a>
+                                    {% endif %}
+                                    {% if driver.license_url %}
+                                        <a href="{{ url_for('static', filename='uploads/' + driver.license_url) }}" target="_blank" class="btn btn-outline-primary" title="Driver's License">Lic</a>
+                                    {% endif %}
+                                    {% if driver.selfie_url %}
+                                        <a href="{{ url_for('static', filename='uploads/' + driver.selfie_url) }}" target="_blank" class="btn btn-outline-primary" title="Face Check">Face</a>
+                                    {% endif %}
+                                </div>
+                            </td>
                             <td>
                                 <a href="{{ url_for('approve_driver', user_id=driver.id) }}" class="btn btn-success btn-sm">Approve</a>
                             </td>

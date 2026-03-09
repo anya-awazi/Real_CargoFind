@@ -1,15 +1,72 @@
 import os
+import random
+import string
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Delivery, Notification, Wallet
 from werkzeug.security import generate_password_hash
+from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO, emit, join_room, leave_room
+import base64
+import numpy as np
+import cv2
+import mediapipe as mp
+
+mp_face_detection = mp.solutions.face_detection
+face_detection = mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.5)
+
+def compare_faces(path1, path2):
+    """Detect faces and compare them using ORB descriptors as a lightweight fallback."""
+    img1 = cv2.imread(path1)
+    img2 = cv2.imread(path2)
+    if img1 is None or img2 is None: return False
+
+    # Convert to RGB for MediaPipe
+    results1 = face_detection.process(cv2.cvtColor(img1, cv2.COLOR_BGR2RGB))
+    results2 = face_detection.process(cv2.cvtColor(img2, cv2.COLOR_BGR2RGB))
+
+    if not results1.detections or not results2.detections:
+        return False
+
+    # Extract first face from each image for comparison
+    def get_face_crop(img, detection):
+        bbox = detection.location_data.relative_bounding_box
+        ih, iw, _ = img.shape
+        x, y, w, h = int(bbox.xmin * iw), int(bbox.ymin * ih), int(bbox.width * iw), int(bbox.height * ih)
+        # Ensure coordinates are within bounds
+        x, y = max(0, x), max(0, y)
+        return img[y:y+h, x:x+w]
+
+    face1 = get_face_crop(img1, results1.detections[0])
+    face2 = get_face_crop(img2, results2.detections[0])
+
+    if face1.size == 0 or face2.size == 0: return False
+
+    # ORB Feature matching
+    orb = cv2.ORB_create()
+    kp1, des1 = orb.detectAndCompute(face1, None)
+    kp2, des2 = orb.detectAndCompute(face2, None)
+
+    if des1 is None or des2 is None: return False
+
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(des1, des2)
+    
+    # A simple score based on match count relative to total features
+    score = len(matches) / max(len(kp1), len(kp2))
+    return score > 0.15 # Adjusted threshold for "highly secured" but portable logic
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'cargofind.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = os.path.join(basedir, 'static', 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
+
+# Create upload folder if it doesn't exist
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
 
 db.init_app(app)
 login_manager = LoginManager()
@@ -22,6 +79,9 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode=None)
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+def generate_otp():
+    return ''.join(random.choices(string.digits, k=6))
 
 def save_notification(user_id, message, link=None):
     notif = Notification(user_id=user_id, message=message, link=link)
@@ -83,6 +143,63 @@ def register():
         if role == 'driver':
             new_user.vehicle_type = request.form.get('vehicle_type')
             new_user.vehicle_id = request.form.get('vehicle_id')
+            
+            # Handle document uploads
+            id_card_file = request.files.get('id_card')
+            license_file = request.files.get('license')
+            selfie_data = request.form.get('selfie_data')
+            
+            if not id_card_file or not license_file or not selfie_data:
+                flash('Please upload ID card, license, and take a live selfie.', 'danger')
+                return redirect(url_for('register'))
+            
+            # Save ID Card
+            id_ext = id_card_file.filename.split('.')[-1]
+            id_filename = secure_filename(f"driver_{email}_id.{id_ext}")
+            id_path = os.path.join(app.config['UPLOAD_FOLDER'], id_filename)
+            id_card_file.save(id_path)
+            new_user.id_card_url = id_filename
+
+            # Save License
+            lic_ext = license_file.filename.split('.')[-1]
+            lic_filename = secure_filename(f"driver_{email}_license.{lic_ext}")
+            lic_path = os.path.join(app.config['UPLOAD_FOLDER'], lic_filename)
+            license_file.save(lic_path)
+            new_user.license_url = lic_filename
+
+            # Process Selfie from Base64
+            try:
+                # Remove header from base64 string if present
+                if ';base64,' in selfie_data:
+                    format, imgstr = selfie_data.split(';base64,') 
+                else:
+                    imgstr = selfie_data
+                
+                selfie_filename = secure_filename(f"driver_{email}_selfie.jpg")
+                selfie_path = os.path.join(app.config['UPLOAD_FOLDER'], selfie_filename)
+                
+                with open(selfie_path, "wb") as f:
+                    f.write(base64.b64decode(imgstr))
+                new_user.selfie_url = selfie_filename
+
+                # FACE COMPARISON USING MEDIAPIPE + ORB
+                match_confirmed = compare_faces(id_path, selfie_path)
+                
+                if not match_confirmed:
+                    flash('Security alert: Your live selfie does not match your ID card photo.', 'danger')
+                    # Cleanup failed attempt files
+                    for p in [id_path, lic_path, selfie_path]:
+                        if os.path.exists(p): os.remove(p)
+                    return redirect(url_for('register'))
+                
+                new_user.is_verified = True
+                new_user.is_approved = False # Still needs admin approval
+                
+            except Exception as e:
+                print(f"Face Error: {e}")
+                flash('Security verification failed. Please ensure good lighting.')
+                return redirect(url_for('register'))
+            
             # Initialize wallet for driver
             wallet = Wallet(user=new_user)
             db.session.add(wallet)
@@ -297,6 +414,8 @@ def book_delivery():
             vehicle_type=vehicle_type,
             distance_km=distance,
             total_cost=total_cost,
+            pickup_otp=generate_otp(),
+            delivery_otp=generate_otp(),
             status='Pending'
         )
         
@@ -409,6 +528,16 @@ def update_status(delivery_id):
     delivery = Delivery.query.get_or_404(delivery_id)
     if delivery.driver_id == current_user.id:
         new_status = request.form.get('status')
+        otp_code = request.form.get('otp_code', '').strip()
+        
+        if new_status == 'Picked Up' and otp_code != delivery.pickup_otp:
+            flash('Invalid Pickup OTP. Please ask the customer for the correct code.', 'danger')
+            return redirect(url_for('driver_dashboard'))
+        
+        if new_status == 'Delivered' and otp_code != delivery.delivery_otp:
+            flash('Invalid Delivery OTP. Please ask the customer for the correct code.', 'danger')
+            return redirect(url_for('driver_dashboard'))
+            
         delivery.status = new_status
         db.session.commit()
         
