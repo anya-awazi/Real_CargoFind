@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import URLSafeTimedSerializer
 
 db = SQLAlchemy()
 
@@ -43,6 +44,28 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def get_reset_token(self, secret_key):
+        """Generate a time-limited password reset token"""
+        serializer = URLSafeTimedSerializer(secret_key)
+        return serializer.dumps({'user_id': self.id}, salt='password-reset-salt')
+
+    @staticmethod
+    def verify_reset_token(token, secret_key, max_age=1800):
+        """Verify a password reset token (valid for 30 minutes)"""
+        serializer = URLSafeTimedSerializer(secret_key)
+        try:
+            data = serializer.loads(token, salt='password-reset-salt', max_age=max_age)
+            return data['user_id']
+        except Exception:
+            return None
+
+    @property
+    def average_rating(self):
+        ratings = [d.rating for d in self.deliveries_as_driver if d.rating is not None]
+        if not ratings:
+            return 0.0
+        return round(sum(ratings) / len(ratings), 1)
+
 class Delivery(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -58,6 +81,7 @@ class Delivery(db.Model):
     
     goods_description = db.Column(db.Text, nullable=False)
     pickup_time = db.Column(db.DateTime, default=datetime.utcnow)
+    dropoff_time = db.Column(db.DateTime)
     special_instructions = db.Column(db.Text)
     weight = db.Column(db.Float)
     vehicle_type = db.Column(db.String(50)) # Type of vehicle required

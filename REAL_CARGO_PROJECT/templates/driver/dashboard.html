@@ -5,7 +5,7 @@
     <div class="col-md-4">
         <div class="card p-4 mb-4 stats-card bg-primary text-white border-0">
             <h6 class="opacity-75">Total Cash Collected</h6>
-            <h2 class="fw-bold mb-3">{{ earnings }} XAF</h2>
+            <h2 class="fw-bold mb-3">{{ earnings|int }} XAF</h2>
             <hr class="opacity-25">
             <a href="javascript:void(0)" onclick="toggleHistory()" class="text-white text-decoration-none d-flex justify-content-between align-items-center">
                 <span class="small">Jobs Completed:</span>
@@ -32,21 +32,28 @@
 
     <div class="col-md-8">
         <!-- 1. Active Jobs (Status not Delivered) -->
-        {% if active_job %}
+        {% if active_jobs %}
+            {% for active_job in active_jobs %}
             <div class="card p-4 border-primary shadow-sm mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h3 class="fw-bold text-primary">Active Delivery #{{ active_job.id }}</h3>
-                    <span class="badge bg-primary px-3 rounded-pill">{{ active_job.status }}</span>
+                    <span class="badge {% if active_job.status == 'Driver Accepted' %}bg-info{% else %}bg-primary{% endif %} px-3 rounded-pill">
+                        {% if active_job.status == 'Driver Accepted' %}Waiting for Customer Approval{% else %}{{ active_job.status }}{% endif %}
+                    </span>
                 </div>
                 
                 <div class="row mb-3">
                     <div class="col-4">
                         <h6><i class="fas fa-map-marker-alt text-success"></i> Pickup</h6>
-                        <p class="small">{{ active_job.pickup_location }}</p>
+                        <p class="small mb-1">{{ active_job.pickup_location }}</p>
+                        <p class="small text-muted"><i class="far fa-clock me-1"></i>{{ active_job.pickup_time.strftime('%d %b, %H:%M') }}</p>
                     </div>
                     <div class="col-4">
                         <h6><i class="fas fa-flag-checkered text-danger"></i> Drop-off</h6>
-                        <p class="small">{{ active_job.dropoff_location }}</p>
+                        <p class="small mb-1">{{ active_job.dropoff_location }}</p>
+                        {% if active_job.dropoff_time %}
+                            <p class="small text-muted"><i class="fas fa-history me-1"></i>Est: {{ active_job.dropoff_time.strftime('%H:%M') }}</p>
+                        {% endif %}
                     </div>
                     <div class="col-4">
                         <h6><i class="fas fa-phone text-primary"></i> Customer</h6>
@@ -56,26 +63,37 @@
 
                 <div class="mb-4">
                     <h6>Update Status</h6>
-                    <form action="{{ url_for('update_status', delivery_id=active_job.id) }}" method="POST" class="d-flex flex-column gap-2">
-                        <div class="d-flex gap-2">
-                            <select name="status" id="statusSelect" class="form-select rounded-pill">
-                                <option value="Accepted" {% if active_job.status == 'Accepted' %}selected{% endif %}>Accepted</option>
-                                <option value="Picked Up" {% if active_job.status == 'Picked Up' %}selected{% endif %}>Picked Up</option>
-                                <option value="In Transit" {% if active_job.status == 'In Transit' %}selected{% endif %}>In Transit</option>
-                                <option value="Traffic Delay" {% if active_job.status == 'Traffic Delay' %}selected{% endif %}>Traffic Delay</option>
-                                <option value="Delivered" {% if active_job.status == 'Delivered' %}selected{% endif %}>Delivered</option>
-                            </select>
-                            <button type="submit" class="btn btn-primary rounded-pill px-4">Update</button>
+                    {% if active_job.status == 'Driver Accepted' %}
+                        <div class="alert alert-info rounded-4 border-0 shadow-sm d-flex align-items-center">
+                            <i class="fas fa-hourglass-half me-3 fa-lg text-info"></i>
+                            <div>
+                                <p class="mb-0 fw-bold">Pending Customer Approval</p>
+                                <p class="mb-0 small">The customer is currently reviewing your profile and rating. You will be notified once they accept your interest.</p>
+                            </div>
                         </div>
-                        <div id="otpSection" style="display: none;">
-                            <input type="text" name="otp_code" class="form-control rounded-pill" placeholder="Enter 6-digit Security OTP from Customer" maxlength="6">
-                            <small class="text-muted ps-2">Ask customer for the verification code</small>
-                        </div>
-                    </form>
+                    {% else %}
+                        <form action="{{ url_for('update_status', delivery_id=active_job.id) }}" method="POST" class="d-flex flex-column gap-2">
+                            <div class="d-flex gap-2">
+                                <select name="status" id="statusSelect{{ active_job.id }}" onchange="toggleOTP(this.value, {{ active_job.id }})" class="form-select rounded-pill">
+                                    <option value="Accepted" {% if active_job.status == 'Accepted' %}selected{% endif %}>Accepted</option>
+                                    <option value="Picked Up" {% if active_job.status == 'Picked Up' %}selected{% endif %}>Picked Up</option>
+                                    <option value="In Transit" {% if active_job.status == 'In Transit' %}selected{% endif %}>In Transit</option>
+                                    <option value="Traffic Delay" {% if active_job.status == 'Traffic Delay' %}selected{% endif %}>Traffic Delay</option>
+                                    <option value="Delivered" {% if active_job.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary rounded-pill px-4">Update</button>
+                            </div>
+                            <div id="otpSection{{ active_job.id }}" style="display: none;">
+                                <input type="text" name="otp_code" class="form-control rounded-pill" placeholder="Enter 6-digit Security OTP from Customer" maxlength="6">
+                                <small class="text-muted ps-2">Ask customer for the verification code</small>
+                            </div>
+                        </form>
+                    {% endif %}
                 </div>
 
-                <div id="driverMap" style="height: 250px; border-radius: 15px;" class="shadow-sm"></div>
+                <div id="driverMap{{ active_job.id }}" style="height: 250px; border-radius: 15px;" class="shadow-sm"></div>
             </div>
+            {% endfor %}
         {% endif %}
 
         <!-- 2. Unpaid Deliveries (Delivered but Pending Cash) -->
@@ -89,7 +107,7 @@
                             <span class="text-muted small">To: {{ job.dropoff_location[:50] }}...</span>
                         </div>
                         <div class="text-end">
-                            <span class="h5 fw-bold text-dark d-block mb-2">{{ job.total_cost }} XAF</span>
+                            <span class="h5 fw-bold text-dark d-block mb-2">{{ job.total_cost|int }} XAF</span>
                             <form action="{{ url_for('mark_paid', delivery_id=job.id) }}" method="POST">
                                 <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Confirm Cash Received</button>
                             </form>
@@ -100,7 +118,7 @@
         {% endif %}
 
         <!-- Placeholder if nothing pending -->
-        {% if not active_job and not unpaid_jobs %}
+        {% if not active_jobs and not unpaid_jobs %}
             <div class="card p-5 text-center border-0 shadow-sm bg-white mb-4">
                 <i class="fas fa-search-location fa-4x text-muted mb-3 opacity-25"></i>
                 <h4 class="fw-bold text-muted">All caught up!</h4>
@@ -134,7 +152,7 @@
                                     <td class="text-truncate" style="max-width: 200px;">{{ job.dropoff_location }}</td>
                                     <td class="text-end pe-4">
                                         <div class="d-flex flex-column align-items-end">
-                                            <span class="fw-bold text-success">{{ job.total_cost }} XAF</span>
+                                            <span class="fw-bold text-success">{{ job.total_cost|int }} XAF</span>
                                             <button class="btn btn-link btn-sm text-primary p-0 text-decoration-none" data-bs-toggle="modal" data-bs-target="#jobModal{{ job.id }}">View Details</button>
                                         </div>
                                     </td>
@@ -163,7 +181,7 @@
             <div class="modal-body p-4">
                 <div class="mb-4">
                     <span class="badge bg-success-subtle text-success border border-success px-3 rounded-pill mb-2">Paid & Delivered</span>
-                    <h2 class="fw-bold text-dark">{{ job.total_cost }} XAF</h2>
+                    <h2 class="fw-bold text-dark">{{ job.total_cost|int }} XAF</h2>
                     <small class="text-muted">Collected on {{ job.created_at.strftime('%d %b %Y, %H:%M') }}</small>
                 </div>
 
@@ -241,40 +259,37 @@
     }
 </script>
 
-{% if active_job %}
+{% if active_jobs %}
 <script>
     const socket = io();
-    const deliveryId = {{ active_job.id }};
-    const jobStatus = "{{ active_job.status }}";
     
-    // OTP Logic Toggle
-    const statusSelect = document.getElementById('statusSelect');
-    const otpSection = document.getElementById('otpSection');
-    
-    function toggleOTP(status) {
+    function toggleOTP(status, deliveryId) {
+        const otpSection = document.getElementById('otpSection' + deliveryId);
         if (status === 'Picked Up' || status === 'Delivered') {
             otpSection.style.display = 'block';
         } else {
             otpSection.style.display = 'none';
         }
     }
-    
-    // Initial check
-    toggleOTP(statusSelect.value);
-    
-    // Change listener
-    statusSelect.addEventListener('change', (e) => toggleOTP(e.target.value));
-    
-    socket.on('connect', () => {
-        console.log('Driver connected to Socket.io');
-        // Join room for delivery updates (re-join if reconnected)
-        socket.emit('join_delivery', { delivery_id: deliveryId });
-    });
-    
-    // Target location depends on status
-    const targetLat = (jobStatus === 'Accepted') ? {{ active_job.pickup_lat }} : {{ active_job.dropoff_lat }};
-    const targetLng = (jobStatus === 'Accepted') ? {{ active_job.pickup_lng }} : {{ active_job.dropoff_lng }};
-    const targetLabel = (jobStatus === 'Accepted') ? 'Pickup' : 'Drop-off';
+
+    const activeJobsData = [
+        {% for job in active_jobs %}
+        {
+            id: {{ job.id }},
+            status: "{{ job.status }}",
+            pickup_lat: {{ job.pickup_lat }},
+            pickup_lng: {{ job.pickup_lng }},
+            dropoff_lat: {{ job.dropoff_lat }},
+            dropoff_lng: {{ job.dropoff_lng }},
+            targetLat: "{{ job.status }}" === 'Accepted' ? {{ job.pickup_lat }} : {{ job.dropoff_lat }},
+            targetLng: "{{ job.status }}" === 'Accepted' ? {{ job.pickup_lng }} : {{ job.dropoff_lng }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    const maps = {};
+    const routingControls = {};
+    const driverMarkers = {};
 
     const greenIcon = new L.Icon({
         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
@@ -288,46 +303,67 @@
         iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
     });
 
-    let map = L.map('driverMap').setView([{{ active_job.pickup_lat }}, {{ active_job.pickup_lng }}], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    const driverIcon = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/2555/2555013.png',
+        iconSize: [32, 32]
+    });
 
-    let pickup = L.marker([{{ active_job.pickup_lat }}, {{ active_job.pickup_lng }}], {icon: greenIcon}).addTo(map).bindPopup('Pickup');
-    let dropoff = L.marker([{{ active_job.dropoff_lat }}, {{ active_job.dropoff_lng }}], {icon: redIcon}).addTo(map).bindPopup('Drop-off');
-    
-    let routingControl;
-    let driverMarker;
+    socket.on('connect', () => {
+        console.log('Driver connected to Socket.io');
+        activeJobsData.forEach(job => {
+            socket.emit('join_delivery', { delivery_id: job.id });
+        });
+    });
 
-    function updateNavigation(lat, lng) {
-        if (routingControl) map.removeControl(routingControl);
+    activeJobsData.forEach(job => {
+        if (job.status === 'Driver Accepted') return; // Don't show map if waiting for approval
 
-        routingControl = L.Routing.control({
+        const mapId = 'driverMap' + job.id;
+        const mapElement = document.getElementById(mapId);
+        if (!mapElement) return;
+
+        const map = L.map(mapId).setView([job.pickup_lat, job.pickup_lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        
+        L.marker([job.pickup_lat, job.pickup_lng], {icon: greenIcon}).addTo(map).bindPopup('Pickup');
+        L.marker([job.dropoff_lat, job.dropoff_lng], {icon: redIcon}).addTo(map).bindPopup('Drop-off');
+        
+        maps[job.id] = map;
+    });
+
+    function updateNavigation(jobId, lat, lng) {
+        const job = activeJobsData.find(j => j.id === jobId);
+        if (!job || job.status === 'Driver Accepted' || !maps[jobId]) return;
+
+        if (routingControls[jobId]) maps[jobId].removeControl(routingControls[jobId]);
+
+        routingControls[jobId] = L.Routing.control({
             waypoints: [
                 L.latLng(lat, lng),
-                L.latLng(targetLat, targetLng)
+                L.latLng(job.targetLat, job.targetLng)
             ],
             lineOptions: {
-                styles: [{ color: '#0d6efd', weight: 6, opacity: 0.8 }] // Highlighted blue route
+                styles: [{ color: '#0d6efd', weight: 6, opacity: 0.8 }]
             },
-            createMarker: function() { return null; }, // We handle markers manually
+            createMarker: function() { return null; },
             show: false,
             addWaypoints: false
-        }).addTo(map);
+        }).addTo(maps[jobId]);
 
-        routingControl.on('routesfound', function(e) {
+        routingControls[jobId].on('routesfound', function(e) {
             const routes = e.routes;
             const summary = routes[0].summary;
             const distance = (summary.totalDistance / 1000).toFixed(1) + ' km';
             const eta = Math.round(summary.totalTime / 60) + ' mins';
 
-            // Send full navigation update to server
             socket.emit('update_location', {
-                delivery_id: deliveryId,
+                delivery_id: jobId,
                 lat: lat,
                 lng: lng,
                 status: 'moving',
                 distance: distance,
                 eta: eta,
-                route: routes[0].coordinates // Send coordinates for live path drawing
+                route: routes[0].coordinates
             });
         });
     }
@@ -337,29 +373,28 @@
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             
-            if (driverMarker) {
-                driverMarker.setLatLng([lat, lng]);
-            } else {
-                const driverIcon = L.icon({
-                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/2555/2555013.png',
-                    iconSize: [32, 32]
-                });
-                driverMarker = L.marker([lat, lng], {icon: driverIcon}).addTo(map).bindPopup('You are here');
-            }
+            activeJobsData.forEach(job => {
+                if (job.status === 'Driver Accepted') return;
+                
+                if (maps[job.id]) {
+                    if (driverMarkers[job.id]) {
+                        driverMarkers[job.id].setLatLng([lat, lng]);
+                    } else {
+                        driverMarkers[job.id] = L.marker([lat, lng], {icon: driverIcon}).addTo(maps[job.id]).bindPopup('You are here');
+                    }
 
-            // Emit location update immediately
-            socket.emit('update_location', {
-                delivery_id: deliveryId,
-                lat: lat,
-                lng: lng,
-                status: 'moving'
+                    socket.emit('update_location', {
+                        delivery_id: job.id,
+                        lat: lat,
+                        lng: lng,
+                        status: 'moving'
+                    });
+
+                    updateNavigation(job.id, lat, lng);
+                }
             });
-
-            updateNavigation(lat, lng);
         }, (error) => {
             console.error("Error getting location", error);
-            const msg = error.code === 1 ? "Permission denied. Please allow location access to share your progress with the customer." : "Error getting location. Please check your GPS settings.";
-            alert(msg);
         }, {
             enableHighAccuracy: true,
             maximumAge: 10000

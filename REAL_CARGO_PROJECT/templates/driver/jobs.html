@@ -16,12 +16,13 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <h5 class="card-title text-primary">Job #{{ job.id }}</h5>
-                        <span class="badge bg-success h5">{{ job.total_cost }} XAF</span>
+                        <span class="badge bg-success h5">{{ job.total_cost|int }} XAF</span>
                     </div>
                     <hr class="my-2">
                     <div class="mb-2 small">
                         <p class="mb-1"><strong><i class="fas fa-map-marker-alt text-success"></i> Pickup:</strong> {{ job.pickup_location }}</p>
                         <p class="mb-1"><strong><i class="fas fa-flag-checkered text-danger"></i> Drop-off:</strong> {{ job.dropoff_location }}</p>
+                        <p class="mb-1 text-primary"><strong><i class="far fa-clock"></i> Pickup At:</strong> {{ job.pickup_time.strftime('%d %b, %H:%M') }}</p>
                     </div>
                     <div class="row small text-muted mb-2">
                         <div class="col-6"><i class="fas fa-route"></i> {{ job.distance_km }} km</div>
@@ -32,11 +33,7 @@
                     
                     <div class="d-flex gap-2">
                         <button onclick="previewJob({{ job.id }})" class="btn btn-sm btn-outline-primary flex-grow-1">Preview Route</button>
-                        {% if is_busy %}
-                            <button class="btn btn-sm btn-secondary flex-grow-1" disabled title="Complete your current job first">Accept Job</button>
-                        {% else %}
-                            <a href="{{ url_for('accept_job', delivery_id=job.id) }}" class="btn btn-sm btn-primary flex-grow-1">Accept Job</a>
-                        {% endif %}
+                        <a href="{{ url_for('accept_job', delivery_id=job.id) }}" class="btn btn-sm btn-primary flex-grow-1">Accept Job</a>
                     </div>
                     
                     <div id="details-{{ job.id }}" class="mt-3 bg-light p-2 rounded small d-none">

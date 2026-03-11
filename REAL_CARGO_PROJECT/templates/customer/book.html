@@ -28,6 +28,21 @@
                     <input type="hidden" id="dropoff_lng" name="dropoff_lng">
                 </div>
 
+                <div class="row g-3 mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label small text-uppercase fw-bold text-muted">Pickup Date</label>
+                        <input type="date" name="pickup_date" class="form-control floating-input" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-uppercase fw-bold text-muted">Pickup Time</label>
+                        <input type="time" name="pickup_time" class="form-control floating-input" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-uppercase fw-bold text-muted">Expected Drop-off Time</label>
+                        <input type="time" name="dropoff_time" class="form-control floating-input">
+                    </div>
+                </div>
+
                 <div class="mb-3">
                     <label class="form-label small text-uppercase fw-bold text-muted">Goods Description</label>
                     <textarea name="goods_description" class="form-control floating-input" rows="2" placeholder="What are you sending?" required></textarea>

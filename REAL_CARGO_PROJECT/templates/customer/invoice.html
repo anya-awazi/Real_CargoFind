@@ -61,13 +61,13 @@
                         <small class="text-muted">To: {{ delivery.dropoff_location }}</small>
                     </td>
                     <td class="text-center">{{ delivery.distance_km }} km</td>
-                    <td class="text-end">{{ delivery.total_cost }} XAF</td>
+                    <td class="text-end">{{ delivery.total_cost|int }} XAF</td>
                 </tr>
             </tbody>
             <tfoot>
                 <tr>
                     <th colspan="2" class="text-end">Total Amount</th>
-                    <th class="text-end text-primary h4">{{ delivery.total_cost }} XAF</th>
+                    <th class="text-end text-primary h4">{{ delivery.total_cost|int }} XAF</th>
                 </tr>
             </tfoot>
         </table>

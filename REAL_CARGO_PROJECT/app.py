@@ -1,6 +1,7 @@
 import os
 import random
 import string
+from datetime import datetime
 from dotenv import load_dotenv
 # Explicitly load .env from current directory
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -72,6 +73,30 @@ def compare_faces(path1, path2):
     # Threshold for matching faces (Adjusted to 42%)
     return final_score > 0.42 
 
+def send_email(sender, receiver, subject, body):
+    """
+    Utility function to send emails using SMTP.
+    Configure EMAIL_USER and EMAIL_PASSWORD in .env for this to work.
+    """
+    msg = MIMEMultipart()
+    msg['From'] = sender
+    msg['To'] = receiver
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    smtp_host = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+    smtp_port = int(os.getenv('EMAIL_PORT', 587))
+    smtp_user = os.getenv('EMAIL_USER')
+    smtp_pass = os.getenv('EMAIL_PASSWORD')
+
+    if not smtp_user or not smtp_pass:
+        raise Exception("Email credentials not configured in .env")
+
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        server.starttls()
+        server.login(smtp_user, smtp_pass)
+        server.send_message(msg)
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -139,10 +164,12 @@ def contact():
         message_body = request.form.get('message')
         
         # Email configuration
-        sender_email = "anyanicklaus@gmail.com"
-        receiver_email = "anyanicklaus@gmail.com"
+        sender_email = "anya.awaziakuru@ictuniversity.edu.cm"
+        receiver_email = "anya.awaziakuru@ictuniversity.edu.cm"
         # Try both os.environ and explicit load_dotenv check
         password = os.getenv('EMAIL_PASSWORD')
+        print(f"DEBUG: EMAIL_PASSWORD loaded: {'Yes' if password else 'No'}")
+        print(f"DEBUG: EMAIL_PASSWORD length: {len(password) if password else 0}")
         
         # Create message
         msg = MIMEMultipart()
@@ -154,9 +181,9 @@ def contact():
         msg.attach(MIMEText(body, 'plain'))
         
         try:
-            if not password:
-                print("DEBUG: EMAIL_PASSWORD not found in environment variables.")
-                flash('Email configuration missing.', 'danger')
+            if not password or password == 'YOUR_APP_PASSWORD_HERE':
+                print("DEBUG: EMAIL_PASSWORD not set or using placeholder. Please generate a Gmail App Password.")
+                flash('Email configuration error. Please contact the administrator.', 'danger')
                 return redirect(url_for('contact'))
 
             # Use SSL for better reliability with Gmail
@@ -164,8 +191,11 @@ def contact():
             server.login(sender_email, password)
             server.send_message(msg)
             server.quit()
-            flash('Thank you for your message! Our support team will receive it shortly.', 'success')
+            flash('Thank you! Your message has been sent successfully.', 'success')
                 
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"Authentication error: {e}")
+            flash('Email authentication failed. Please check the email configuration.', 'danger')
         except Exception as e:
             print(f"Error sending email: {e}")
             flash(f'Error sending email: {str(e)}', 'danger')
@@ -290,6 +320,85 @@ def login():
         flash('Invalid email or password')
     return render_template('login.html')
 
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        user = User.query.filter_by(email=email).first()
+        
+        if user:
+            # Generate reset token
+            token = user.get_reset_token(app.config['SECRET_KEY'])
+            reset_url = url_for('reset_password', token=token, _external=True)
+            
+            # Send reset email
+            sender_email = os.getenv('EMAIL_USER')
+            subject = 'CargoFind - Password Reset Request'
+            body = f"""
+            Hello {user.full_name},
+            
+            We received a request to reset your CargoFind password.
+            
+            Click the link below to reset your password:
+            {reset_url}
+            
+            This link will expire in 30 minutes.
+            
+            If you didn't request this, please ignore this email.
+            
+            Best regards,
+            CargoFind Team
+            """
+            
+            try:
+                send_email(sender_email, user.email, subject, body)
+                flash('Password reset link has been sent to your email.', 'success')
+            except Exception as e:
+                flash(f'Failed to send reset email: {str(e)}. Please contact support.', 'danger')
+        else:
+            # Don't reveal if email exists or not for security
+            flash('If an account exists with this email, a reset link has been sent.', 'info')
+        
+        return redirect(url_for('login'))
+    
+    return render_template('forgot_password.html')
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    user_id = User.verify_reset_token(token, app.config['SECRET_KEY'])
+    
+    if user_id is None:
+        flash('Invalid or expired reset token. Please request a new password reset.', 'danger')
+        return redirect(url_for('forgot_password'))
+    
+    user = User.query.get(user_id)
+    
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if password != confirm_password:
+            flash('Passwords do not match.', 'danger')
+            return render_template('reset_password.html', token=token)
+        
+        if len(password) < 6:
+            flash('Password must be at least 6 characters.', 'danger')
+            return render_template('reset_password.html', token=token)
+        
+        user.set_password(password)
+        db.session.commit()
+        
+        flash('Your password has been reset successfully. Please login with your new password.', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('reset_password.html', token=token)
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -385,6 +494,44 @@ def cancel_delivery(delivery_id):
     flash('Delivery request cancelled successfully.', 'success')
     return redirect(url_for('customer_dashboard'))
 
+@app.route('/customer/accept_driver/<int:delivery_id>')
+@login_required
+def accept_driver(delivery_id):
+    delivery = Delivery.query.get_or_404(delivery_id)
+    if delivery.customer_id != current_user.id:
+        flash('Unauthorized action.', 'danger')
+        return redirect(url_for('customer_dashboard'))
+    
+    if delivery.status == 'Driver Accepted':
+        delivery.status = 'Accepted'
+        db.session.commit()
+        
+        # Notify driver
+        save_notification(delivery.driver_id, f'Customer {current_user.full_name} accepted you for the job! You can now start the delivery.')
+        flash('Driver confirmed! They have been notified.', 'success')
+        
+    return redirect(url_for('customer_dashboard'))
+
+@app.route('/customer/reject_driver/<int:delivery_id>')
+@login_required
+def customer_reject_driver(delivery_id):
+    delivery = Delivery.query.get_or_404(delivery_id)
+    if delivery.customer_id != current_user.id:
+        flash('Unauthorized action.', 'danger')
+        return redirect(url_for('customer_dashboard'))
+    
+    if delivery.status == 'Driver Accepted':
+        old_driver_id = delivery.driver_id
+        delivery.driver_id = None
+        delivery.status = 'Pending'
+        db.session.commit()
+        
+        # Notify driver
+        save_notification(old_driver_id, f'Customer {current_user.full_name} chose another driver for delivery #{delivery.id}.')
+        flash('Driver rejected. Your job is back on the market.', 'info')
+        
+    return redirect(url_for('customer_dashboard'))
+
 @app.route('/customer/rate/<int:delivery_id>', methods=['POST'])
 @login_required
 def rate_delivery(delivery_id):
@@ -445,12 +592,34 @@ def book_delivery():
         # Calculate cost
         base_fare = 500
         rates = {'car': 250, 'van': 350, 'truck': 500}
-        total_cost = base_fare + (rates.get(vehicle_type, 250) * effective_distance)
+        total_cost = int(base_fare + (rates.get(vehicle_type, 250) * effective_distance))
         
         if request.form.get('heavy_goods'): total_cost += 1000
         if request.form.get('fragile_goods'): total_cost += 500
         if request.form.get('urgent_delivery'): total_cost += 1000
         
+        # Parse pickup date and time
+        pickup_date_str = request.form.get('pickup_date')
+        pickup_time_str = request.form.get('pickup_time')
+        dropoff_time_str = request.form.get('dropoff_time')
+        
+        pickup_dt = None
+        if pickup_date_str and pickup_time_str:
+            try:
+                pickup_dt = datetime.strptime(f"{pickup_date_str} {pickup_time_str}", "%Y-%m-%d %H:%M")
+            except ValueError:
+                pickup_dt = datetime.utcnow()
+        else:
+            pickup_dt = datetime.utcnow()
+            
+        dropoff_dt = None
+        if pickup_date_str and dropoff_time_str:
+            try:
+                # Assuming dropoff is on the same day for simplicity, or we could add dropoff_date
+                dropoff_dt = datetime.strptime(f"{pickup_date_str} {dropoff_time_str}", "%Y-%m-%d %H:%M")
+            except ValueError:
+                pass
+
         new_delivery = Delivery(
             customer_id=current_user.id,
             pickup_location=pickup_loc,
@@ -464,6 +633,8 @@ def book_delivery():
             vehicle_type=vehicle_type,
             distance_km=distance,
             total_cost=total_cost,
+            pickup_time=pickup_dt,
+            dropoff_time=dropoff_dt,
             pickup_otp=generate_otp(),
             delivery_otp=generate_otp(),
             status='Pending'
@@ -493,7 +664,7 @@ def calculate_price():
     
     base_fare = 500
     rates = {'car': 250, 'van': 350, 'truck': 500}
-    total_cost = base_fare + (rates.get(vehicle_type, 250) * effective_distance)
+    total_cost = int(base_fare + (rates.get(vehicle_type, 250) * effective_distance))
     
     if data.get('heavy'): total_cost += 1000
     if data.get('fragile'): total_cost += 500
@@ -508,16 +679,16 @@ def driver_dashboard():
     if current_user.role != 'driver':
         return redirect(url_for('index'))
     
-    active_job = Delivery.query.filter_by(driver_id=current_user.id).filter(Delivery.status != 'Delivered').first()
+    active_jobs = Delivery.query.filter_by(driver_id=current_user.id).filter(Delivery.status != 'Delivered').all()
     
     # Separation: Delivered but not paid, vs Delivered and fully Paid (History)
     unpaid_jobs = Delivery.query.filter_by(driver_id=current_user.id, status='Delivered').filter(Delivery.payment_status != 'Paid').all()
     history_jobs = Delivery.query.filter_by(driver_id=current_user.id, status='Delivered').filter(Delivery.payment_status == 'Paid').all()
     
-    total_earnings = sum(job.total_cost for job in history_jobs)
+    total_earnings = int(sum(job.total_cost for job in history_jobs))
     
     return render_template('driver/dashboard.html', 
-                           active_job=active_job, 
+                           active_jobs=active_jobs, 
                            unpaid_jobs=unpaid_jobs,
                            history_jobs=history_jobs,
                            completed_count=len(history_jobs), 
@@ -533,15 +704,12 @@ def available_jobs():
         flash('You must be approved by an administrator before you can accept jobs.')
         return redirect(url_for('driver_dashboard'))
     
-    # Check if driver is already on a job
-    active_job = Delivery.query.filter_by(driver_id=current_user.id).filter(Delivery.status.in_(['Accepted', 'Picked Up', 'In Transit', 'Traffic Delay'])).first()
-    
     # Filter jobs by driver's vehicle type to ensure relevance
     jobs = Delivery.query.filter_by(status='Pending', vehicle_type=current_user.vehicle_type).all()
     general_jobs = Delivery.query.filter_by(status='Pending', vehicle_type=None).all()
     
     all_jobs = jobs + general_jobs
-    return render_template('driver/jobs.html', jobs=all_jobs, is_busy=active_job is not None)
+    return render_template('driver/jobs.html', jobs=all_jobs)
 
 @app.route('/driver/accept/<int:delivery_id>')
 @login_required
@@ -549,21 +717,17 @@ def accept_job(delivery_id):
     if current_user.role != 'driver':
         return redirect(url_for('index'))
     
-    # Check if driver already has an active job
-    active_job = Delivery.query.filter_by(driver_id=current_user.id).filter(Delivery.status.in_(['Accepted', 'Picked Up', 'In Transit', 'Traffic Delay'])).first()
-    if active_job:
-        flash('You cannot accept a new job while you have an active delivery.')
-        return redirect(url_for('driver_dashboard'))
-    
     delivery = Delivery.query.get_or_404(delivery_id)
     if delivery.status == 'Pending':
         delivery.driver_id = current_user.id
-        delivery.status = 'Accepted'
+        delivery.status = 'Driver Accepted'
         db.session.commit()
-        flash('Job accepted!')
+        flash('Interest expressed! Waiting for customer to confirm.')
         
-        # Notify customer (simple notification for now)
-        notif = Notification(user_id=delivery.customer_id, message=f'Driver {current_user.full_name} accepted your delivery!')
+        # Notify customer
+        notif = Notification(user_id=delivery.customer_id, 
+                             message=f'Driver {current_user.full_name} (Rating: {current_user.average_rating}) wants to take your job. Please confirm.',
+                             link=url_for('customer_dashboard'))
         db.session.add(notif)
         db.session.commit()
         
@@ -613,7 +777,7 @@ def admin_dashboard():
     active_deliveries = Delivery.query.filter(Delivery.status != 'Delivered').all()
     completed_deliveries = Delivery.query.filter_by(status='Delivered').all()
     
-    total_revenue = sum(d.total_cost for d in completed_deliveries if d.payment_status == 'Paid')
+    total_revenue = int(sum(d.total_cost for d in completed_deliveries if d.payment_status == 'Paid'))
     
     return render_template('admin/dashboard.html', 
                            total_users=total_users, 
@@ -753,6 +917,23 @@ def edit_delivery(delivery_id):
         delivery.distance_km = float(request.form.get('distance_km', 0))
         effective_distance = max(delivery.distance_km, 1.0)
         
+        # Parse times
+        pickup_date_str = request.form.get('pickup_date')
+        pickup_time_str = request.form.get('pickup_time')
+        dropoff_time_str = request.form.get('dropoff_time')
+        
+        if pickup_date_str and pickup_time_str:
+            try:
+                delivery.pickup_time = datetime.strptime(f"{pickup_date_str} {pickup_time_str}", "%Y-%m-%d %H:%M")
+            except ValueError:
+                pass
+                
+        if pickup_date_str and dropoff_time_str:
+            try:
+                delivery.dropoff_time = datetime.strptime(f"{pickup_date_str} {dropoff_time_str}", "%Y-%m-%d %H:%M")
+            except ValueError:
+                pass
+
         # Recalculate cost
         base_fare = 500
         rates = {'car': 250, 'van': 350, 'truck': 500}

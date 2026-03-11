@@ -16,7 +16,7 @@
                     <h5 class="fw-bold mb-4">Order Summary</h5>
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Delivery #{{ delivery.id }}</span>
-                        <span class="fw-bold text-primary">XAF {{ delivery.total_cost }}</span>
+                        <span class="fw-bold text-primary">XAF {{ delivery.total_cost|int }}</span>
                     </div>
                     <hr class="my-4 opacity-50">
                     <div class="mb-3">
@@ -37,7 +37,7 @@
                     <div class="bg-light rounded-3 p-3 mt-4">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="fw-bold">Total Amount</span>
-                            <h3 class="fw-bold text-primary mb-0">XAF {{ delivery.total_cost }}</h3>
+                            <h3 class="fw-bold text-primary mb-0">XAF {{ delivery.total_cost|int }}</h3>
                         </div>
                     </div>
                 </div>
