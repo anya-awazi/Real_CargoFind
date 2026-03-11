@@ -1,6 +1,10 @@
 import os
 import random
 import string
+from dotenv import load_dotenv
+# Explicitly load .env from current directory
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env'))
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Delivery, Notification, Wallet
@@ -10,51 +14,63 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 import base64
 import numpy as np
 import cv2
-import mediapipe as mp
-
-mp_face_detection = mp.solutions.face_detection
-face_detection = mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.5)
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 def compare_faces(path1, path2):
-    """Detect faces and compare them using ORB descriptors as a lightweight fallback."""
+    """
+    Perform a robust face comparison using OpenCV-only methods.
+    Detects faces using Haar Cascades and compares them using Histogram similarity.
+    This is highly portable and doesn't require complex ML libraries.
+    """
+    # Load images
     img1 = cv2.imread(path1)
     img2 = cv2.imread(path2)
     if img1 is None or img2 is None: return False
 
-    # Convert to RGB for MediaPipe
-    results1 = face_detection.process(cv2.cvtColor(img1, cv2.COLOR_BGR2RGB))
-    results2 = face_detection.process(cv2.cvtColor(img2, cv2.COLOR_BGR2RGB))
+    # Convert to grayscale for Haar cascade
+    gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+    gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-    if not results1.detections or not results2.detections:
+    # Load pre-trained face detector (Haar Cascade)
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+    # Detect faces
+    faces1 = face_cascade.detectMultiScale(gray1, 1.1, 4)
+    faces2 = face_cascade.detectMultiScale(gray2, 1.1, 4)
+
+    if len(faces1) == 0 or len(faces2) == 0:
         return False
 
-    # Extract first face from each image for comparison
-    def get_face_crop(img, detection):
-        bbox = detection.location_data.relative_bounding_box
-        ih, iw, _ = img.shape
-        x, y, w, h = int(bbox.xmin * iw), int(bbox.ymin * ih), int(bbox.width * iw), int(bbox.height * ih)
-        # Ensure coordinates are within bounds
-        x, y = max(0, x), max(0, y)
-        return img[y:y+h, x:x+w]
+    # Extract first face from each
+    (x1, y1, w1, h1) = faces1[0]
+    (x2, y2, w2, h2) = faces2[0]
+    face1 = gray1[y1:y1+h1, x1:x1+w1]
+    face2 = gray2[y2:y2+h2, x2:x2+w2]
 
-    face1 = get_face_crop(img1, results1.detections[0])
-    face2 = get_face_crop(img2, results2.detections[0])
+    # Resize to same dimensions for comparison
+    face1 = cv2.resize(face1, (100, 100))
+    face2 = cv2.resize(face2, (100, 100))
 
-    if face1.size == 0 or face2.size == 0: return False
+    # Calculate histograms for comparison
+    hist1 = cv2.calcHist([face1], [0], None, [256], [0, 256])
+    hist2 = cv2.calcHist([face2], [0], None, [256], [0, 256])
+    cv2.normalize(hist1, hist1, 0, 1, cv2.NORM_MINMAX)
+    cv2.normalize(hist2, hist2, 0, 1, cv2.NORM_MINMAX)
 
-    # ORB Feature matching
-    orb = cv2.ORB_create()
-    kp1, des1 = orb.detectAndCompute(face1, None)
-    kp2, des2 = orb.detectAndCompute(face2, None)
-
-    if des1 is None or des2 is None: return False
-
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-    matches = bf.match(des1, des2)
+    # Compare histograms using correlation (closer to 1.0 means more similar)
+    similarity = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
     
-    # A simple score based on match count relative to total features
-    score = len(matches) / max(len(kp1), len(kp2))
-    return score > 0.15 # Adjusted threshold for "highly secured" but portable logic
+    # Also perform a basic SSIM-like Structural similarity via absolute difference
+    diff = cv2.absdiff(face1, face2)
+    diff_score = 1.0 - (np.mean(diff) / 255.0)
+
+    # Combined score
+    final_score = (similarity * 0.7) + (diff_score * 0.3)
+    
+    # Threshold for matching faces (Adjusted to 42%)
+    return final_score > 0.42 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
@@ -117,9 +133,43 @@ def testimonials():
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
-        # Logic to handle the contact form submission
-        # In a real scenario, this would send an email or store the message in a DB
-        flash('Thank you for your message! Our support team will get back to you shortly.', 'success')
+        name = request.form.get('name')
+        email = request.form.get('email')
+        subject = request.form.get('subject')
+        message_body = request.form.get('message')
+        
+        # Email configuration
+        sender_email = "anyanicklaus@gmail.com"
+        receiver_email = "anyanicklaus@gmail.com"
+        # Try both os.environ and explicit load_dotenv check
+        password = os.getenv('EMAIL_PASSWORD')
+        
+        # Create message
+        msg = MIMEMultipart()
+        msg['From'] = email
+        msg['To'] = receiver_email
+        msg['Subject'] = f"CargoFind Support: {subject}"
+        
+        body = f"Name: {name}\nEmail: {email}\n\nMessage:\n{message_body}"
+        msg.attach(MIMEText(body, 'plain'))
+        
+        try:
+            if not password:
+                print("DEBUG: EMAIL_PASSWORD not found in environment variables.")
+                flash('Email configuration missing.', 'danger')
+                return redirect(url_for('contact'))
+
+            # Use SSL for better reliability with Gmail
+            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            server.login(sender_email, password)
+            server.send_message(msg)
+            server.quit()
+            flash('Thank you for your message! Our support team will receive it shortly.', 'success')
+                
+        except Exception as e:
+            print(f"Error sending email: {e}")
+            flash(f'Error sending email: {str(e)}', 'danger')
+            
         return redirect(url_for('index'))
     return render_template('contact.html')
 
@@ -190,7 +240,7 @@ def register():
                     # Cleanup failed attempt files
                     for p in [id_path, lic_path, selfie_path]:
                         if os.path.exists(p): os.remove(p)
-                    return redirect(url_for('register'))
+                    return render_template('register.html', form_data=request.form)
                 
                 new_user.is_verified = True
                 new_user.is_approved = False # Still needs admin approval
@@ -198,7 +248,7 @@ def register():
             except Exception as e:
                 print(f"Face Error: {e}")
                 flash('Security verification failed. Please ensure good lighting.')
-                return redirect(url_for('register'))
+                return render_template('register.html', form_data=request.form)
             
             # Initialize wallet for driver
             wallet = Wallet(user=new_user)
@@ -618,6 +668,27 @@ def approve_driver(user_id):
         db.session.commit()
         
         flash(f'Driver {user.full_name} has been approved.')
+    return redirect(url_for('admin_pending_drivers'))
+
+@app.route('/admin/driver/reject/<int:user_id>')
+@login_required
+def reject_driver(user_id):
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+    user = User.query.get_or_404(user_id)
+    if user.role == 'driver':
+        name = user.full_name
+        # Delete associated files if they exist
+        for attr in ['id_card_url', 'license_url', 'selfie_url']:
+            file_url = getattr(user, attr)
+            if file_url:
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_url)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+        
+        db.session.delete(user)
+        db.session.commit()
+        flash(f'Driver {name} application rejected and account removed.', 'warning')
     return redirect(url_for('admin_pending_drivers'))
 
 @app.route('/driver/mark_paid/<int:delivery_id>', methods=['POST'])

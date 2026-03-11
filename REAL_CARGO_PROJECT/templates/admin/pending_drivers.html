@@ -45,7 +45,10 @@
                                 </div>
                             </td>
                             <td>
-                                <a href="{{ url_for('approve_driver', user_id=driver.id) }}" class="btn btn-success btn-sm">Approve</a>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('approve_driver', user_id=driver.id) }}" class="btn btn-success">Approve</a>
+                                    <a href="{{ url_for('reject_driver', user_id=driver.id) }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject and delete this driver account?')">Reject</a>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
