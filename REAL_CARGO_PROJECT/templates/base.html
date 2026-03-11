@@ -193,6 +193,85 @@
                 justify-content: center;
             }
         }
+        
+        /* Footer Styles */
+        .footer {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%);
+        }
+        
+        .footer-brand {
+            transition: opacity 0.2s ease;
+        }
+        
+        .footer-brand:hover {
+            opacity: 0.8;
+        }
+        
+        .footer-heading {
+            font-size: 0.875rem;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-link {
+            color: #adb5bd;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 0.9375rem;
+        }
+        
+        .footer-link:hover {
+            color: #fff;
+            padding-left: 5px;
+        }
+        
+        .footer-contact li {
+            font-size: 0.9375rem;
+        }
+        
+        .social-link {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .social-link:hover {
+            background: #0d6efd;
+            transform: translateY(-3px);
+        }
+        
+        .footer-bottom {
+            font-size: 0.875rem;
+        }
+        
+        .footer-bottom-links a {
+            transition: color 0.2s ease;
+        }
+        
+        .footer-bottom-links a:hover {
+            color: #fff !important;
+        }
+        
+        @media (max-width: 768px) {
+            .footer-bottom {
+                text-align: center;
+            }
+            
+            .footer-bottom-links {
+                margin-top: 0.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -328,9 +407,76 @@
 
     {% block modals %}{% endblock %}
 
-    <footer class="bg-dark text-white py-4 mt-5">
-        <div class="container text-center">
-            <p>&copy; 2026 CargoFind Cameroon. All rights reserved.</p>
+    <footer class="footer bg-dark text-white pt-5 pb-4">
+        <div class="container">
+            <div class="row">
+                <!-- Brand Column -->
+                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                    <a href="{{ url_for('index') }}" class="footer-brand d-flex align-items-center text-white text-decoration-none mb-3">
+                        <i class="fas fa-truck-moving fa-lg me-2"></i>
+                        <span class="fw-bold fs-5">CargoFind</span>
+                    </a>
+                    <p class="text-white-50 mb-3">Fast & reliable logistics across Cameroon. Connecting businesses and individuals with trusted drivers for seamless deliveries.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="footer-heading text-uppercase fw-bold mb-3">Quick Links</h6>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="{{ url_for('index') }}" class="footer-link">Home</a></li>
+                        <li><a href="{{ url_for('testimonials') }}" class="footer-link">Testimonials</a></li>
+                        <li><a href="{{ url_for('contact') }}" class="footer-link">Contact</a></li>
+                        <li><a href="{{ url_for('login') }}" class="footer-link">Login</a></li>
+                        <li><a href="{{ url_for('register') }}" class="footer-link">Sign Up</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Services -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h6 class="footer-heading text-uppercase fw-bold mb-3">Services</h6>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="{{ url_for('register') }}" class="footer-link">Book a Truck</a></li>
+                        <li><a href="{{ url_for('register') }}" class="footer-link">Become a Driver</a></li>
+                        <li><a href="{{ url_for('contact') }}" class="footer-link">Business Solutions</a></li>
+                        <li><a href="{{ url_for('contact') }}" class="footer-link">API Access</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact Info -->
+                <div class="col-lg-4 col-md-6">
+                    <h6 class="footer-heading text-uppercase fw-bold mb-3">Contact Us</h6>
+                    <ul class="list-unstyled footer-contact">
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-map-marker-alt mt-1 me-3 text-primary"></i>
+                            <span class="text-white-50">Yaoundé, Cameroon</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-center">
+                            <i class="fas fa-phone mt-1 me-3 text-primary"></i>
+                            <span class="text-white-50">+237 6XX XXX XXX</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-center">
+                            <i class="fas fa-envelope mt-1 me-3 text-primary"></i>
+                            <span class="text-white-50">support@cargofind.cm</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Bottom Bar -->
+            <div class="footer-bottom border-top border-secondary mt-4 pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <p class="mb-2 mb-md-0 text-white-50">&copy; 2026 CargoFind Cameroon. All rights reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="#" class="text-white-50 text-decoration-none me-3">Privacy Policy</a>
+                    <a href="#" class="text-white-50 text-decoration-none me-3">Terms of Service</a>
+                    <a href="#" class="text-white-50 text-decoration-none">Cookie Policy</a>
+                </div>
+            </div>
         </div>
     </footer>
 
