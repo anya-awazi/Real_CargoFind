@@ -10,3 +10,5 @@ mediapipe
 opencv-contrib-python
 numpy
 python-dotenv
+itsdangerous
+Pillow

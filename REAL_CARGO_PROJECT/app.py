@@ -1,4 +1,5 @@
 import os
+import logging
 import random
 import string
 from datetime import datetime
@@ -18,6 +19,30 @@ import cv2
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from PIL import Image
+import io
+
+def compress_image(image_path, quality=60, max_size=(800, 800)):
+    """
+    Compresses an image to save space and potentially resizes it.
+    """
+    try:
+        img = Image.open(image_path)
+        # Convert RGBA to RGB if necessary (e.g., for PNG to JPG)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        
+        # Resize image while maintaining aspect ratio
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
+        
+        # Save compressed version (overwrite original or save as new)
+        # If the original was not a JPG, we might want to save it as JPG for better compression
+        # But here we'll just overwrite the original path
+        img.save(image_path, "JPEG", optimize=True, quality=quality)
+        return True
+    except Exception as e:
+        print(f"Compression error: {e}")
+        return False
 
 def compare_faces(path1, path2):
     """
@@ -98,6 +123,11 @@ def send_email(sender, receiver, subject, body):
         server.send_message(msg)
 
 app = Flask(__name__)
+
+# Configure Logging for Render
+logging.basicConfig(level=logging.INFO)
+logger = app.logger
+
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'cargofind.db')
@@ -238,6 +268,7 @@ def register():
             id_filename = secure_filename(f"driver_{email}_id.{id_ext}")
             id_path = os.path.join(app.config['UPLOAD_FOLDER'], id_filename)
             id_card_file.save(id_path)
+            compress_image(id_path) # Compress uploaded ID
             new_user.id_card_url = id_filename
 
             # Save License
@@ -245,6 +276,7 @@ def register():
             lic_filename = secure_filename(f"driver_{email}_license.{lic_ext}")
             lic_path = os.path.join(app.config['UPLOAD_FOLDER'], lic_filename)
             license_file.save(lic_path)
+            compress_image(lic_path) # Compress uploaded License
             new_user.license_url = lic_filename
 
             # Process Selfie from Base64
@@ -260,6 +292,8 @@ def register():
                 
                 with open(selfie_path, "wb") as f:
                     f.write(base64.b64decode(imgstr))
+                
+                compress_image(selfie_path) # Compress uploaded Selfie
                 new_user.selfie_url = selfie_filename
 
                 # FACE COMPARISON USING MEDIAPIPE + ORB
@@ -357,7 +391,8 @@ def forgot_password():
                 send_email(sender_email, user.email, subject, body)
                 flash('Password reset link has been sent to your email.', 'success')
             except Exception as e:
-                flash(f'Failed to send reset email: {str(e)}. Please contact support.', 'danger')
+                logger.error(f"Error sending reset email: {str(e)}")
+                flash(f'Failed to send reset email. Please contact support.', 'danger')
         else:
             # Don't reveal if email exists or not for security
             flash('If an account exists with this email, a reset link has been sent.', 'info')
@@ -392,10 +427,15 @@ def reset_password(token):
             return render_template('reset_password.html', token=token)
         
         user.set_password(password)
-        db.session.commit()
-        
-        flash('Your password has been reset successfully. Please login with your new password.', 'success')
-        return redirect(url_for('login'))
+        try:
+            db.session.commit()
+            flash('Your password has been reset successfully. Please login with your new password.', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error resetting password for user {user.id}: {str(e)}")
+            flash('An error occurred while resetting your password. Please try again.', 'danger')
+            return render_template('reset_password.html', token=token)
     
     return render_template('reset_password.html', token=token)
 
