@@ -1,43 +1,347 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center animate-up">
-    <div class="col-md-6">
-        <div class="card p-4">
-            <h3>My Profile</h3>
-            <hr>
-            <form method="POST">
-                <div class="mb-3">
-                    <label class="form-label">Full Name</label>
-                    <input type="text" name="full_name" class="form-control" value="{{ current_user.full_name }}" required>
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+        border-radius: 24px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 60%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #0d6efd;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .profile-name {
+        color: white;
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .profile-email {
+        color: rgba(255,255,255,0.8);
+        font-size: 0.95rem;
+    }
+    
+    .profile-role {
+        display: inline-block;
+        padding: 0.35rem 1rem;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50px;
+        color: white;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+    
+    .profile-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    
+    .card-header-custom {
+        background: white;
+        border-bottom: 1px solid #f1f3f5;
+        padding: 1.25rem 1.5rem;
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+    
+    .card-body-custom {
+        padding: 1.5rem;
+    }
+    
+    .form-label-custom {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control-custom {
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e9ecef;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control-custom:focus {
+        border-color: #0d6efd;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+    }
+    
+    .form-control-custom:disabled {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+    }
+    
+    .info-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(13, 110, 253, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0d6efd;
+        margin-right: 1rem;
+    }
+    
+    .info-content {
+        flex: 1;
+    }
+    
+    .info-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .info-value {
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+    
+    .badge-driver {
+        background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .badge-customer {
+        background: linear-gradient(135deg, #6f42c1 0%, #4f2d7f 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .btn-update {
+        padding: 0.875rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-update:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(13, 110, 253, 0.25);
+    }
+    
+    .divider-section {
+        height: 1px;
+        background: #e9ecef;
+        margin: 1.5rem 0;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-header {
+            text-align: center;
+        }
+        
+        .profile-avatar {
+            margin: 0 auto 1rem;
+        }
+    }
+</style>
+
+<div class="row animate-up">
+    <div class="col-12">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
-                    <small class="text-muted">Email cannot be changed.</small>
+                <div class="col">
+                    <h1 class="profile-name">{{ current_user.full_name }}</h1>
+                    <p class="profile-email">{{ current_user.email }}</p>
+                    {% if current_user.role == 'driver' %}
+                        <span class="badge-driver">
+                            <i class="fas fa-truck-moving me-1"></i> Driver
+                        </span>
+                    {% else %}
+                        <span class="badge-customer">
+                            <i class="fas fa-shopping-bag me-1"></i> Customer
+                        </span>
+                    {% endif %}
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Phone Number</label>
-                    <input type="tel" name="phone" class="form-control" value="{{ current_user.phone }}" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Home Address</label>
-                    <input type="text" name="address" class="form-control" value="{{ current_user.address or '' }}">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Profile Form -->
+    <div class="col-lg-7">
+        <div class="card profile-card">
+            <div class="card-header-custom d-flex align-items-center">
+                <i class="fas fa-user-edit me-2 text-primary"></i>
+                Edit Profile Information
+            </div>
+            <div class="card-body-custom">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Full Name</label>
+                            <input type="text" name="full_name" class="form-control form-control-custom" value="{{ current_user.full_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Phone Number</label>
+                            <input type="tel" name="phone" class="form-control form-control-custom" value="{{ current_user.phone }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="divider-section"></div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label-custom">Email Address</label>
+                        <input type="email" class="form-control form-control-custom" value="{{ current_user.email }}" disabled>
+                        <small class="text-muted mt-1 d-block"><i class="fas fa-lock me-1"></i> Email cannot be changed</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label-custom">Home Address</label>
+                        <input type="text" name="address" class="form-control form-control-custom" value="{{ current_user.address or '' }}" placeholder="Enter your address">
+                    </div>
+                    
+                    {% if current_user.role == 'driver' %}
+                    <div class="divider-section"></div>
+                    
+                    <h6 class="fw-bold mb-3 text-primary">
+                        <i class="fas fa-id-card me-2"></i>Vehicle Information
+                    </h6>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Vehicle Type</label>
+                            <input type="text" class="form-control form-control-custom" value="{{ current_user.vehicle_type | capitalize }}" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Vehicle ID / Plate</label>
+                            <input type="text" class="form-control form-control-custom" value="{{ current_user.vehicle_id or 'Not set' }}" disabled>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="divider-section"></div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 btn-update">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profile Info Sidebar -->
+    <div class="col-lg-5">
+        <div class="card profile-card mb-4">
+            <div class="card-header-custom d-flex align-items-center">
+                <i class="fas fa-info-circle me-2 text-primary"></i>
+                Account Details
+            </div>
+            <div class="card-body-custom">
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Member Since</div>
+                        <div class="info-value">{{ current_user.created_at.strftime('%B %d, %Y') if current_user.created_at else 'N/A' }}</div>
+                    </div>
                 </div>
                 
-                {% if current_user.role == 'driver' %}
-                <div class="mb-3">
-                    <label class="form-label">Vehicle Type</label>
-                    <input type="text" class="form-control" value="{{ current_user.vehicle_type | capitalize }}" disabled>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Phone Number</div>
+                        <div class="info-value">{{ current_user.phone }}</div>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Vehicle ID</label>
-                    <input type="text" class="form-control" value="{{ current_user.vehicle_id }}" disabled>
-                </div>
-                {% endif %}
                 
-                <button type="submit" class="btn btn-primary w-100 mt-3">Update Profile</button>
-            </form>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Address</div>
+                        <div class="info-value">{{ current_user.address or 'Not set' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card profile-card">
+            <div class="card-header-custom d-flex align-items-center">
+                <i class="fas fa-bolt me-2 text-warning"></i>
+                Quick Actions
+            </div>
+            <div class="card-body-custom">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('notifications') }}" class="btn btn-outline-primary btn-sm rounded-pill">
+                        <i class="fas fa-bell me-2"></i>View Notifications
+                    </a>
+                    {% if current_user.role == 'customer' %}
+                    <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-primary btn-sm rounded-pill">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                    </a>
+                    {% elif current_user.role == 'driver' %}
+                    <a href="{{ url_for('driver_dashboard') }}" class="btn btn-outline-primary btn-sm rounded-pill">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Driver Panel
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm rounded-pill">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -24,8 +24,9 @@ class User(UserMixin, db.Model):
     selfie_url = db.Column(db.String(255))
     license_url = db.Column(db.String(255))
     is_verified = db.Column(db.Boolean, default=False)
+    registration_otp = db.Column(db.String(6))
     
-    is_active = db.Column(db.Boolean, default=True)
+    is_active = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False) # Admin approval
     
     # Location tracking

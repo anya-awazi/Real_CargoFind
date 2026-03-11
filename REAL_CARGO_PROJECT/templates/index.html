@@ -1,35 +1,362 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="hero-section text-center text-lg-start animate-up">
+<style>
+    /* Hero Section */
+    .hero-section {
+        padding: 4rem 0;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 60%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(13, 110, 253, 0.05) 0%, transparent 70%);
+    }
+    
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -2px;
+        color: #1a1a2e;
+    }
+    
+    .hero-title .text-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.15rem;
+        color: #6c757d;
+        line-height: 1.7;
+    }
+    
+    .btn-hero {
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-hero:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(13, 110, 253, 0.3);
+    }
+    
+    .btn-hero-outline {
+        border: 2px solid #1a1a2e;
+        color: #1a1a2e;
+    }
+    
+    .btn-hero-outline:hover {
+        background: #1a1a2e;
+        color: white;
+    }
+    
+    .hero-image {
+        border-radius: 24px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        transform: rotate(1deg);
+        transition: transform 0.3s ease;
+    }
+    
+    .hero-image:hover {
+        transform: rotate(0deg) scale(1.02);
+    }
+    
+    .floating-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        padding: 1rem 1.5rem;
+    }
+    
+    .user-avatars {
+        display: flex;
+        align-items: center;
+    }
+    
+    .user-avatars img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 3px solid white;
+        margin-left: -12px;
+        object-fit: cover;
+    }
+    
+    .user-avatars img:first-child {
+        margin-left: 0;
+    }
+    
+    /* Features Section */
+    .features-section {
+        padding: 5rem 0;
+    }
+    
+    .section-title {
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 0.5rem;
+    }
+    
+    .section-subtitle {
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
+    
+    .feature-card {
+        border: none;
+        border-radius: 20px;
+        padding: 2rem;
+        height: 100%;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .feature-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 0.75rem;
+    }
+    
+    .feature-text {
+        color: #6c757d;
+        line-height: 1.6;
+    }
+    
+    /* Stats */
+    .stats-section {
+        background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+        padding: 2rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stats-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 60%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    }
+    
+    .stat-item {
+        text-align: center;
+        color: white;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+    
+    /* Testimonials */
+    .testimonials-section {
+        padding: 5rem 0;
+    }
+    
+    .testimonial-card {
+        border: none;
+        border-radius: 20px;
+        padding: 2rem;
+        height: 100%;
+        background: white;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .testimonial-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+    
+    .testimonial-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .testimonial-name {
+        font-weight: 700;
+        color: #1a1a2e;
+    }
+    
+    .testimonial-text {
+        color: #6c757d;
+        line-height: 1.7;
+    }
+    
+    .testimonial-stars {
+        color: #ffc107;
+    }
+    
+    /* CTA Section */
+    .cta-section {
+        padding: 5rem 0;
+    }
+    
+    .cta-card {
+        background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+        border-radius: 30px;
+        padding: 4rem 2rem;
+        text-align: center;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .cta-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 60%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    }
+    
+    .cta-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .cta-text {
+        font-size: 1.15rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .btn-cta {
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .btn-cta:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Animations */
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .floating {
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @media (max-width: 991px) {
+        .hero-title {
+            font-size: 2.5rem;
+            text-align: center;
+        }
+        
+        .hero-subtitle {
+            text-align: center;
+        }
+        
+        .d-flex.justify-content-lg-start {
+            justify-content: center !important;
+        }
+        
+        .hero-image {
+            margin-top: 2rem;
+            transform: none;
+        }
+        
+        .cta-title {
+            font-size: 1.75rem;
+        }
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="hero-section">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-lg-6 px-4">
-                <h1 class="display-3 fw-bold mb-4" style="letter-spacing: -1.5px; line-height: 1.1;">Move Anything, <br><span class="text-primary">Anywhere</span> Instantly.</h1>
-                <p class="lead text-muted mb-5 pe-lg-5">CargoFind connects you with thousands of verified drivers for fast, secure, and transparent deliveries across the country.</p>
+            <div class="col-lg-6">
+                <h1 class="hero-title mb-4">Move Anything, <br><span class="text-primary">Anywhere</span> Instantly.</h1>
+                <p class="hero-subtitle mb-5 pe-lg-5">CargoFind connects you with thousands of verified drivers for fast, secure, and transparent deliveries across Cameroon.</p>
                 <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
-                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg shadow-lg">Book a Truck Today</a>
-                    <a href="#how-it-works" class="btn btn-outline-dark btn-lg">How it Works</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-hero">
+                        <i class="fas fa-truck-moving me-2"></i>Book a Truck Today
+                    </a>
+                    <a href="#how-it-works" class="btn btn-hero-outline btn-hero">
+                        How it Works
+                    </a>
                 </div>
                 
-                <div class="mt-5 d-flex align-items-center gap-4 justify-content-center justify-content-lg-start">
-                    <div class="d-flex -space-x-2">
-                        <img src="https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px; margin-right: -15px; object-fit: cover;">
-                        <img src="https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px; margin-right: -15px; object-fit: cover;">
-                        <img src="https://images.unsplash.com/photo-1531384441138-2736e62e0919?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px; margin-right: -15px; object-fit: cover;">
-                        <img src="https://images.unsplash.com/photo-1530268729831-4b0b9e170218?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px; margin-right: -15px; object-fit: cover;">
-                        <img src="https://images.unsplash.com/photo-1512484776495-a09d92e87c3b?auto=format&fit=crop&w=100&h=100&q=80" class="rounded-circle border border-white" style="width: 40px; height: 40px; object-fit: cover;">
+                <div class="mt-5 pt-3">
+                    <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-3">
+                        <div class="user-avatars">
+                            <img src="https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=100&h=100&fit=crop" alt="User">
+                            <img src="https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?w=100&h=100&fit=crop" alt="User">
+                            <img src="https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=100&h=100&fit=crop" alt="User">
+                            <img src="https://images.unsplash.com/photo-1530268729831-4b0b9e170218?w=100&h=100&fit=crop" alt="User">
+                            <img src="https://images.unsplash.com/photo-1512484776495-a09d92e87c3b?w=100&h=100&fit=crop" alt="User">
+                        </div>
+                        <div>
+                            <strong>500+</strong> active drivers
+                        </div>
                     </div>
-                    <p class="small text-muted mb-0"><strong>100+</strong> drivers active today</p>
                 </div>
             </div>
-            <div class="col-lg-6 mt-5 mt-lg-0 px-4">
+            <div class="col-lg-6 mt-5 mt-lg-0">
                 <div class="position-relative">
-                    <img src="https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=800&q=80" alt="Logistics Truck" class="img-fluid rounded-4 shadow-2xl" style="transform: rotate(2deg);">
-                    <div class="position-absolute bottom-0 start-0 translate-middle-x bg-white p-3 rounded-4 shadow-lg d-none d-md-block" style="margin-left: 50px;">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-success-subtle p-2 rounded-3">
-                                <i class="fas fa-check text-success"></i>
+                    <img src="https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=800&q=80" alt="Logistics Truck" class="hero-image img-fluid w-100">
+                    <div class="floating-card floating position-absolute d-none d-md-block" style="bottom: 30px; left: -20px;">
+                        <div class="d-flex align-items-center gap-3 class="bg-success-subtle p-2 rounded-3">
+">
+                            <div                                <i class="fas fa-check-circle text-success fa-lg"></i>
                             </div>
                             <div>
                                 <h6 class="mb-0 fw-bold">Live Tracking</h6>
@@ -43,115 +370,191 @@
     </div>
 </div>
 
-<div id="how-it-works" class="container mb-5 py-5">
-    <div class="text-center mb-5">
-        <h2 class="fw-bold">Designed for Modern Logistics</h2>
-        <p class="text-muted">Simple steps to get your goods moving in minutes.</p>
-    </div>
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card h-100 p-4 border-0">
-                <div class="bg-primary-subtle rounded-4 p-3 mb-4 d-inline-block" style="width: 60px;">
-                    <i class="fas fa-box fa-2x text-primary"></i>
+<!-- Stats Section -->
+<div class="stats-section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">10K+</div>
+                    <div class="stat-label">Deliveries Made</div>
                 </div>
-                <h4>Post a Request</h4>
-                <p class="text-muted">Tell us what you're sending and where it's going. Get instant transparent pricing in XAF.</p>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100 p-4 border-0">
-                <div class="bg-warning-subtle rounded-4 p-3 mb-4 d-inline-block" style="width: 60px;">
-                    <i class="fas fa-handshake fa-2x text-warning"></i>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Active Drivers</div>
                 </div>
-                <h4>Matched Instantly</h4>
-                <p class="text-muted">Our smart algorithm matches you with the nearest driver that fits your vehicle requirement.</p>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100 p-4 border-0">
-                <div class="bg-success-subtle rounded-4 p-3 mb-4 d-inline-block" style="width: 60px;">
-                    <i class="fas fa-route fa-2x text-success"></i>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Cities Covered</div>
                 </div>
-                <h4>Real-Time Journey</h4>
-                <p class="text-muted">Watch your delivery move on the map in real-time. Full transparency from pickup to delivery.</p>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100 p-4 border-0">
-                <div class="bg-info-subtle rounded-4 p-3 mb-4 d-inline-block" style="width: 60px;">
-                    <i class="fas fa-wallet fa-2x text-info"></i>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">4.9★</div>
+                    <div class="stat-label">User Rating</div>
                 </div>
-                <h4>Flexible Payments</h4>
-                <p class="text-muted">Pay easily in cash directly to the driver upon successful delivery of your goods.</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100 p-4 border-0">
-                <div class="bg-danger-subtle rounded-4 p-3 mb-4 d-inline-block" style="width: 60px;">
-                    <i class="fas fa-user-shield fa-2x text-danger"></i>
-                </div>
-                <h4>Verified Drivers</h4>
-                <p class="text-muted">Every driver is strictly vetted and background-checked to ensure your goods are in safe hands.</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100 p-4 border-0">
-                <div class="bg-secondary-subtle rounded-4 p-3 mb-4 d-inline-block" style="width: 60px;">
-                    <i class="fas fa-bell fa-2x text-secondary"></i>
-                </div>
-                <h4>Instant Alerts</h4>
-                <p class="text-muted">Get real-time SMS and app notifications at every stage of your delivery journey.</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="container mb-5 pb-5">
-    <div class="row align-items-center mb-5">
-        <div class="col-md-8">
-            <h2 class="fw-bold">What Our Customers Say</h2>
-            <p class="text-muted">Real stories from the people who trust CargoFind.</p>
+<!-- How It Works -->
+<div id="how-it-works" class="features-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Designed for Modern Logistics</h2>
+            <p class="section-subtitle">Simple steps to get your goods moving in minutes</p>
         </div>
-        <div class="col-md-4 text-md-end">
-            <a href="{{ url_for('testimonials') }}" class="btn btn-outline-primary rounded-pill">View All Testimonials</a>
-        </div>
-    </div>
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm glass-morphism p-4">
-                <div class="d-flex align-items-center mb-3">
-                    <img src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=60&h=60&fit=crop" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                    <h6 class="mb-0 fw-bold">Marie Ngo</h6>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon bg-primary-subtle">
+                        <i class="fas fa-box text-primary"></i>
+                    </div>
+                    <h4 class="feature-title">Post a Request</h4>
+                    <p class="feature-text">Tell us what you're sending and where it's going. Get instant transparent pricing in XAF.</p>
                 </div>
-                <p class="small text-muted mb-0">"CargoFind has transformed how I move my business inventory. The real-time tracking is incredible!"</p>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm glass-morphism p-4">
-                <div class="d-flex align-items-center mb-3">
-                    <img src="https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=60&h=60&fit=crop" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                    <h6 class="mb-0 fw-bold">Samuel Eto</h6>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon bg-warning-subtle">
+                        <i class="fas fa-handshake text-warning"></i>
+                    </div>
+                    <h4 class="feature-title">Matched Instantly</h4>
+                    <p class="feature-text">Our smart algorithm matches you with the nearest driver that fits your vehicle requirement.</p>
                 </div>
-                <p class="small text-muted mb-0">"As a driver, I find more jobs easily. The job matching system is fast and reliable. Best app in Cameroon!"</p>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm glass-morphism p-4">
-                <div class="d-flex align-items-center mb-3">
-                    <img src="https://images.unsplash.com/photo-1507152832244-10d45c7eda57?w=60&h=60&fit=crop" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                    <h6 class="mb-0 fw-bold">Amadou Bello</h6>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon bg-success-subtle">
+                        <i class="fas fa-route text-success"></i>
+                    </div>
+                    <h4 class="feature-title">Real-Time Journey</h4>
+                    <p class="feature-text">Watch your delivery move on the map in real-time. Full transparency from pickup to delivery.</p>
                 </div>
-                <p class="small text-muted mb-0">"Very easy to use. I requested a truck for moving house and it was matched instantly."</p>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon bg-info-subtle">
+                        <i class="fas fa-wallet text-info"></i>
+                    </div>
+                    <h4 class="feature-title">Flexible Payments</h4>
+                    <p class="feature-text">Pay easily in cash directly to the driver upon successful delivery of your goods.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon bg-danger-subtle">
+                        <i class="fas fa-user-shield text-danger"></i>
+                    </div>
+                    <h4 class="feature-title">Verified Drivers</h4>
+                    <p class="feature-text">Every driver is strictly vetted and background-checked to ensure your goods are safe.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon bg-purple-subtle" style="background: rgba(111, 66, 193, 0.1);">
+                        <i class="fas fa-bell text-purple" style="color: #6f42c1;"></i>
+                    </div>
+                    <h4 class="feature-title">Instant Alerts</h4>
+                    <p class="feature-text">Get real-time notifications at every stage of your delivery journey.</p>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="bg-primary text-white py-5 rounded-5 mx-3 mb-5 shadow-lg overflow-hidden position-relative">
-    <div class="container text-center py-4">
-        <h2 class="display-5 fw-bold mb-4">Are you a Transporter?</h2>
-        <p class="lead mb-4 opacity-75">Join our network of drivers and start earning with your car, van, or truck today.</p>
-        <a href="{{ url_for('register', role='driver') }}" class="btn btn-light btn-lg px-5 fw-bold text-primary rounded-pill">Become a Driver</a>
+<!-- Testimonials -->
+<div class="testimonials-section" style="background: #f8f9fa;">
+    <div class="container">
+        <div class="row align-items-center mb-5">
+            <div class="col-md-8">
+                <h2 class="section-title">What Our Customers Say</h2>
+                <p class="section-subtitle">Real stories from people who trust CargoFind</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{{ url_for('testimonials') }}" class="btn btn-outline-primary rounded-pill px-4">
+                    View All <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=60&h=60&fit=crop" alt="Marie Ngo" class="testimonial-avatar me-3">
+                        <div>
+                            <h6 class="testimonial-name mb-0">Marie Ngo</h6>
+                            <div class="testimonial-stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="testimonial-text mb-0">"CargoFind has transformed how I move my business inventory. The real-time tracking is incredible!"</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=60&h=60&fit=crop" alt="Samuel Eto" class="testimonial-avatar me-3">
+                        <div>
+                            <h6 class="testimonial-name mb-0">Samuel Eto</h6>
+                            <div class="testimonial-stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="testimonial-text mb-0">"As a driver, I find more jobs easily. The job matching system is fast and reliable. Best app in Cameroon!"</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://images.unsplash.com/photo-1507152832244-10d45c7eda57?w=60&h=60&fit=crop" alt="Amadou Bello" class="testimonial-avatar me-3">
+                        <div>
+                            <h6 class="testimonial-name mb-0">Amadou Bello</h6>
+                            <div class="testimonial-stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="testimonial-text mb-0">"Very easy to use. I requested a truck for moving house and it was matched instantly."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="cta-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="cta-card">
+                    <h2 class="cta-title">Are you a Transporter?</h2>
+                    <p class="cta-text">Join our network of drivers and start earning with your car, van, or truck today.</p>
+                    <a href="{{ url_for('register') }}" class="btn btn-light btn-cta">
+                        <i class="fas fa-user-plus me-2"></i>Become a Driver
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

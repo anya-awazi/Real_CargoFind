@@ -1,203 +1,692 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center py-5 animate-up">
-    <div class="col-md-7 col-lg-6">
-        <div class="card border-0 shadow-lg p-4 p-md-5 rounded-4">
-            <div class="text-center mb-5">
-                <div class="bg-primary-subtle d-inline-block p-3 rounded-circle mb-3">
-                    <i class="fas fa-user-plus fa-2x text-primary"></i>
-                </div>
-                <h2 class="fw-bold">Create Account</h2>
-                <p class="text-muted">Join the fastest logistics network in Cameroon</p>
-            </div>
-            
-            <form method="POST" enctype="multipart/form-data">
-                <div class="row g-3 mb-4">
-                    <div class="col-md-12">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Full Name</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0"><i class="far fa-user text-muted"></i></span>
-                            <input type="text" name="full_name" class="form-control floating-input border-start-0 ps-0" placeholder="John Doe" value="{{ form_data.full_name if form_data else '' }}" required>
-                        </div>
-                    </div>
-                </div>
+<style>
+    .auth-page {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    .auth-card {
+        border: none;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .auth-brand-panel {
+        background: linear-gradient(135deg, #0d6efd 0%, #0043a8 50%, #002a5c 100%);
+        padding: 3rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .auth-brand-panel::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    }
+    
+    .auth-brand-panel::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -30%;
+        width: 80%;
+        height: 80%;
+        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    }
+    
+    .brand-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .brand-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .brand-icon i {
+        font-size: 2.5rem;
+        color: white;
+    }
+    
+    .brand-title {
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .brand-subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .feature-list li {
+        color: rgba(255, 255, 255, 0.9);
+        padding: 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .feature-list li i {
+        width: 24px;
+        height: 24px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+    }
+    
+    .auth-form-panel {
+        padding: 2.5rem;
+        background: white;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .form-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-subtitle {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
+    
+    .input-icon-group {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    
+    .input-icon-group .form-control,
+    .input-icon-group .form-select {
+        padding: 0.75rem 1rem 0.75rem 2.75rem;
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .input-icon-group .form-control:focus,
+    .input-icon-group .form-select:focus {
+        border-color: #0d6efd;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+    }
+    
+    .input-icon-group .form-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #adb5bd;
+        font-size: 0.9rem;
+        transition: color 0.3s ease;
+    }
+    
+    .input-icon-group .form-control:focus ~ .form-icon,
+    .input-icon-group .form-select:focus ~ .form-icon {
+        color: #0d6efd;
+    }
+    
+    .btn-auth {
+        padding: 0.875rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-auth:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(13, 110, 253, 0.25);
+    }
+    
+    .role-selector {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .role-option {
+        flex: 1;
+    }
+    
+    .role-option input {
+        display: none;
+    }
+    
+    .role-option label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+        border: 2px solid #e9ecef;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .role-option label:hover {
+        border-color: #0d6efd;
+        background: rgba(13, 110, 253, 0.02);
+    }
+    
+    .role-option input:checked + label {
+        border-color: #0d6efd;
+        background: rgba(13, 110, 253, 0.05);
+    }
+    
+    .role-option label i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: #6c757d;
+        transition: color 0.3s ease;
+    }
+    
+    .role-option input:checked + label i {
+        color: #0d6efd;
+    }
+    
+    .role-option label span {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .driver-fields {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px dashed #ced4da;
+    }
+    
+    .driver-fields-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0d6efd;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .file-upload {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    
+    .file-upload .form-control {
+        padding: 0.6rem;
+        border-radius: 12px;
+        border: 2px dashed #ced4da;
+        background: white;
+    }
+    
+    .file-upload .form-control:focus {
+        border-style: solid;
+    }
+    
+    .camera-container {
+        position: relative;
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+    
+    .camera-container video,
+    .camera-container img {
+        width: 100%;
+        display: block;
+    }
+    
+    .camera-controls {
+        position: absolute;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .camera-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .camera-btn.capture {
+        background: white;
+        color: #dc3545;
+    }
+    
+    .camera-btn.retake {
+        background: white;
+        color: #0d6efd;
+    }
+    
+    .terms-check {
+        margin-bottom: 1.5rem;
+    }
+    
+    .terms-check a {
+        color: #0d6efd;
+        text-decoration: none;
+    }
+    
+    .terms-check a:hover {
+        text-decoration: underline;
+    }
+    
+    .form-footer {
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .form-footer a {
+        color: #0d6efd;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    
+    .form-footer a:hover {
+        text-decoration: underline;
+    }
+    
+    .password-toggle {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #adb5bd;
+        cursor: pointer;
+        padding: 0;
+    }
+    
+    .password-toggle:hover {
+        color: #495057;
+    }
+    
+    @media (max-width: 991px) {
+        .auth-brand-panel {
+            display: none;
+        }
+        
+        .auth-form-panel {
+            padding: 2rem;
+        }
+        
+        .role-selector {
+            flex-direction: column;
+        }
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .floating-icon {
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    .animate__fadeIn {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
 
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Email Address</label>
-                        <input type="email" name="email" class="form-control floating-input" placeholder="john@example.com" value="{{ form_data.email if form_data else '' }}" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Phone Number</label>
-                        <input type="tel" name="phone" class="form-control floating-input" placeholder="677000000" value="{{ form_data.phone if form_data else '' }}" required>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label small text-uppercase fw-bold text-muted">Password</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-key text-muted"></i></span>
-                        <input type="password" name="password" class="form-control floating-input border-start-0 ps-0" placeholder="••••••••" required>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label small text-uppercase fw-bold text-muted">Account Type</label>
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <input type="radio" class="btn-check" name="role" id="role_customer" value="customer" {{ 'checked' if not form_data or form_data.role == 'customer' else '' }} onchange="toggleDriverFields()">
-                            <label class="btn btn-outline-primary w-100 py-3 rounded-4 fw-bold d-flex flex-column align-items-center gap-2" for="role_customer">
-                                <i class="fas fa-shopping-bag fa-lg"></i>
-                                Customer
-                            </label>
-                        </div>
-                        <div class="col-6">
-                            <input type="radio" class="btn-check" name="role" id="role_driver" value="driver" {{ 'checked' if form_data and form_data.role == 'driver' else '' }} onchange="toggleDriverFields()">
-                            <label class="btn btn-outline-primary w-100 py-3 rounded-4 fw-bold d-flex flex-column align-items-center gap-2" for="role_driver">
-                                <i class="fas fa-truck-moving fa-lg"></i>
-                                Driver
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="driverFields" style="{{ 'display: block;' if form_data and form_data.role == 'driver' else 'display: none;' }}" class="bg-light p-4 rounded-4 mb-4 border border-dashed border-primary border-opacity-25 animate__animated animate__fadeIn">
-                    <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-id-card me-2"></i>Professional Driver Details</h6>
-                    <div class="mb-3">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Vehicle Type</label>
-                        <select name="vehicle_type" class="form-select floating-input">
-                            <option value="car" {{ 'selected' if form_data and form_data.vehicle_type == 'car' else '' }}>Car (Up to 250kg)</option>
-                            <option value="van" {{ 'selected' if form_data and form_data.vehicle_type == 'van' else '' }}>Van (Up to 1000kg)</option>
-                            <option value="truck" {{ 'selected' if form_data and form_data.vehicle_type == 'truck' else '' }}>Truck (Over 1000kg)</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Vehicle ID / Plate Number</label>
-                        <input type="text" name="vehicle_id" class="form-control floating-input" placeholder="e.g. NW 123 AA" value="{{ form_data.vehicle_id if form_data else '' }}">
-                    </div>
-
-                    <h6 class="fw-bold mb-3 text-primary mt-4"><i class="fas fa-shield-alt me-2"></i>Security Verification</h6>
-                    
-                    <div class="mb-3">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Biometric Face Verification</label>
-                        <input type="file" name="id_card" id="id_card" class="form-control" accept="image/*">
-                        <small class="text-muted">Upload a sharp photo of you</small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Driver's License</label>
-                        <input type="file" name="license" id="license" class="form-control" accept="image/*">
-                        <small class="text-muted">Valid license for your vehicle type</small>
-                    </div>
-
-                    <div class="mb-0">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Face Verification (Live Selfie)</label>
-                        <div id="camera-container" class="mb-3">
-                            <video id="video" width="100%" height="auto" class="rounded-3 shadow-sm" autoplay playsinline style="background: #000; display: none;"></video>
-                            <canvas id="canvas" style="display:none;"></canvas>
-                            <img id="photo-preview" class="img-fluid rounded-3 shadow-sm mb-2" style="display:none;">
-                            <input type="hidden" name="selfie_data" id="selfie_data">
-                            
-                            <div class="d-grid gap-2">
-                                <button type="button" id="start-camera" class="btn btn-outline-secondary btn-sm rounded-pill mt-2">
-                                    <i class="fas fa-camera me-1"></i> Enable Camera for Selfie
-                                </button>
-                                <button type="button" id="capture-photo" class="btn btn-primary btn-sm rounded-pill mt-2" style="display:none;">
-                                    <i class="fas fa-camera-retro me-1"></i> Capture Selfie
-                                </button>
-                                <button type="button" id="retake-photo" class="btn btn-outline-warning btn-sm rounded-pill mt-2" style="display:none;">
-                                    <i class="fas fa-redo me-1"></i> Retake
-                                </button>
+<div class="auth-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card auth-card">
+                    <div class="row g-0">
+                        <!-- Brand Panel -->
+                        <div class="col-lg-5 d-none d-lg-block">
+                            <div class="auth-brand-panel h-100">
+                                <div class="brand-content">
+                                    <div class="brand-icon floating-icon">
+                                        <i class="fas fa-truck-moving"></i>
+                                    </div>
+                                    <h1 class="brand-title">Join CargoFind</h1>
+                                    <p class="brand-subtitle">Start your journey with Cameroon's fastest-growing logistics network.</p>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <ul class="feature-list">
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Free account creation
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Instant delivery quotes
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Track deliveries in real-time
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Earn as a verified driver
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="mt-4 pt-3 border-top border-light">
+                                    <p class="small text-white-50 mb-0">
+                                        <i class="fas fa-shield-alt me-2"></i>Your data is safe with us
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <small class="text-muted">Align your face in the center of the frame</small>
+                        
+                        <!-- Form Panel -->
+                        <div class="col-lg-7">
+                            <div class="auth-form-panel">
+                                <h2 class="form-title">Create Account</h2>
+                                <p class="form-subtitle">Fill in your details to get started</p>
+                                
+                                <form method="POST" enctype="multipart/form-data">
+                                    <!-- Account Type -->
+                                    <label class="form-label small text-uppercase fw-bold text-muted mb-2">I want to</label>
+                                    <div class="role-selector">
+                                        <div class="role-option">
+                                            <input type="radio" name="role" id="role_customer" value="customer" {{ 'checked' if not form_data or form_data.role == 'customer' else '' }} onchange="toggleDriverFields()">
+                                            <label for="role_customer">
+                                                <i class="fas fa-shopping-bag"></i>
+                                                <span>Send Packages</span>
+                                            </label>
+                                        </div>
+                                        <div class="role-option">
+                                            <input type="radio" name="role" id="role_driver" value="driver" {{ 'checked' if form_data and form_data.role == 'driver' else '' }} onchange="toggleDriverFields()">
+                                            <label for="role_driver">
+                                                <i class="fas fa-truck-moving"></i>
+                                                <span>Drive & Earn</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Personal Info -->
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="input-icon-group">
+                                                <input type="text" name="full_name" class="form-control" placeholder="Full Name" value="{{ form_data.full_name if form_data else '' }}" required>
+                                                <i class="fas fa-user form-icon"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="input-icon-group">
+                                                <input type="tel" name="phone" class="form-control" placeholder="Phone (677000000)" value="{{ form_data.phone if form_data else '' }}" required>
+                                                <i class="fas fa-phone form-icon"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="input-icon-group">
+                                        <input type="email" name="email" class="form-control" placeholder="Email Address" value="{{ form_data.email if form_data else '' }}" required>
+                                        <i class="fas fa-envelope form-icon"></i>
+                                    </div>
+                                    
+                                    <div class="input-icon-group">
+                                        <input type="password" name="password" class="form-control" id="registerPassword" placeholder="Create Password" required>
+                                        <i class="fas fa-lock form-icon"></i>
+                                        <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
+                                            <i class="fas fa-eye" id="toggleIconReg"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Driver Fields -->
+                                    <div id="driverFields" style="{{ 'display: block;' if form_data and form_data.role == 'driver' else 'display: none;' }}" class="driver-fields animate__fadeIn">
+                                        <h6 class="driver-fields-title">
+                                            <i class="fas fa-id-card"></i> Driver Verification
+                                        </h6>
+                                        
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label small text-muted">Vehicle Type</label>
+                                                <select name="vehicle_type" class="form-select">
+                                                    <option value="car" {{ 'selected' if form_data and form_data.vehicle_type == 'car' else '' }}>Car (Up to 250kg)</option>
+                                                    <option value="van" {{ 'selected' if form_data and form_data.vehicle_type == 'van' else '' }}>Van (Up to 1000kg)</option>
+                                                    <option value="truck" {{ 'selected' if form_data and form_data.vehicle_type == 'truck' else '' }}>Truck (Over 1000kg)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small text-muted">Plate Number</label>
+                                                <input type="text" name="vehicle_id" class="form-control" placeholder="e.g. NW 123 AA" value="{{ form_data.vehicle_id if form_data else '' }}">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row g-3 mt-2">
+                                            <div class="col-md-6">
+                                                <label class="form-label small text-muted">ID Card Photo</label>
+                                                <input type="file" name="id_card" class="form-control" accept="image/*">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small text-muted">Driver's License</label>
+                                                <input type="file" name="license" class="form-control" accept="image/*">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            <label class="form-label small text-muted">Live Selfie Verification</label>
+                                            <div class="camera-container" id="camera-wrapper" style="min-height: 250px; background: #1a1a2e; border-radius: 16px; overflow: hidden; position: relative;">
+                                                <div id="camera-placeholder" class="d-flex flex-column align-items-center justify-content-center h-100" style="min-height: 250px; color: white; position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
+                                                    <i class="fas fa-camera fa-3x mb-3 opacity-75"></i>
+                                                    <p class="mb-2 text-center px-3">Click below to enable camera</p>
+                                                </div>
+                                                <video id="video" playsinline muted loop style="display: none; width: 100%; height: 250px; object-fit: cover; background: #000;"></video>
+                                                <canvas id="canvas" style="display: none;"></canvas>
+                                                <img id="photo-preview" style="display: none; width: 100%; height: 250px; object-fit: cover;" class="img-fluid">
+                                                <div class="camera-controls" style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px;">
+                                                    <button type="button" id="start-camera" class="camera-btn" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid white; background: #0d6efd; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="startCamera()">
+                                                        <i class="fas fa-video fa-lg"></i>
+                                                    </button>
+                                                    <button type="button" id="capture-photo" class="camera-btn" style="display: none; width: 60px; height: 60px; border-radius: 50%; border: 3px solid white; background: #dc3545; color: white; align-items: center; justify-content: center; cursor: pointer;" onclick="capturePhoto()">
+                                                        <i class="fas fa-camera fa-lg"></i>
+                                                    </button>
+                                                    <button type="button" id="retake-photo" class="camera-btn" style="display: none; width: 60px; height: 60px; border-radius: 50%; border: 3px solid white; background: #ffc107; color: #000; align-items: center; justify-content: center; cursor: pointer;" onclick="retakePhoto()">
+                                                        <i class="fas fa-redo fa-lg"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="d-grid mt-2">
+                                                <button type="button" id="enable-camera-btn" class="btn btn-outline-primary btn-sm rounded-pill" onclick="startCamera()">
+                                                    <i class="fas fa-camera me-2"></i>Enable Camera for Selfie
+                                                </button>
+                                            </div>
+                                            <small class="text-muted d-block mt-2">Take a clear selfie for identity verification</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Terms -->
+                                    <div class="terms-check">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="terms" required>
+                                            <label class="form-check-label" for="terms">
+                                                I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary w-100 btn-auth">
+                                        <i class="fas fa-user-plus me-2"></i>Create Account
+                                    </button>
+                                </form>
+                                
+                                <p class="form-footer mt-3">
+                                    Already have an account? 
+                                    <a href="{{ url_for('login') }}">Sign in</a>
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm mb-4">
-                    Create My Account
-                </button>
-            </form>
-            
-            <div class="text-center">
-                <p class="text-muted small mb-0">Already have an account? <a href="{{ url_for('login') }}" class="fw-bold text-decoration-none">Sign In instead</a></p>
+                <p class="text-center mt-4 text-muted small">
+                    <i class="fas fa-lock me-1"></i> 
+                    &copy; 2026 CargoFind Cameroon. Secure Logistics Platform.
+                </p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function toggleDriverFields() {
-    const roleDriver = document.getElementById('role_driver');
-    if (!roleDriver) return;
-    
-    const isDriver = roleDriver.checked;
-    const driverFields = document.getElementById('driverFields');
-    if (!driverFields) return;
-    
-    driverFields.style.display = isDriver ? 'block' : 'none';
-    
-    const inputs = driverFields.querySelectorAll('input:not(#selfie_data), select');
-    inputs.forEach(input => {
-        if (isDriver) {
-            input.setAttribute('required', 'required');
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById('toggleIconReg');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
         } else {
-            input.removeAttribute('required');
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
         }
-    });
-
-    if (isDriver) {
-        initCameraLogic();
     }
-}
-
-let cameraInitialized = false;
-function initCameraLogic() {
-    if (cameraInitialized) return;
     
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const startBtn = document.getElementById('start-camera');
-    const captureBtn = document.getElementById('capture-photo');
-    const retakeBtn = document.getElementById('retake-photo');
-    const preview = document.getElementById('photo-preview');
-    const selfieDataInput = document.getElementById('selfie_data');
+    function toggleDriverFields() {
+        const roleDriver = document.getElementById('role_driver');
+        const driverFields = document.getElementById('driverFields');
+        
+        if (!roleDriver || !driverFields) return;
+        
+        const isDriver = roleDriver.checked;
+        driverFields.style.display = isDriver ? 'block' : 'none';
+        
+        const inputs = driverFields.querySelectorAll('input:not(#selfie_data), select');
+        inputs.forEach(input => {
+            if (isDriver) {
+                input.setAttribute('required', 'required');
+            } else {
+                input.removeAttribute('required');
+            }
+        });
+    }
+    
     let stream = null;
-
-    if (!startBtn) return;
-    cameraInitialized = true;
-
-    startBtn.onclick = async () => {
+    
+    function startCamera() {
+        const video = document.getElementById('video');
+        const placeholder = document.getElementById('camera-placeholder');
+        const enableBtn = document.getElementById('enable-camera-btn');
+        const startBtn = document.getElementById('start-camera');
+        const captureBtn = document.getElementById('capture-photo');
+        const wrapper = document.getElementById('camera-wrapper');
+        
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert("Your browser does not support camera access or you are not on a secure (HTTPS) connection.");
+            alert("Camera not supported on this device. Please use a modern browser (Chrome, Firefox, Safari) and ensure you're using HTTPS.");
             return;
         }
-
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user" }, 
-                audio: false 
-            });
+        
+        // Request camera access
+        navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: "user",
+                width: { ideal: 640 },
+                height: { ideal: 480 }
+            }, 
+            audio: false 
+        })
+        .then(s => {
+            stream = s;
             video.srcObject = stream;
-            video.style.display = 'block';
-            startBtn.style.display = 'none';
-            captureBtn.style.display = 'block';
             
-            video.onloadedmetadata = () => {
-                video.play();
+            // Wait for video to be ready
+            video.onloadedmetadata = function() {
+                video.play().then(() => {
+                    // Show video, hide placeholder
+                    video.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                    if (enableBtn) enableBtn.style.display = 'none';
+                    startBtn.style.display = 'none';
+                    captureBtn.style.display = 'flex';
+                }).catch(err => {
+                    console.error('Play error:', err);
+                    alert('Could not play video. Please try again.');
+                });
             };
-        } catch (err) {
-            console.error("Camera Error:", err);
-            alert("Could not access camera. Please ensure you have granted permission and no other app is using it.");
-        }
-    };
-
-    captureBtn.onclick = () => {
-        if (!video.videoWidth) {
-            alert("Camera is still loading. Please wait a second.");
+        })
+        .catch(err => {
+            console.error("Camera error:", err);
+            let message = "Could not access camera.";
+            if (err.name === 'NotAllowedError') {
+                message = "Camera access denied. Please allow camera permission in your browser settings.";
+            } else if (err.name === 'NotFoundError') {
+                message = "No camera found on this device.";
+            } else if (err.name === 'NotReadableError') {
+                message = "Camera is in use by another application. Please close other apps using the camera.";
+            }
+            alert(message);
+        });
+    }
+    
+    function capturePhoto() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const preview = document.getElementById('photo-preview');
+        const captureBtn = document.getElementById('capture-photo');
+        const retakeBtn = document.getElementById('retake-photo');
+        const selfieData = document.getElementById('selfie_data');
+        
+        if (!video.videoWidth || !video.videoHeight) {
+            alert("Camera is still loading. Please wait a moment and try again.");
             return;
         }
+        
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
@@ -205,29 +694,41 @@ function initCameraLogic() {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
         const data = canvas.toDataURL('image/jpeg', 0.8);
-        selfieDataInput.value = data;
+        selfieData.value = data;
         preview.src = data;
-        preview.style.display = 'block';
-        video.style.display = 'none';
-        captureBtn.style.display = 'none';
-        retakeBtn.style.display = 'block';
         
+        // Show preview, hide video
+        video.style.display = 'none';
+        preview.style.display = 'block';
+        captureBtn.style.display = 'none';
+        retakeBtn.style.display = 'flex';
+        
+        // Stop camera to save resources
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
         }
-    };
-
-    retakeBtn.onclick = async () => {
+        
+        // Confirm capture
+        alert("✓ Selfie captured! Click 'Retake' if you need to take another.");
+    }
+    
+    function retakePhoto() {
+        const video = document.getElementById('video');
+        const preview = document.getElementById('photo-preview');
+        const captureBtn = document.getElementById('capture-photo');
+        const retakeBtn = document.getElementById('retake-photo');
+        const selfieData = document.getElementById('selfie_data');
+        const enableBtn = document.getElementById('enable-camera-btn');
+        
         preview.style.display = 'none';
-        selfieDataInput.value = '';
-        startBtn.click(); // Re-trigger start
-    };
-}
-
-// Run on load to handle pre-filled forms
-document.addEventListener('DOMContentLoaded', toggleDriverFields);
-
+        selfieData.value = '';
+        retakeBtn.style.display = 'none';
+        
+        if (enableBtn) enableBtn.style.display = 'block';
+        
+        startCamera();
+    }
+    
+    document.addEventListener('DOMContentLoaded', toggleDriverFields);
 </script>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 {% endblock %}

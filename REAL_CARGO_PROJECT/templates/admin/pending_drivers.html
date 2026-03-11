@@ -1,67 +1,353 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Pending Driver Approvals</h2>
-        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-    </div>
+<style>
+    .pending-page {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .page-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .header-badge {
+        background: #fff3cd;
+        color: #664d03;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .driver-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .driver-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        transition: transform 0.2s ease;
+    }
+    
+    .driver-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    .driver-card-header {
+        background: linear-gradient(135deg, #fd7e14 0%, #d65a00 100%);
+        padding: 1.5rem;
+        color: white;
+    }
+    
+    .driver-avatar {
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .driver-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .driver-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+    }
+    
+    .driver-card-body {
+        padding: 1.5rem;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+    
+    .documents-section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #eee;
+    }
+    
+    .documents-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        margin-bottom: 0.75rem;
+    }
+    
+    .document-links {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .doc-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: #0d6efd;
+        transition: all 0.2s ease;
+    }
+    
+    .doc-link:hover {
+        background: #e9ecef;
+    }
+    
+    .doc-link.missing {
+        color: #6c757d;
+        background: #f8f9fa;
+    }
+    
+    .driver-card-footer {
+        padding: 1rem 1.5rem;
+        background: #f8f9fa;
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .btn-action {
+        flex: 1;
+        padding: 0.75rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-approve {
+        background: #198754;
+        color: white;
+    }
+    
+    .btn-approve:hover {
+        background: #157347;
+        color: white;
+    }
+    
+    .btn-reject {
+        background: white;
+        color: #dc3545;
+        border: 1px solid #dc3545;
+    }
+    
+    .btn-reject:hover {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .empty-icon {
+        width: 100px;
+        height: 100px;
+        background: #d1e7dd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2.5rem;
+        color: #198754;
+    }
+    
+    .empty-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-text {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .driver-cards {
+            grid-template-columns: 1fr;
+        }
+        
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
 
-    <div class="card shadow">
-        <div class="card-body">
-            {% if drivers %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Vehicle Type</th>
-                            <th>Vehicle ID</th>
-                            <th>Documents</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for driver in drivers %}
-                        <tr>
-                            <td>{{ driver.full_name }}</td>
-                            <td>{{ driver.email }}</td>
-                            <td>{{ driver.phone }}</td>
-                            <td><span class="badge bg-info text-dark text-capitalize">{{ driver.vehicle_type }}</span></td>
-                            <td>{{ driver.vehicle_id }}</td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    {% if driver.id_card_url %}
-                                        <a href="{{ url_for('static', filename='uploads/' + driver.id_card_url) }}" target="_blank" class="btn btn-outline-primary" title="National ID">ID</a>
-                                    {% endif %}
-                                    {% if driver.license_url %}
-                                        <a href="{{ url_for('static', filename='uploads/' + driver.license_url) }}" target="_blank" class="btn btn-outline-primary" title="Driver's License">Lic</a>
-                                    {% endif %}
-                                    {% if driver.selfie_url %}
-                                        <a href="{{ url_for('static', filename='uploads/' + driver.selfie_url) }}" target="_blank" class="btn btn-outline-primary" title="Face Check">Face</a>
-                                    {% endif %}
-                                </div>
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ url_for('approve_driver', user_id=driver.id) }}" class="btn btn-success">Approve</a>
-                                    <a href="{{ url_for('reject_driver', user_id=driver.id) }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject and delete this driver account?')">Reject</a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="text-center py-4">
-                <i class="bi bi-person-check display-4 text-muted"></i>
-                <p class="mt-2">No pending driver approvals at the moment.</p>
-            </div>
-            {% endif %}
-        </div>
+<div class="pending-page">
+    <div class="page-header">
+        <h2><i class="fas fa-user-check text-warning me-2"></i>Pending Driver Approvals</h2>
+        {% if drivers %}
+        <span class="header-badge">
+            <i class="fas fa-clock me-1"></i>{{ drivers|length }} Waiting
+        </span>
+        {% endif %}
     </div>
+    
+    {% if drivers %}
+    <div class="driver-cards">
+        {% for driver in drivers %}
+        <div class="driver-card">
+            <div class="driver-card-header">
+                <div class="driver-avatar">{{ driver.full_name[0]|upper }}</div>
+                <div class="driver-name">{{ driver.full_name }}</div>
+                <span class="driver-status">
+                    <i class="fas fa-clock"></i> Pending Review
+                </span>
+            </div>
+            
+            <div class="driver-card-body">
+                <div class="info-row">
+                    <div>
+                        <div class="info-label">Email</div>
+                        <div class="info-value">{{ driver.email }}</div>
+                    </div>
+                    <div>
+                        <div class="info-label">Phone</div>
+                        <div class="info-value">{{ driver.phone }}</div>
+                    </div>
+                </div>
+                
+                <div class="info-row">
+                    <div>
+                        <div class="info-label">Vehicle Type</div>
+                        <div class="info-value text-capitalize">{{ driver.vehicle_type }}</div>
+                    </div>
+                    <div>
+                        <div class="info-label">Vehicle ID</div>
+                        <div class="info-value">{{ driver.vehicle_id }}</div>
+                    </div>
+                </div>
+                
+                <div class="documents-section">
+                    <div class="documents-title">Submitted Documents</div>
+                    <div class="document-links">
+                        {% if driver.id_card_url %}
+                        <a href="{{ url_for('static', filename='uploads/' + driver.id_card_url) }}" target="_blank" class="doc-link">
+                            <i class="fas fa-id-card"></i> National ID
+                        </a>
+                        {% else %}
+                        <span class="doc-link missing">
+                            <i class="fas fa-times-circle"></i> National ID
+                        </span>
+                        {% endif %}
+                        
+                        {% if driver.license_url %}
+                        <a href="{{ url_for('static', filename='uploads/' + driver.license_url) }}" target="_blank" class="doc-link">
+                            <i class="fas fa-id-badge"></i> License
+                        </a>
+                        {% else %}
+                        <span class="doc-link missing">
+                            <i class="fas fa-times-circle"></i> License
+                        </span>
+                        {% endif %}
+                        
+                        {% if driver.selfie_url %}
+                        <a href="{{ url_for('static', filename='uploads/' + driver.selfie_url) }}" target="_blank" class="doc-link">
+                            <i class="fas fa-user"></i> Selfie
+                        </a>
+                        {% else %}
+                        <span class="doc-link missing">
+                            <i class="fas fa-times-circle"></i> Selfie
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="driver-card-footer">
+                <a href="{{ url_for('reject_driver', user_id=driver.id) }}" class="btn-action btn-reject" onclick="return confirm('Are you sure you want to reject and delete this driver account?')">
+                    <i class="fas fa-times"></i> Reject
+                </a>
+                <a href="{{ url_for('approve_driver', user_id=driver.id) }}" class="btn-action btn-approve">
+                    <i class="fas fa-check"></i> Approve
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h3 class="empty-title">All Caught Up!</h3>
+        <p class="empty-text">No pending driver approvals at the moment. Check back later.</p>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary rounded-pill px-4">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -1,277 +1,614 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row animate-up">
-    <div class="col-md-4">
-        <div class="card p-4 mb-4 stats-card bg-primary text-white border-0">
-            <h6 class="opacity-75">Total Cash Collected</h6>
-            <h2 class="fw-bold mb-3">{{ earnings|int }} XAF</h2>
-            <hr class="opacity-25">
-            <a href="javascript:void(0)" onclick="toggleHistory()" class="text-white text-decoration-none d-flex justify-content-between align-items-center">
-                <span class="small">Jobs Completed:</span>
-                <span class="fw-bold h5 mb-0">{{ completed_count }} <i class="fas fa-chevron-right ms-1" style="font-size: 0.7rem;"></i></span>
+<style>
+    .driver-dashboard {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .welcome-card {
+        background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        color: white;
+        margin-bottom: 2rem;
+    }
+    
+    .welcome-card h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    .stat-card.primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+        color: white;
+    }
+    
+    .stat-card.success {
+        border-left: 4px solid #198754;
+    }
+    
+    .stat-card.warning {
+        border-left: 4px solid #ffc107;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-card.primary .stat-icon {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .stat-card:not(.primary) .stat-icon {
+        background: #f8f9fa;
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+    
+    .section-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    
+    .section-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .section-header h3 {
+        font-size: 1.125rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .job-card {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #eee;
+        transition: background 0.2s ease;
+    }
+    
+    .job-card:last-child {
+        border-bottom: none;
+    }
+    
+    .job-card:hover {
+        background: #f8f9fa;
+    }
+    
+    .job-card.active {
+        border-left: 4px solid #0d6efd;
+        background: #f0f7ff;
+    }
+    
+    .job-id {
+        font-weight: 700;
+        color: #1a1a2e;
+    }
+    
+    .job-route {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0.75rem 0;
+    }
+    
+    .route-point {
+        flex: 1;
+    }
+    
+    .route-line {
+        width: 30px;
+        height: 2px;
+        background: #dee2e6;
+        position: relative;
+    }
+    
+    .route-line::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: -3px;
+        width: 0;
+        height: 0;
+        border-left: 6px solid #dee2e6;
+        border-top: 4px solid transparent;
+        border-bottom: 4px solid transparent;
+    }
+    
+    .route-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    
+    .route-value {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+    
+    .job-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .job-meta i {
+        width: 16px;
+    }
+    
+    .status-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-badge.pending {
+        background: #fff3cd;
+        color: #664d03;
+    }
+    
+    .status-badge.active {
+        background: #cff4fc;
+        color: #055160;
+    }
+    
+    .status-badge.completed {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .status-badge.paid {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .status-badge.unpaid {
+        background: #fff3cd;
+        color: #664d03;
+    }
+    
+    .empty-state {
+        padding: 3rem;
+        text-align: center;
+    }
+    
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        background: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 2rem;
+        color: #adb5bd;
+    }
+    
+    .empty-state h4 {
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
+    
+    .vehicle-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+    
+    .vehicle-icon {
+        width: 48px;
+        height: 48px;
+        background: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: #0d6efd;
+    }
+    
+    .vehicle-info {
+        flex: 1;
+    }
+    
+    .vehicle-type {
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+    
+    .vehicle-plate {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .action-btn {
+        padding: 0.625rem 1.25rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .welcome-card {
+            padding: 1.5rem;
+        }
+        
+        .welcome-card h1 {
+            font-size: 1.5rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .section-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        
+        .job-route {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .route-line {
+            width: 2px;
+            height: 20px;
+        }
+        
+        .route-line::after {
+            right: -3px;
+            top: auto;
+            bottom: 0;
+            border-left: 4px solid transparent;
+            border-top: 6px solid #dee2e6;
+        }
+        
+        .job-meta {
+            flex-wrap: wrap;
+        }
+    }
+    
+    @media print {
+        .no-print { display: none !important; }
+    }
+</style>
+
+<div class="driver-dashboard">
+    <!-- Welcome Section -->
+    <div class="welcome-card">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1><i class="fas fa-truck-moving me-2"></i>Welcome back, {{ current_user.full_name.split()[0] }}!</h1>
+                <p class="mb-0 opacity-75">Here's your driver dashboard overview</p>
+            </div>
+            <a href="{{ url_for('available_jobs') }}" class="action-btn btn btn-light {% if not current_user.is_approved %}disabled{% endif %}">
+                <i class="fas fa-search"></i> Find Jobs
             </a>
         </div>
-        <div class="card p-4 mb-4">
-            <h5>Vehicle Status</h5>
-            <p class="mb-1 text-muted small">Type: <strong>{{ current_user.vehicle_type | capitalize }}</strong></p>
-            <p class="mb-1 text-muted small">Plate: <strong>{{ current_user.vehicle_id }}</strong></p>
-            <hr>
-            <p class="mb-0">Status: 
-                {% if current_user.is_approved %}
-                    <span class="badge bg-success-subtle text-success border border-success px-3">Approved</span>
-                {% else %}
-                    <span class="badge bg-warning-subtle text-warning border border-warning px-3">Pending</span>
-                {% endif %}
-            </p>
-        </div>
-        <a href="{{ url_for('available_jobs') }}" class="btn btn-primary btn-lg w-100 mb-4 {% if not current_user.is_approved %}disabled{% endif %}">
-            <i class="fas fa-search me-2"></i> Find New Jobs
-        </a>
     </div>
-
-    <div class="col-md-8">
-        <!-- 1. Active Jobs (Status not Delivered) -->
-        {% if active_jobs %}
-            {% for active_job in active_jobs %}
-            <div class="card p-4 border-primary shadow-sm mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="fw-bold text-primary">Active Delivery #{{ active_job.id }}</h3>
-                    <span class="badge {% if active_job.status == 'Driver Accepted' %}bg-info{% else %}bg-primary{% endif %} px-3 rounded-pill">
-                        {% if active_job.status == 'Driver Accepted' %}Waiting for Customer Approval{% else %}{{ active_job.status }}{% endif %}
-                    </span>
+    
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="stat-value">{{ "{:,}".format(earnings|int) }}</div>
+            <div class="stat-label">Total Earnings (XAF)</div>
+        </div>
+        
+        <div class="stat-card success">
+            <div class="stat-icon text-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value">{{ completed_count }}</div>
+            <div class="stat-label">Jobs Completed</div>
+        </div>
+        
+        <div class="stat-card warning">
+            <div class="stat-icon text-warning">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-value">{{ active_jobs|length + unpaid_jobs|length }}</div>
+            <div class="stat-label">Active Jobs</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon text-primary">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-value">4.9</div>
+            <div class="stat-label">Rating</div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Active Jobs -->
+            {% if active_jobs %}
+            <div class="section-card">
+                <div class="section-header">
+                    <h3><i class="fas fa-truck text-primary"></i> Active Deliveries</h3>
+                    <span class="status-badge active">{{ active_jobs|length }} Active</span>
                 </div>
                 
-                <div class="row mb-3">
-                    <div class="col-4">
-                        <h6><i class="fas fa-map-marker-alt text-success"></i> Pickup</h6>
-                        <p class="small mb-1">{{ active_job.pickup_location }}</p>
-                        <p class="small text-muted"><i class="far fa-clock me-1"></i>{{ active_job.pickup_time.strftime('%d %b, %H:%M') }}</p>
+                {% for job in active_jobs %}
+                <div class="job-card active">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="job-id">Delivery #{{ job.id }}</span>
+                        <span class="status-badge {% if job.status == 'Driver Accepted' %}pending{% else %}active{% endif %}">
+                            {{ job.status }}
+                        </span>
                     </div>
-                    <div class="col-4">
-                        <h6><i class="fas fa-flag-checkered text-danger"></i> Drop-off</h6>
-                        <p class="small mb-1">{{ active_job.dropoff_location }}</p>
-                        {% if active_job.dropoff_time %}
-                            <p class="small text-muted"><i class="fas fa-history me-1"></i>Est: {{ active_job.dropoff_time.strftime('%H:%M') }}</p>
-                        {% endif %}
-                    </div>
-                    <div class="col-4">
-                        <h6><i class="fas fa-phone text-primary"></i> Customer</h6>
-                        <p class="small"><a href="tel:{{ active_job.customer.phone }}" class="text-decoration-none fw-bold">{{ active_job.customer.phone }}</a></p>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <h6>Update Status</h6>
-                    {% if active_job.status == 'Driver Accepted' %}
-                        <div class="alert alert-info rounded-4 border-0 shadow-sm d-flex align-items-center">
-                            <i class="fas fa-hourglass-half me-3 fa-lg text-info"></i>
-                            <div>
-                                <p class="mb-0 fw-bold">Pending Customer Approval</p>
-                                <p class="mb-0 small">The customer is currently reviewing your profile and rating. You will be notified once they accept your interest.</p>
-                            </div>
+                    
+                    <div class="job-route">
+                        <div class="route-point">
+                            <div class="route-label"><i class="fas fa-map-marker-alt text-success me-1"></i> Pickup</div>
+                            <div class="route-value">{{ job.pickup_location }}</div>
                         </div>
+                        <div class="route-line"></div>
+                        <div class="route-point">
+                            <div class="route-label"><i class="fas fa-flag-checkered text-danger me-1"></i> Drop-off</div>
+                            <div class="route-value">{{ job.dropoff_location }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="job-meta">
+                        <span><i class="fas fa-user"></i> {{ job.customer.full_name }}</span>
+                        <span><i class="fas fa-phone"></i> {{ job.customer.phone }}</span>
+                        <span><i class="fas fa-money-bill"></i> {{ "{:,}".format(job.total_cost|int) }} XAF</span>
+                    </div>
+                    
+                    {% if job.status != 'Driver Accepted' %}
+                    <form action="{{ url_for('update_status', delivery_id=job.id) }}" method="POST" class="mt-3">
+                        <div class="d-flex gap-2">
+                            <select name="status" class="form-select form-select-sm rounded-pill" style="max-width: 200px;">
+                                <option value="Accepted" {% if job.status == 'Accepted' %}selected{% endif %}>Accepted</option>
+                                <option value="Picked Up" {% if job.status == 'Picked Up' %}selected{% endif %}>Picked Up</option>
+                                <option value="In Transit" {% if job.status == 'In Transit' %}selected{% endif %}>In Transit</option>
+                                <option value="Traffic Delay" {% if job.status == 'Traffic Delay' %}selected{% endif %}>Traffic Delay</option>
+                                <option value="Delivered" {% if job.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary btn-sm rounded-pill">Update</button>
+                        </div>
+                    </form>
                     {% else %}
-                        <form action="{{ url_for('update_status', delivery_id=active_job.id) }}" method="POST" class="d-flex flex-column gap-2">
-                            <div class="d-flex gap-2">
-                                <select name="status" id="statusSelect{{ active_job.id }}" onchange="toggleOTP(this.value, {{ active_job.id }})" class="form-select rounded-pill">
-                                    <option value="Accepted" {% if active_job.status == 'Accepted' %}selected{% endif %}>Accepted</option>
-                                    <option value="Picked Up" {% if active_job.status == 'Picked Up' %}selected{% endif %}>Picked Up</option>
-                                    <option value="In Transit" {% if active_job.status == 'In Transit' %}selected{% endif %}>In Transit</option>
-                                    <option value="Traffic Delay" {% if active_job.status == 'Traffic Delay' %}selected{% endif %}>Traffic Delay</option>
-                                    <option value="Delivered" {% if active_job.status == 'Delivered' %}selected{% endif %}>Delivered</option>
-                                </select>
-                                <button type="submit" class="btn btn-primary rounded-pill px-4">Update</button>
-                            </div>
-                            <div id="otpSection{{ active_job.id }}" style="display: none;">
-                                <input type="text" name="otp_code" class="form-control rounded-pill" placeholder="Enter 6-digit Security OTP from Customer" maxlength="6">
-                                <small class="text-muted ps-2">Ask customer for the verification code</small>
-                            </div>
-                        </form>
+                    <div class="alert alert-info rounded-4 border-0 shadow-sm d-flex align-items-center mt-3 py-2">
+                        <i class="fas fa-hourglass-half me-2 text-info"></i>
+                        <small>Waiting for customer approval</small>
+                    </div>
                     {% endif %}
                 </div>
-
-                <div id="driverMap{{ active_job.id }}" style="height: 250px; border-radius: 15px;" class="shadow-sm"></div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        {% endif %}
-
-        <!-- 2. Unpaid Deliveries (Delivered but Pending Cash) -->
-        {% if unpaid_jobs %}
-            <h5 class="fw-bold mb-3 mt-4 text-warning"><i class="fas fa-money-bill-wave me-2"></i>Awaiting Cash Payment</h5>
-            {% for job in unpaid_jobs %}
-                <div class="card border-warning shadow-sm mb-3 p-3">
+            {% endif %}
+            
+            <!-- Awaiting Payment -->
+            {% if unpaid_jobs %}
+            <div class="section-card">
+                <div class="section-header">
+                    <h3><i class="fas fa-money-bill-wave text-warning"></i> Awaiting Cash Payment</h3>
+                    <span class="status-badge unpaid">{{ unpaid_jobs|length }} Pending</span>
+                </div>
+                
+                {% for job in unpaid_jobs %}
+                <div class="job-card">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="fw-bold">Delivery #{{ job.id }}</span><br>
-                            <span class="text-muted small">To: {{ job.dropoff_location[:50] }}...</span>
+                            <span class="job-id">Delivery #{{ job.id }}</span>
+                            <div class="job-route" style="margin-top: 0.5rem;">
+                                <div class="route-point">
+                                    <div class="route-value text-muted">{{ job.pickup_location[:30] }}...</div>
+                                </div>
+                                <div class="route-line"></div>
+                                <div class="route-point">
+                                    <div class="route-value">{{ job.dropoff_location[:30] }}...</div>
+                                </div>
+                            </div>
                         </div>
                         <div class="text-end">
-                            <span class="h5 fw-bold text-dark d-block mb-2">{{ job.total_cost|int }} XAF</span>
+                            <div class="stat-value" style="font-size: 1.25rem;">{{ "{:,}".format(job.total_cost|int) }} XAF</div>
                             <form action="{{ url_for('mark_paid', delivery_id=job.id) }}" method="POST">
-                                <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Confirm Cash Received</button>
+                                <button type="submit" class="btn btn-success btn-sm rounded-pill mt-2">
+                                    <i class="fas fa-check"></i> Confirm Payment
+                                </button>
                             </form>
                         </div>
                     </div>
                 </div>
-            {% endfor %}
-        {% endif %}
-
-        <!-- Placeholder if nothing pending -->
-        {% if not active_jobs and not unpaid_jobs %}
-            <div class="card p-5 text-center border-0 shadow-sm bg-white mb-4">
-                <i class="fas fa-search-location fa-4x text-muted mb-3 opacity-25"></i>
-                <h4 class="fw-bold text-muted">All caught up!</h4>
-                <p class="text-muted">Browse available jobs to start your next delivery.</p>
-                <a href="{{ url_for('available_jobs') }}" class="btn btn-primary rounded-pill px-5 mt-2 shadow">Browse Jobs</a>
+                {% endfor %}
             </div>
-        {% endif %}
-
-        <!-- 3. Completed History (Hidden by default, shown on click) -->
-        <div id="completedHistory" style="display: none;" class="animate-up">
-            <div class="d-flex justify-content-between align-items-center mt-5 mb-4">
-                <h4 class="fw-bold mb-0 text-success"><i class="fas fa-history me-2"></i>Completed Jobs History</h4>
-                <button onclick="toggleHistory()" class="btn btn-light btn-sm rounded-pill px-3 shadow-sm"><i class="fas fa-times me-1"></i> Close</button>
-            </div>
-            <div class="card border-0 shadow-sm overflow-hidden mb-5">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr class="small text-uppercase text-muted">
-                                <th class="ps-4">ID</th>
-                                <th>Date</th>
-                                <th>Destination</th>
-                                <th class="text-end pe-4">Earnings</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for job in history_jobs %}
-                            <tr class="small">
-                                    <td class="ps-4 fw-bold">#{{ job.id }}</td>
-                                    <td>{{ job.created_at.strftime('%d %b %Y') }}</td>
-                                    <td class="text-truncate" style="max-width: 200px;">{{ job.dropoff_location }}</td>
-                                    <td class="text-end pe-4">
-                                        <div class="d-flex flex-column align-items-end">
-                                            <span class="fw-bold text-success">{{ job.total_cost|int }} XAF</span>
-                                            <button class="btn btn-link btn-sm text-primary p-0 text-decoration-none" data-bs-toggle="modal" data-bs-target="#jobModal{{ job.id }}">View Details</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% endblock %}
-
-{% block modals %}
-<!-- History Modals -->
-{% for job in history_jobs %}
-<div class="modal fade" id="jobModal{{ job.id }}" tabindex="-1" data-bs-backdrop="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 rounded-4 shadow-lg">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold">Job Summary #{{ job.id }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="mb-4">
-                    <span class="badge bg-success-subtle text-success border border-success px-3 rounded-pill mb-2">Paid & Delivered</span>
-                    <h2 class="fw-bold text-dark">{{ job.total_cost|int }} XAF</h2>
-                    <small class="text-muted">Collected on {{ job.created_at.strftime('%d %b %Y, %H:%M') }}</small>
-                </div>
-
-                {% if job.rating %}
-                <div class="mb-4 p-3 bg-warning-subtle rounded-4 border border-warning-subtle animate-up">
-                    <h6 class="text-uppercase small fw-bold text-warning mb-2"><i class="fas fa-star me-2"></i>Customer Rating</h6>
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <div class="text-warning h4 mb-0">
-                            {% for i in range(5) %}
-                                <i class="{% if i < job.rating %}fas{% else %}far{% endif %} fa-star"></i>
-                            {% endfor %}
-                        </div>
-                        <span class="fw-bold text-dark">({{ job.rating }}/5)</span>
+            {% endif %}
+            
+            <!-- Empty State -->
+            {% if not active_jobs and not unpaid_jobs %}
+            <div class="section-card">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-check-double"></i>
                     </div>
-                    {% if job.feedback %}
-                        <p class="mb-0 small text-dark-emphasis italic">"{{ job.feedback }}"</p>
-                    {% endif %}
+                    <h4>All caught up!</h4>
+                    <p>You have no pending deliveries. Browse available jobs to start earning.</p>
+                    <a href="{{ url_for('available_jobs') }}" class="btn btn-primary rounded-pill px-4">
+                        <i class="fas fa-search me-2"></i> Browse Jobs
+                    </a>
                 </div>
-                {% endif %}
-
-                <div class="row g-3">
-                    <div class="col-12">
-                        <div class="p-3 bg-light rounded-3">
-                            <h6 class="text-uppercase small fw-bold text-muted mb-2"><i class="fas fa-box me-2"></i>Goods Description</h6>
-                            <p class="mb-0 small">{{ job.goods_description }}</p>
-                            {% if job.weight %}
-                            <span class="badge bg-secondary-subtle text-secondary mt-2">{{ job.weight }} kg</span>
-                            {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Vehicle Info -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3><i class="fas fa-truck text-primary"></i> Vehicle Status</h3>
+                </div>
+                <div class="p-3">
+                    <div class="vehicle-card">
+                        <div class="vehicle-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-type">{{ current_user.vehicle_type|capitalize }}</div>
+                            <div class="vehicle-plate">{{ current_user.vehicle_id }}</div>
                         </div>
                     </div>
                     
-                    <div class="col-6">
-                        <h6 class="text-uppercase small fw-bold text-muted mb-1"><i class="fas fa-map-marker-alt text-success me-2"></i>Pickup</h6>
-                        <p class="small mb-0">{{ job.pickup_location }}</p>
-                    </div>
-                    <div class="col-6">
-                        <h6 class="text-uppercase small fw-bold text-muted mb-1"><i class="fas fa-flag-checkered text-danger me-2"></i>Drop-off</h6>
-                        <p class="small mb-0">{{ job.dropoff_location }}</p>
-                    </div>
-
-                    <div class="col-12 border-top pt-3">
-                        <h6 class="text-uppercase small fw-bold text-muted mb-2"><i class="fas fa-user-circle me-2"></i>Customer Info</h6>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="mb-0 fw-bold">{{ job.customer.full_name }}</p>
-                                <p class="mb-0 small text-muted">{{ job.customer.phone }}</p>
-                            </div>
-                            <a href="tel:{{ job.customer.phone }}" class="btn btn-primary btn-sm rounded-pill px-3">Call Now</a>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Driver Status</span>
+                        {% if current_user.is_approved %}
+                            <span class="badge bg-success-subtle text-success border border-success px-3 rounded-pill">
+                                <i class="fas fa-check-circle me-1"></i> Approved
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning px-3 rounded-pill">
+                                <i class="fas fa-clock me-1"></i> Pending
+                            </span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light w-100 rounded-pill py-2" data-bs-dismiss="modal">Close</button>
+            
+            <!-- Quick Actions -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3><i class="fas fa-bolt text-warning"></i> Quick Actions</h3>
+                </div>
+                <div class="p-3">
+                    <a href="{{ url_for('available_jobs') }}" class="btn btn-outline-primary w-100 mb-2 {% if not current_user.is_approved %}disabled{% endif %}">
+                        <i class="fas fa-search me-2"></i> Find New Jobs
+                    </a>
+                    <button onclick="toggleHistory()" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-history me-2"></i> View History
+                    </button>
+                </div>
             </div>
+            
+            <!-- Completed History (Toggle) -->
+            {% if history_jobs %}
+            <div id="completedHistory" style="display: none;">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3><i class="fas fa-check-circle text-success"></i> Completed Jobs</h3>
+                        <button onclick="toggleHistory()" class="btn btn-sm btn-light rounded-pill">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        {% for job in history_jobs[:10] %}
+                        <div class="job-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="job-id">#{{ job.id }}</span>
+                                    <div class="text-muted small">{{ job.dropoff_location[:25] }}...</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="text-success fw-bold">{{ "{:,}".format(job.total_cost|int) }} XAF</div>
+                                    <small class="text-muted">{{ job.created_at.strftime('%d %b') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
-{% endfor %}
+
 {% endblock %}
 
 {% block scripts %}
-<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-
 <script>
     function toggleHistory() {
         const historyDiv = document.getElementById('completedHistory');
-        if (historyDiv.style.display === 'none') {
-            historyDiv.style.display = 'block';
-            historyDiv.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            historyDiv.style.display = 'none';
+        if (historyDiv) {
+            if (historyDiv.style.display === 'none') {
+                historyDiv.style.display = 'block';
+                historyDiv.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                historyDiv.style.display = 'none';
+            }
         }
     }
 </script>
 
 {% if active_jobs %}
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
 <script>
     const socket = io();
     
-    function toggleOTP(status, deliveryId) {
-        const otpSection = document.getElementById('otpSection' + deliveryId);
-        if (status === 'Picked Up' || status === 'Delivered') {
-            otpSection.style.display = 'block';
-        } else {
-            otpSection.style.display = 'none';
-        }
-    }
-
     const activeJobsData = [
         {% for job in active_jobs %}
         {
@@ -280,15 +617,12 @@
             pickup_lat: {{ job.pickup_lat }},
             pickup_lng: {{ job.pickup_lng }},
             dropoff_lat: {{ job.dropoff_lat }},
-            dropoff_lng: {{ job.dropoff_lng }},
-            targetLat: "{{ job.status }}" === 'Accepted' ? {{ job.pickup_lat }} : {{ job.dropoff_lat }},
-            targetLng: "{{ job.status }}" === 'Accepted' ? {{ job.pickup_lng }} : {{ job.dropoff_lng }}
+            dropoff_lng: {{ job.dropoff_lng }}
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ];
 
     const maps = {};
-    const routingControls = {};
     const driverMarkers = {};
 
     const greenIcon = new L.Icon({
@@ -303,70 +637,12 @@
         iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
     });
 
-    const driverIcon = L.icon({
-        iconUrl: 'https://cdn-icons-png.flaticon.com/512/2555/2555013.png',
-        iconSize: [32, 32]
-    });
-
     socket.on('connect', () => {
-        console.log('Driver connected to Socket.io');
+        console.log('Driver connected');
         activeJobsData.forEach(job => {
             socket.emit('join_delivery', { delivery_id: job.id });
         });
     });
-
-    activeJobsData.forEach(job => {
-        if (job.status === 'Driver Accepted') return; // Don't show map if waiting for approval
-
-        const mapId = 'driverMap' + job.id;
-        const mapElement = document.getElementById(mapId);
-        if (!mapElement) return;
-
-        const map = L.map(mapId).setView([job.pickup_lat, job.pickup_lng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        
-        L.marker([job.pickup_lat, job.pickup_lng], {icon: greenIcon}).addTo(map).bindPopup('Pickup');
-        L.marker([job.dropoff_lat, job.dropoff_lng], {icon: redIcon}).addTo(map).bindPopup('Drop-off');
-        
-        maps[job.id] = map;
-    });
-
-    function updateNavigation(jobId, lat, lng) {
-        const job = activeJobsData.find(j => j.id === jobId);
-        if (!job || job.status === 'Driver Accepted' || !maps[jobId]) return;
-
-        if (routingControls[jobId]) maps[jobId].removeControl(routingControls[jobId]);
-
-        routingControls[jobId] = L.Routing.control({
-            waypoints: [
-                L.latLng(lat, lng),
-                L.latLng(job.targetLat, job.targetLng)
-            ],
-            lineOptions: {
-                styles: [{ color: '#0d6efd', weight: 6, opacity: 0.8 }]
-            },
-            createMarker: function() { return null; },
-            show: false,
-            addWaypoints: false
-        }).addTo(maps[jobId]);
-
-        routingControls[jobId].on('routesfound', function(e) {
-            const routes = e.routes;
-            const summary = routes[0].summary;
-            const distance = (summary.totalDistance / 1000).toFixed(1) + ' km';
-            const eta = Math.round(summary.totalTime / 60) + ' mins';
-
-            socket.emit('update_location', {
-                delivery_id: jobId,
-                lat: lat,
-                lng: lng,
-                status: 'moving',
-                distance: distance,
-                eta: eta,
-                route: routes[0].coordinates
-            });
-        });
-    }
 
     if (navigator.geolocation) {
         navigator.geolocation.watchPosition((position) => {
@@ -376,22 +652,12 @@
             activeJobsData.forEach(job => {
                 if (job.status === 'Driver Accepted') return;
                 
-                if (maps[job.id]) {
-                    if (driverMarkers[job.id]) {
-                        driverMarkers[job.id].setLatLng([lat, lng]);
-                    } else {
-                        driverMarkers[job.id] = L.marker([lat, lng], {icon: driverIcon}).addTo(maps[job.id]).bindPopup('You are here');
-                    }
-
-                    socket.emit('update_location', {
-                        delivery_id: job.id,
-                        lat: lat,
-                        lng: lng,
-                        status: 'moving'
-                    });
-
-                    updateNavigation(job.id, lat, lng);
-                }
+                socket.emit('update_location', {
+                    delivery_id: job.id,
+                    lat: lat,
+                    lng: lng,
+                    status: 'moving'
+                });
             });
         }, (error) => {
             console.error("Error getting location", error);

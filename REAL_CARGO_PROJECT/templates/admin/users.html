@@ -1,59 +1,494 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>User Management</h2>
-    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
-</div>
+<style>
+    .user-management {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .page-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .user-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 0;
+    }
+    
+    .user-tab {
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        color: #6c757d;
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .user-tab:hover {
+        color: #0d6efd;
+    }
+    
+    .user-tab.active {
+        color: #0d6efd;
+        border-bottom-color: #0d6efd;
+    }
+    
+    .user-tab .badge {
+        margin-left: 0.5rem;
+    }
+    
+    .users-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+    
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .users-table th {
+        background: #f8f9fa;
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        font-weight: 600;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .users-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+    
+    .users-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .users-table tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .user-details {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .user-name {
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+    
+    .user-extra {
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+    
+    .role-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .role-badge.customer {
+        background: #cfe2ff;
+        color: #055160;
+    }
+    
+    .role-badge.driver {
+        background: #ffe5d0;
+        color: #664d03;
+    }
+    
+    .role-badge.admin {
+        background: #f8d7da;
+        color: #842029;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+    
+    .status-badge.active {
+        color: #198754;
+    }
+    
+    .status-badge.inactive {
+        color: #dc3545;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-action {
+        padding: 0.375rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-action.suspend {
+        border: 1px solid #dc3545;
+        color: #dc3545;
+        background: white;
+    }
+    
+    .btn-action.suspend:hover {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-action.activate {
+        border: 1px solid #198754;
+        color: #198754;
+        background: white;
+    }
+    
+    .btn-action.activate:hover {
+        background: #198754;
+        color: white;
+    }
+    
+    .btn-action.delete {
+        border: 1px solid #dc3545;
+        color: #dc3545;
+        background: white;
+    }
+    
+    .btn-action.delete:hover {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .user-section {
+        display: none;
+    }
+    
+    .user-section.active {
+        display: block;
+    }
+    
+    .empty-state {
+        padding: 3rem;
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+    
+    @media (max-width: 768px) {
+        .users-table {
+            display: block;
+            overflow-x: auto;
+        }
+        
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
 
-<div class="card p-4">
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email / Phone</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>
-                        <div class="fw-bold">{{ user.full_name }}</div>
-                        {% if user.role == 'driver' %}
-                            <small class="text-muted">{{ user.vehicle_type | capitalize }} - {{ user.vehicle_id }}</small>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <div>{{ user.email }}</div>
-                        <small class="text-muted">{{ user.phone }}</small>
-                    </td>
-                    <td>
-                        <span class="badge {% if user.role == 'admin' %}bg-danger{% elif user.role == 'driver' %}bg-success{% else %}bg-primary{% endif %}">
-                            {{ user.role | capitalize }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if user.is_active %}
-                            <span class="text-success"><i class="fas fa-check-circle"></i> Active</span>
-                        {% else %}
-                            <span class="text-danger"><i class="fas fa-times-circle"></i> Suspended</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if user.role != 'admin' %}
-                            <a href="{{ url_for('toggle_user_status', user_id=user.id) }}" class="btn btn-sm {% if user.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
-                                {% if user.is_active %}Suspend{% else %}Activate{% endif %}
-                            </a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="user-management">
+    <div class="page-header">
+        <h2><i class="fas fa-users text-primary me-2"></i>User Management</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary rounded-pill">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+    
+    <!-- User Tabs -->
+    <div class="user-tabs">
+        <a class="user-tab active" onclick="showSection('all')">
+            All Users
+            <span class="badge bg-secondary">{{ users|length }}</span>
+        </a>
+        <a class="user-tab" onclick="showSection('customer')">
+            Customers
+            <span class="badge bg-primary">{{ users|selectattr('role', 'equalto', 'customer')|list|length }}</span>
+        </a>
+        <a class="user-tab" onclick="showSection('driver')">
+            Drivers
+            <span class="badge bg-warning">{{ users|selectattr('role', 'equalto', 'driver')|list|length }}</span>
+        </a>
+    </div>
+    
+    <!-- All Users -->
+    <div id="all" class="user-section active">
+        <div class="users-card">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Contact</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar">{{ user.full_name[0]|upper }}</div>
+                                <div class="user-details">
+                                    <span class="user-name">{{ user.full_name }}</span>
+                                    {% if user.role == 'driver' %}
+                                        <span class="user-extra">{{ user.vehicle_type|capitalize }} - {{ user.vehicle_id }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <span>{{ user.email }}</span>
+                                <span class="user-extra">{{ user.phone }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="role-badge {{ user.role }}">{{ user.role|capitalize }}</span>
+                        </td>
+                        <td>
+                            <span class="status-badge {% if user.is_active %}active{% else %}inactive{% endif %}">
+                                <i class="fas {% if user.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+                                {% if user.is_active %}Active{% else %}Suspended{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% if user.role != 'admin' %}
+                            <div class="action-buttons">
+                                <a href="{{ url_for('toggle_user_status', user_id=user.id) }}" class="btn-action {% if user.is_active %}suspend{% else %}activate{% endif %}">
+                                    <i class="fas {% if user.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
+                                    {% if user.is_active %}Suspend{% else %}Activate{% endif %}
+                                </a>
+                                <a href="{{ url_for('delete_user', user_id=user.id) }}" class="btn-action delete" onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
+                                    <i class="fas fa-trash"></i>Delete
+                                </a>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Customers Only -->
+    <div id="customer" class="user-section">
+        <div class="users-card">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users if user.role == 'customer' %}
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar" style="background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);">{{ user.full_name[0]|upper }}</div>
+                                <div class="user-details">
+                                    <span class="user-name">{{ user.full_name }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <span>{{ user.email }}</span>
+                                <span class="user-extra">{{ user.phone }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge {% if user.is_active %}active{% else %}inactive{% endif %}">
+                                <i class="fas {% if user.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+                                {% if user.is_active %}Active{% else %}Suspended{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{{ url_for('toggle_user_status', user_id=user.id) }}" class="btn-action {% if user.is_active %}suspend{% else %}activate{% endif %}">
+                                    <i class="fas {% if user.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
+                                    {% if user.is_active %}Suspend{% else %}Activate{% endif %}
+                                </a>
+                                <a href="{{ url_for('delete_user', user_id=user.id) }}" class="btn-action delete" onclick="return confirm('Are you sure?')">
+                                    <i class="fas fa-trash"></i>Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i class="fas fa-users d-block mx-auto mb-2"></i>
+                                <p>No customers found</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Drivers Only -->
+    <div id="driver" class="user-section">
+        <div class="users-card">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Driver</th>
+                        <th>Vehicle</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users if user.role == 'driver' %}
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar" style="background: linear-gradient(135deg, #fd7e14 0%, #d65a00 100%);">{{ user.full_name[0]|upper }}</div>
+                                <div class="user-details">
+                                    <span class="user-name">{{ user.full_name }}</span>
+                                    {% if user.is_approved %}
+                                        <span class="text-success"><i class="fas fa-check-circle"></i> Approved</span>
+                                    {% else %}
+                                        <span class="text-warning"><i class="fas fa-clock"></i> Pending</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <span class="user-name">{{ user.vehicle_type|capitalize }}</span>
+                                <span class="user-extra">{{ user.vehicle_id }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <span>{{ user.email }}</span>
+                                <span class="user-extra">{{ user.phone }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge {% if user.is_active %}active{% else %}inactive{% endif %}">
+                                <i class="fas {% if user.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+                                {% if user.is_active %}Active{% else %}Suspended{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{{ url_for('toggle_user_status', user_id=user.id) }}" class="btn-action {% if user.is_active %}suspend{% else %}activate{% endif %}">
+                                    <i class="fas {% if user.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
+                                    {% if user.is_active %}Suspend{% else %}Activate{% endif %}
+                                </a>
+                                <a href="{{ url_for('delete_user', user_id=user.id) }}" class="btn-action delete" onclick="return confirm('Are you sure?')">
+                                    <i class="fas fa-trash"></i>Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i class="fas fa-truck d-block mx-auto mb-2"></i>
+                                <p>No drivers found</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+<script>
+    function showSection(sectionId) {
+        // Hide all sections
+        document.querySelectorAll('.user-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // Remove active from all tabs
+        document.querySelectorAll('.user-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show selected section
+        document.getElementById(sectionId).classList.add('active');
+        
+        // Add active to clicked tab
+        event.target.classList.add('active');
+    }
+</script>
 {% endblock %}

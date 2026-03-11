@@ -1,65 +1,472 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2 class="mb-4">Admin Command Center</h2>
+<style>
+    .admin-dashboard {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .page-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    .stat-card.revenue {
+        border-left: 4px solid #198754;
+    }
+    
+    .stat-card.users {
+        border-left: 4px solid #0d6efd;
+    }
+    
+    .stat-card.deliveries {
+        border-left: 4px solid #6f42c1;
+    }
+    
+    .stat-card.drivers {
+        border-left: 4px solid #fd7e14;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-card.revenue .stat-icon {
+        background: #d1e7dd;
+        color: #198754;
+    }
+    
+    .stat-card.users .stat-icon {
+        background: #cfe2ff;
+        color: #0d6efd;
+    }
+    
+    .stat-card.deliveries .stat-icon {
+        background: #e2dbfe;
+        color: #6f42c1;
+    }
+    
+    .stat-card.drivers .stat-icon {
+        background: #ffe5d0;
+        color: #fd7e14;
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+        color: #1a1a2e;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .stat-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+    
+    .stat-badge.pending {
+        background: #fff3cd;
+        color: #664d03;
+    }
+    
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    @media (max-width: 992px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .content-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+    
+    .card-header-custom {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .card-header-custom h3 {
+        font-size: 1.125rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .card-body-custom {
+        padding: 0;
+    }
+    
+    .activity-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .activity-item {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .activity-info {
+        flex: 1;
+    }
+    
+    .activity-id {
+        font-weight: 700;
+        color: #1a1a2e;
+    }
+    
+    .activity-route {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .activity-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.75rem;
+        color: #adb5bd;
+        margin-top: 0.5rem;
+    }
+    
+    .status-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    
+    .status-badge.active {
+        background: #cff4fc;
+        color: #055160;
+    }
+    
+    .status-badge.pending {
+        background: #fff3cd;
+        color: #664d03;
+    }
+    
+    .status-badge.completed {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .quick-links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .quick-link {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #1a1a2e;
+        transition: all 0.2s ease;
+    }
+    
+    .quick-link:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+    
+    .quick-link-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+    
+    .quick-link.users .quick-link-icon {
+        background: #cfe2ff;
+        color: #0d6efd;
+    }
+    
+    .quick-link.drivers .quick-link-icon {
+        background: #ffe5d0;
+        color: #fd7e14;
+    }
+    
+    .quick-link.pending .quick-link-icon {
+        background: #fff3cd;
+        color: #664d03;
+    }
+    
+    .quick-link-content {
+        flex: 1;
+    }
+    
+    .quick-link-title {
+        font-weight: 600;
+        font-size: 0.9375rem;
+    }
+    
+    .quick-link-subtitle {
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+    
+    .map-container {
+        height: 400px;
+        border-radius: 0;
+    }
+    
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.5;
+    }
+</style>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card p-3 bg-white border-0 shadow-sm text-center">
-            <h6 class="text-muted">Total Revenue</h6>
-            <h3 class="fw-bold text-success">{{ revenue }} XAF</h3>
-        </div>
+<div class="admin-dashboard">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2><i class="fas fa-shield-alt text-primary me-2"></i>Admin Command Center</h2>
     </div>
-    <div class="col-md-3">
-        <div class="card p-3 bg-white border-0 shadow-sm text-center">
-            <h6 class="text-muted">Total Users</h6>
-            <h3 class="fw-bold">{{ total_users }}</h3>
+    
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card revenue">
+            <div class="stat-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="stat-value">{{ "{:,}".format(revenue|int) }}</div>
+            <div class="stat-label">Total Revenue</div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card p-3 bg-white border-0 shadow-sm text-center">
-            <h6 class="text-muted">Active Deliveries</h6>
-            <h3 class="fw-bold text-primary">{{ active_count }}</h3>
+        
+        <div class="stat-card users">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value">{{ total_users }}</div>
+            <div class="stat-label">Total Users</div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card p-3 bg-white border-0 shadow-sm text-center">
-            <h6 class="text-muted">Drivers</h6>
-            <h3 class="fw-bold">{{ total_drivers }}</h3>
+        
+        <div class="stat-card deliveries">
+            <div class="stat-icon">
+                <i class="fas fa-shipping-fast"></i>
+            </div>
+            <div class="stat-value">{{ active_count }}</div>
+            <div class="stat-label">Active Deliveries</div>
+        </div>
+        
+        <div class="stat-card drivers">
+            <div class="stat-icon">
+                <i class="fas fa-truck"></i>
+            </div>
+            <div class="stat-value">{{ total_drivers }}</div>
+            <div class="stat-label">Total Drivers</div>
             {% if pending_drivers_count > 0 %}
-            <a href="{{ url_for('admin_pending_drivers') }}" class="badge bg-warning text-dark text-decoration-none">
-                {{ pending_drivers_count }} Pending Approval
-            </a>
+            <div class="stat-badge pending">
+                <i class="fas fa-clock"></i> {{ pending_drivers_count }} Pending
+            </div>
             {% endif %}
         </div>
     </div>
-</div>
-
-<div class="row">
-    <div class="col-md-8">
-        <div class="card p-4">
-            <h5>Live Operations Map</h5>
-            <div id="adminMap" style="height: 500px; border-radius: 10px;"></div>
+    
+    <!-- Dashboard Content -->
+    <div class="dashboard-grid">
+        <!-- Map Section -->
+        <div class="content-card">
+            <div class="card-header-custom">
+                <h3><i class="fas fa-map-marked-alt text-primary"></i> Live Operations Map</h3>
+            </div>
+            <div class="card-body-custom">
+                {% if active_deliveries %}
+                <div id="adminMap" class="map-container"></div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-truck-loading d-block mx-auto mb-2"></i>
+                    <p>No active deliveries to display</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card p-4 h-100">
-            <h5>Recent Activities</h5>
-            <ul class="list-group list-group-flush">
-                {% for d in active_deliveries %}
-                    <li class="list-group-item px-0">
-                        <strong>#{{ d.id }}</strong> - {{ d.status }}<br>
-                        <small class="text-muted">{{ d.pickup_location[:20] }}... -> {{ d.dropoff_location[:20] }}...</small>
-                    </li>
-                {% endfor %}
-            </ul>
-            <a href="{{ url_for('admin_users') }}" class="btn btn-primary mt-auto">Manage All Users</a>
+        
+        <!-- Sidebar -->
+        <div>
+            <!-- Recent Activities -->
+            <div class="content-card mb-4">
+                <div class="card-header-custom">
+                    <h3><i class="fas fa-history text-primary"></i> Recent Activities</h3>
+                </div>
+                <div class="card-body-custom">
+                    {% if active_deliveries %}
+                    <ul class="activity-list">
+                        {% for d in active_deliveries %}
+                        <li class="activity-item">
+                            <div class="activity-info">
+                                <span class="activity-id">Delivery #{{ d.id }}</span>
+                                <div class="activity-route">
+                                    {{ d.pickup_location[:25] }}... → {{ d.dropoff_location[:25] }}...
+                                </div>
+                                <div class="activity-meta">
+                                    {% if d.customer %}
+                                    <span><i class="fas fa-user me-1"></i>{{ d.customer.full_name[:15] }}</span>
+                                {% endif %}
+                        {% if d.driver %}
+                                    <span><i class="fas fa-truck me-1"></i>{{ d.driver.vehicle_type[:10] if d.driver.vehicle_type else 'N/A' }}</span>
+                                {% endif %}
+                                </div>
+                            </div>
+                            <span class="status-badge 
+                                {% if d.status == 'Delivered' %}completed
+                                {% elif d.status in ['Driver Accepted', 'Accepted', 'Picked Up', 'In Transit'] %}active
+                                {% else %}pending{% endif %}">
+                                {{ d.status }}
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="empty-state">
+                        <p>No recent activities</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Quick Links -->
+            <div class="content-card">
+                <div class="card-header-custom">
+                    <h3><i class="fas fa-bolt text-warning"></i> Quick Actions</h3>
+                </div>
+                <div class="card-body-custom p-3">
+                    <div class="quick-links">
+                        <a href="{{ url_for('admin_users') }}" class="quick-link users">
+                            <div class="quick-link-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="quick-link-content">
+                                <div class="quick-link-title">Manage Users</div>
+                                <div class="quick-link-subtitle">{{ total_users }} total users</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+                        
+                        <a href="{{ url_for('admin_pending_drivers') }}" class="quick-link drivers">
+                            <div class="quick-link-icon">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="quick-link-content">
+                                <div class="quick-link-title">Pending Drivers</div>
+                                <div class="quick-link-subtitle">{{ pending_drivers_count }} awaiting approval</div>
+                            </div>
+                            {% if pending_drivers_count > 0 %}
+                            <span class="badge bg-warning">!</span>
+                            {% else %}
+                            <i class="fas fa-chevron-right text-muted"></i>
+                            {% endif %}
+                        </a>
+                        
+                        <a href="{{ url_for('notifications') }}" class="quick-link pending">
+                            <div class="quick-link-icon">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div class="quick-link-content">
+                                <div class="quick-link-title">Notifications</div>
+                                <div class="quick-link-subtitle">System notifications</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+{% if active_deliveries %}
 <script>
     let map = L.map('adminMap').setView([3.8480, 11.5021], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -76,6 +483,12 @@
         iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
     });
 
+    const blueIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
     const activeDeliveries = [
         {% for d in active_deliveries %}
         {
@@ -88,10 +501,16 @@
     ];
 
     activeDeliveries.forEach(d => {
-        L.marker(d.pickup, {icon: greenIcon}).addTo(map).bindPopup(`Delivery #${d.id} Pickup`);
-        L.marker(d.dropoff, {icon: redIcon}).addTo(map).bindPopup(`Delivery #${d.id} Drop-off`);
+        const icon = d.status === 'Delivered' ? blueIcon : greenIcon;
+        L.marker(d.pickup, {icon: icon}).addTo(map).bindPopup(`Delivery #${d.id} - Pickup`);
+        L.marker(d.dropoff, {icon: redIcon}).addTo(map).bindPopup(`Delivery #${d.id} - Drop-off`);
         
-        L.polyline([d.pickup, d.dropoff], {color: 'blue', opacity: 0.5, dashArray: '5, 10'}).addTo(map);
+        L.polyline([d.pickup, d.dropoff], {
+            color: '#0d6efd',
+            opacity: 0.5,
+            dashArray: '5, 10'
+        }).addTo(map);
     });
 </script>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center py-5 animate-up">
+    <div class="col-md-5">
+        <div class="card border-0 shadow-lg p-4 p-md-5 rounded-4">
+            <div class="text-center mb-5">
+                <div class="bg-primary-subtle d-inline-block p-3 rounded-circle mb-3">
+                    <i class="fas fa-shield-alt fa-2x text-primary"></i>
+                </div>
+                <h2 class="fw-bold">Verify Your Account</h2>
+                <p class="text-muted">We've sent a 6-digit verification code to your email. Please enter it below to activate your account.</p>
+            </div>
+            
+            <form action="{{ url_for('verify_otp', user_id=user_id) }}" method="POST">
+                <div class="mb-4 text-center">
+                    <label class="form-label small text-uppercase fw-bold text-muted d-block">Enter 6-Digit OTP</label>
+                    <input type="text" name="otp" class="form-control form-control-lg text-center fw-bold letter-spacing-lg" 
+                           placeholder="000000" maxlength="6" required pattern="\d{6}" autofocus
+                           style="letter-spacing: 0.5rem; font-size: 2rem; border-radius: 15px;">
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm mb-4">
+                    <i class="fas fa-check-circle me-2"></i> Verify Account
+                </button>
+            </form>
+            
+            <div class="text-center">
+                <p class="text-muted small mb-0">Didn't receive the code? 
+                    <a href="{{ url_for('resend_otp', user_id=user_id) }}" class="fw-bold text-decoration-none">Resend Code</a>
+                </p>
+                <hr class="my-4 opacity-25">
+                <p class="text-muted small mb-0">Back to <a href="{{ url_for('login') }}" class="fw-bold text-decoration-none">Login</a></p>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <p class="small text-muted">&copy; 2026 CargoFind Cameroon. Secure Logistics Platform.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .letter-spacing-lg {
+        letter-spacing: 0.5rem;
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+</style>
+{% endblock %}

@@ -250,6 +250,10 @@ def register():
         new_user = User(email=email, phone=phone, full_name=full_name, role=role)
         new_user.set_password(password)
         
+        # Generate Registration OTP
+        reg_otp = ''.join(random.choices(string.digits, k=6))
+        new_user.registration_otp = reg_otp
+        
         if role == 'driver':
             new_user.vehicle_type = request.form.get('vehicle_type')
             new_user.vehicle_id = request.form.get('vehicle_id')
@@ -321,10 +325,62 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         
-        flash('Registration successful!')
-        return redirect(url_for('login'))
+        # Send OTP email
+        try:
+            sender = os.getenv('EMAIL_USER')
+            subject = "CargoFind - Verify Your Account"
+            body = f"Hello {new_user.full_name},\n\nYour account has been created. To activate it, please enter the following OTP: {reg_otp}\n\nThank you for choosing CargoFind!"
+            send_email(sender, new_user.email, subject, body)
+            flash('Registration successful! Please check your email for the verification code.')
+        except Exception as e:
+            logger.error(f"Failed to send registration OTP to {new_user.email}: {e}")
+            flash('Account created but failed to send verification email. Please try logging in to resend.')
+
+        return redirect(url_for('verify_otp', user_id=new_user.id))
         
     return render_template('register.html')
+
+@app.route('/verify-otp/<int:user_id>', methods=['GET', 'POST'])
+def verify_otp(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.is_active:
+        flash('Account already active. Please login.')
+        return redirect(url_for('login'))
+        
+    if request.method == 'POST':
+        otp_input = request.form.get('otp').strip()
+        if otp_input == user.registration_otp:
+            user.is_active = True
+            user.registration_otp = None # Clear OTP
+            db.session.commit()
+            flash('Account verified successfully! You can now log in.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('Invalid OTP. Please try again.', 'danger')
+            
+    return render_template('verify_otp.html', user_id=user_id)
+
+@app.route('/resend-otp/<int:user_id>')
+def resend_otp(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.is_active:
+        return redirect(url_for('login'))
+        
+    reg_otp = ''.join(random.choices(string.digits, k=6))
+    user.registration_otp = reg_otp
+    db.session.commit()
+    
+    try:
+        sender = os.getenv('EMAIL_USER')
+        subject = "CargoFind - Your New Verification Code"
+        body = f"Hello {user.full_name},\n\nYour new verification code is: {reg_otp}\n\nThank you for choosing CargoFind!"
+        send_email(sender, user.email, subject, body)
+        flash('New verification code sent to your email.')
+    except Exception as e:
+        logger.error(f"Failed to resend registration OTP to {user.email}: {e}")
+        flash('Failed to send email. Please try again later.')
+        
+    return redirect(url_for('verify_otp', user_id=user_id))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -336,8 +392,8 @@ def login():
         
         if user and user.check_password(password):
             if not user.is_active:
-                flash('Your account has been deactivated. Please contact an administrator.')
-                return redirect(url_for('login'))
+                flash('Your account is not yet verified. Please enter the OTP sent to your email.')
+                return redirect(url_for('verify_otp', user_id=user.id))
                 
             login_user(user)
             save_notification(user.id, "Welcome back to CargoFind! You have successfully logged in.")
@@ -846,6 +902,46 @@ def toggle_user_status(user_id):
     user.is_active = not user.is_active
     db.session.commit()
     flash(f'User {user.full_name} status updated.')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/user/delete/<int:user_id>')
+@login_required
+def delete_user(user_id):
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent deleting admin users
+    if user.role == 'admin':
+        flash('Cannot delete admin users.')
+        return redirect(url_for('admin_users'))
+    
+    user_name = user.full_name
+    
+    # Delete driver files if they exist
+    if user.role == 'driver':
+        for attr in ['id_card_url', 'license_url', 'selfie_url']:
+            file_url = getattr(user, attr)
+            if file_url:
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_url)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+    
+    # Delete related notifications
+    Notification.query.filter_by(user_id=user.id).delete()
+    
+    # Delete wallet if exists
+    Wallet.query.filter_by(user_id=user.id).delete()
+    
+    # Set driver_id to NULL for deliveries (cascade)
+    Delivery.query.filter_by(driver_id=user.id).update({'driver_id': None})
+    
+    # Delete the user (deliveries as customer will cascade)
+    db.session.delete(user)
+    db.session.commit()
+    
+    flash(f'User {user_name} has been deleted.')
     return redirect(url_for('admin_users'))
 
 @app.route('/admin/drivers/pending')

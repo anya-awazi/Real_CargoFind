@@ -1,116 +1,318 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10 text-center mb-5">
-        <h1 class="display-4 fw-bold">What Our Users Say</h1>
-        <p class="lead text-muted">Join thousands of satisfied customers and drivers across Cameroon.</p>
+<!-- Hero Section -->
+<section class="testimonials-hero py-5 mb-4">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <span class="badge bg-primary-soft text-primary mb-3 px-4 py-2 rounded-pill">
+                    <i class="fas fa-star me-2"></i>Testimonials
+                </span>
+                <h1 class="display-4 fw-bold mb-3">What Our Users Say</h1>
+                <p class="lead text-muted">Join thousands of satisfied customers and drivers across Cameroon.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container pb-5">
+    <!-- Stats Banner -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg rounded-4 stats-card">
+                <div class="card-body py-4">
+                    <div class="row text-center">
+                        <div class="col-6 col-md-3 mb-3 mb-md-0">
+                            <div class="stat-item">
+                                <h2 class="fw-bold text-primary mb-0">10K+</h2>
+                                <p class="text-muted mb-0">Deliveries</p>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3 mb-md-0">
+                            <div class="stat-item">
+                                <h2 class="fw-bold text-success mb-0">500+</h2>
+                                <p class="text-muted mb-0">Drivers</p>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-item">
+                                <h2 class="fw-bold text-warning mb-0">4.9</h2>
+                                <p class="text-muted mb-0">Rating</p>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-item">
+                                <h2 class="fw-bold text-info mb-0">50+</h2>
+                                <p class="text-muted mb-0">Cities</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Testimonials Grid -->
+    <div class="row g-4 mb-5">
+        <!-- Testimonial 1 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 testimonial-card hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&h=100&fit=crop" class="rounded-circle me-3" alt="Customer Profile" style="width: 60px; height: 60px; object-fit: cover; border: 3px solid #4e54c8;">
+                        <div>
+                            <h5 class="mb-0 fw-bold">Marie Ngo</h5>
+                            <small class="text-muted">Small Business Owner</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text text-muted">"CargoFind has transformed how I move my business inventory from Yaoundé to Bafoussam. The real-time tracking gives me peace of mind!"</p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-muted"><i class="fas fa-quote-left me-2 text-primary"></i>Verified Customer</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 testimonial-card hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=100&h=100&fit=crop" class="rounded-circle me-3" alt="Driver Profile" style="width: 60px; height: 60px; object-fit: cover; border: 3px solid #1cc75e;">
+                        <div>
+                            <h5 class="mb-0 fw-bold">Samuel Eto</h5>
+                            <small class="text-muted">Verified Driver</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text text-muted">"As a driver, this platform helps me find more jobs easily. The job matching system is fast and reliable. Best logistics app in Cameroon!"</p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-muted"><i class="fas fa-check-circle me-2 text-success"></i>Top Rated Driver</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 testimonial-card hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://images.unsplash.com/photo-1507152832244-10d45c7eda57?w=100&h=100&fit=crop" class="rounded-circle me-3" alt="Customer Profile" style="width: 60px; height: 60px; object-fit: cover; border: 3px solid #17a2b8;">
+                        <div>
+                            <h5 class="mb-0 fw-bold">Amadou Bello</h5>
+                            <small class="text-muted">Regular Customer</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star-half-alt text-warning"></i>
+                    </div>
+                    <p class="card-text text-muted">"Very easy to use. I requested a truck for moving house and it was matched instantly. Highly recommended for everyone."</p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-muted"><i class="fas fa-user me-2 text-info"></i>Loyal Customer</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonial 4 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 testimonial-card hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://images.unsplash.com/photo-1589156229687-496a31ad1d1f?w=100&h=100&fit=crop" class="rounded-circle me-3" alt="Customer Profile" style="width: 60px; height: 60px; object-fit: cover; border: 3px solid #6f42c1;">
+                        <div>
+                            <h5 class="mb-0 fw-bold">Grace Biya</h5>
+                            <small class="text-muted">Corporate Client</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text text-muted">"The security and verified drivers make all the difference. I trust CargoFind with my most valuable deliveries."</p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-muted"><i class="fas fa-building me-2 text-purple"></i>Business Partner</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonial 5 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 testimonial-card hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=100&h=100&fit=crop" class="rounded-circle me-3" alt="Driver Profile" style="width: 60px; height: 60px; object-fit: cover; border: 3px solid #e83e8c;">
+                        <div>
+                            <h5 class="mb-0 fw-bold">Sarah Nana</h5>
+                            <small class="text-muted">Verified Driver</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text text-muted">"Being a female driver in this industry can be tough, but CargoFind provides a safe and professional environment for everyone."</p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-muted"><i class="fas fa-venus me-2 text-pink"></i>Featured Driver</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonial 6 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 testimonial-card hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=100&h=100&fit=crop" class="rounded-circle me-3" alt="Customer Profile" style="width: 60px; height: 60px; object-fit: cover; border: 3px solid #fd7e14;">
+                        <div>
+                            <h5 class="mb-0 fw-bold">John Tobi</h5>
+                            <small class="text-muted">Regular Customer</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text text-muted">"The pricing is transparent and fair. No hidden costs. This is exactly what we needed in the logistics sector."</p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-muted"><i class="fas fa-award me-2 text-orange"></i>VIP Customer</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg rounded-4 cta-card">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-comments fa-3x text-primary"></i>
+                    </div>
+                    <h3 class="fw-bold mb-3">Want to share your experience?</h3>
+                    <p class="text-muted mb-4">We value your feedback. Contact us to share your story and get featured on our website!</p>
+                    <a href="{{ url_for('contact') }}" class="btn btn-primary btn-lg px-5 rounded-pill shadow hover-lift">
+                        <i class="fas fa-paper-plane me-2"></i>Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="row g-4">
-    <!-- Testimonial 1 -->
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm glass-morphism p-4">
-            <div class="d-flex align-items-center mb-3">
-                <img src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&h=100&fit=crop" class="rounded-circle me-3" alt="Customer Profile" style="width: 60px; height: 60px; object-fit: cover;">
-                <div>
-                    <h5 class="mb-0">Marie Ngo</h5>
-                </div>
-            </div>
-            <p class="card-text">"CargoFind has transformed how I move my business inventory from Yaoundé to Bafoussam. The real-time tracking gives me peace of mind!"</p>
-            <div class="mt-auto">
-                <span class="badge bg-soft-primary text-primary">Small Business Owner</span>
-            </div>
-        </div>
-    </div>
+<style>
+    .testimonials-hero {
+        background: linear-gradient(135deg, #f8f9ff 0%, #fff5f5 100%);
+        margin-top: -60px;
+        padding-top: 100px;
+    }
 
-    <!-- Testimonial 2 -->
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm glass-morphism p-4">
-            <div class="d-flex align-items-center mb-3">
-                <img src="https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=100&h=100&fit=crop" class="rounded-circle me-3" alt="Driver Profile" style="width: 60px; height: 60px; object-fit: cover;">
-                <div>
-                    <h5 class="mb-0">Samuel Eto</h5>
-                </div>
-            </div>
-            <p class="card-text">"As a driver, this platform helps me find more jobs easily. The job matching system is fast and reliable. Best logistics app in Cameroon!"</p>
-            <div class="mt-auto">
-                <span class="badge bg-soft-success text-success">Verified Driver</span>
-            </div>
-        </div>
-    </div>
+    .bg-primary-soft {
+        background-color: rgba(78, 84, 200, 0.1);
+    }
 
-    <!-- Testimonial 3 -->
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm glass-morphism p-4">
-            <div class="d-flex align-items-center mb-3">
-                <img src="https://images.unsplash.com/photo-1507152832244-10d45c7eda57?w=100&h=100&fit=crop" class="rounded-circle me-3" alt="Customer Profile" style="width: 60px; height: 60px; object-fit: cover;">
-                <div>
-                    <h5 class="mb-0">Amadou Bello</h5>
-                </div>
-            </div>
-            <p class="card-text">"Very easy to use. I requested a truck for moving house and it was matched instantly. Highly recommended for everyone."</p>
-            <div class="mt-auto">
-                <span class="badge bg-soft-info text-info">Regular Customer</span>
-            </div>
-        </div>
-    </div>
+    .text-purple {
+        color: #6f42c1 !important;
+    }
 
-    <!-- Testimonial 4 -->
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm glass-morphism p-4">
-            <div class="d-flex align-items-center mb-3">
-                <img src="https://images.unsplash.com/photo-1589156229687-496a31ad1d1f?w=100&h=100&fit=crop" class="rounded-circle me-3" alt="Customer Profile" style="width: 60px; height: 60px; object-fit: cover;">
-                <div>
-                    <h5 class="mb-0">Grace Biya</h5>
-                </div>
-            </div>
-            <p class="card-text">"The security and verified drivers make all the difference. I trust CargoFind with my most valuable deliveries."</p>
-            <div class="mt-auto">
-                <span class="badge bg-soft-primary text-primary">Corporate Client</span>
-            </div>
-        </div>
-    </div>
+    .text-pink {
+        color: #e83e8c !important;
+    }
 
-    <!-- Testimonial 5 -->
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm glass-morphism p-4">
-            <div class="d-flex align-items-center mb-3">
-                <img src="https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=100&h=100&fit=crop" class="rounded-circle me-3" alt="Driver Profile" style="width: 60px; height: 60px; object-fit: cover;">
-                <div>
-                    <h5 class="mb-0">Sarah Nana</h5>
-                </div>
-            </div>
-            <p class="card-text">"Being a female driver in this industry can be tough, but CargoFind provides a safe and professional environment for everyone."</p>
-            <div class="mt-auto">
-                <span class="badge bg-soft-success text-success">Verified Driver</span>
-            </div>
-        </div>
-    </div>
+    .text-orange {
+        color: #fd7e14 !important;
+    }
 
-    <!-- Testimonial 6 -->
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm glass-morphism p-4">
-            <div class="d-flex align-items-center mb-3">
-                <img src="https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=100&h=100&fit=crop" class="rounded-circle me-3" alt="Customer Profile" style="width: 60px; height: 60px; object-fit: cover;">
-                <div>
-                    <h5 class="mb-0">John Tobi</h5>
-                </div>
-            </div>
-            <p class="card-text">"The pricing is transparent and fair. No hidden costs. This is exactly what we needed in the logistics sector."</p>
-            <div class="mt-auto">
-                <span class="badge bg-soft-info text-info">Regular Customer</span>
-            </div>
-        </div>
-    </div>
-</div>
+    .stats-card {
+        background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
+    }
 
-<div class="row mt-5">
-    <div class="col-12 text-center">
-        <h3 class="fw-bold mb-4">Want to share your experience?</h3>
-        <p class="mb-4">We value your feedback. Contact us to share your story!</p>
-        <a href="{{ url_for('contact') }}" class="btn btn-primary btn-lg px-5 rounded-pill shadow">Contact Support</a>
-    </div>
-</div>
+    .stats-card .text-muted {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    .stats-card h2 {
+        color: white !important;
+    }
+
+    .testimonial-card {
+        transition: all 0.3s ease;
+    }
+
+    .testimonial-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    .testimonial-card::before {
+        content: '"';
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        font-size: 80px;
+        color: rgba(78, 84, 200, 0.1);
+        font-family: Georgia, serif;
+    }
+
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .cta-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+        border: 1px solid #e9ecef !important;
+    }
+
+    .stat-item {
+        padding: 10px;
+    }
+
+    .stat-item:not(:last-child) {
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    @media (max-width: 768px) {
+        .stat-item:not(:last-child) {
+            border-right: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 15px;
+        }
+    }
+</style>
 {% endblock %}
