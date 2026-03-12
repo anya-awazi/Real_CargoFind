@@ -479,12 +479,15 @@
                                     </div>
                                     
                                     <div class="input-icon-group">
-                                        <input type="password" name="password" class="form-control" id="registerPassword" placeholder="Create Password" required>
+                                        <input type="password" name="password" class="form-control" id="registerPassword" placeholder="Create Password" minlength="6" required>
                                         <i class="fas fa-lock form-icon"></i>
                                         <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
                                             <i class="fas fa-eye" id="toggleIconReg"></i>
                                         </button>
                                     </div>
+                                    <small class="text-muted" style="display: block; margin-top: -10px; margin-bottom: 15px; font-size: 0.85rem;">
+                                        <i class="fas fa-info-circle"></i> Password must be at least 6 characters
+                                    </small>
                                     
                                     <!-- Driver Fields -->
                                     <div id="driverFields" style="{{ 'display: block;' if form_data and form_data.role == 'driver' else 'display: none;' }}" class="driver-fields animate__fadeIn">
@@ -508,44 +511,10 @@
                                         </div>
                                         
                                         <div class="row g-3 mt-2">
-                                            <div class="col-md-6">
-                                                <label class="form-label small text-muted">ID Card Photo</label>
-                                                <input type="file" name="id_card" class="form-control" accept="image/*">
-                                            </div>
-                                            <div class="col-md-6">
+                                            <div class="col-md-12">
                                                 <label class="form-label small text-muted">Driver's License</label>
                                                 <input type="file" name="license" class="form-control" accept="image/*">
                                             </div>
-                                        </div>
-                                        
-                                        <div class="mt-3">
-                                            <label class="form-label small text-muted">Live Selfie Verification</label>
-                                            <div class="camera-container" id="camera-wrapper" style="min-height: 250px; background: #1a1a2e; border-radius: 16px; overflow: hidden; position: relative;">
-                                                <div id="camera-placeholder" class="d-flex flex-column align-items-center justify-content-center h-100" style="min-height: 250px; color: white; position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
-                                                    <i class="fas fa-camera fa-3x mb-3 opacity-75"></i>
-                                                    <p class="mb-2 text-center px-3">Click below to enable camera</p>
-                                                </div>
-                                                <video id="video" playsinline muted loop style="display: none; width: 100%; height: 250px; object-fit: cover; background: #000;"></video>
-                                                <canvas id="canvas" style="display: none;"></canvas>
-                                                <img id="photo-preview" style="display: none; width: 100%; height: 250px; object-fit: cover;" class="img-fluid">
-                                                <div class="camera-controls" style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px;">
-                                                    <button type="button" id="start-camera" class="camera-btn" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid white; background: #0d6efd; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="startCamera()">
-                                                        <i class="fas fa-video fa-lg"></i>
-                                                    </button>
-                                                    <button type="button" id="capture-photo" class="camera-btn" style="display: none; width: 60px; height: 60px; border-radius: 50%; border: 3px solid white; background: #dc3545; color: white; align-items: center; justify-content: center; cursor: pointer;" onclick="capturePhoto()">
-                                                        <i class="fas fa-camera fa-lg"></i>
-                                                    </button>
-                                                    <button type="button" id="retake-photo" class="camera-btn" style="display: none; width: 60px; height: 60px; border-radius: 50%; border: 3px solid white; background: #ffc107; color: #000; align-items: center; justify-content: center; cursor: pointer;" onclick="retakePhoto()">
-                                                        <i class="fas fa-redo fa-lg"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div class="d-grid mt-2">
-                                                <button type="button" id="enable-camera-btn" class="btn btn-outline-primary btn-sm rounded-pill" onclick="startCamera()">
-                                                    <i class="fas fa-camera me-2"></i>Enable Camera for Selfie
-                                                </button>
-                                            </div>
-                                            <small class="text-muted d-block mt-2">Take a clear selfie for identity verification</small>
                                         </div>
                                     </div>
                                     
@@ -615,118 +584,6 @@
                 input.removeAttribute('required');
             }
         });
-    }
-    
-    let stream = null;
-    
-    function startCamera() {
-        const video = document.getElementById('video');
-        const placeholder = document.getElementById('camera-placeholder');
-        const enableBtn = document.getElementById('enable-camera-btn');
-        const startBtn = document.getElementById('start-camera');
-        const captureBtn = document.getElementById('capture-photo');
-        const wrapper = document.getElementById('camera-wrapper');
-        
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert("Camera not supported on this device. Please use a modern browser (Chrome, Firefox, Safari) and ensure you're using HTTPS.");
-            return;
-        }
-        
-        // Request camera access
-        navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: "user",
-                width: { ideal: 640 },
-                height: { ideal: 480 }
-            }, 
-            audio: false 
-        })
-        .then(s => {
-            stream = s;
-            video.srcObject = stream;
-            
-            // Wait for video to be ready
-            video.onloadedmetadata = function() {
-                video.play().then(() => {
-                    // Show video, hide placeholder
-                    video.style.display = 'block';
-                    if (placeholder) placeholder.style.display = 'none';
-                    if (enableBtn) enableBtn.style.display = 'none';
-                    startBtn.style.display = 'none';
-                    captureBtn.style.display = 'flex';
-                }).catch(err => {
-                    console.error('Play error:', err);
-                    alert('Could not play video. Please try again.');
-                });
-            };
-        })
-        .catch(err => {
-            console.error("Camera error:", err);
-            let message = "Could not access camera.";
-            if (err.name === 'NotAllowedError') {
-                message = "Camera access denied. Please allow camera permission in your browser settings.";
-            } else if (err.name === 'NotFoundError') {
-                message = "No camera found on this device.";
-            } else if (err.name === 'NotReadableError') {
-                message = "Camera is in use by another application. Please close other apps using the camera.";
-            }
-            alert(message);
-        });
-    }
-    
-    function capturePhoto() {
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const preview = document.getElementById('photo-preview');
-        const captureBtn = document.getElementById('capture-photo');
-        const retakeBtn = document.getElementById('retake-photo');
-        const selfieData = document.getElementById('selfie_data');
-        
-        if (!video.videoWidth || !video.videoHeight) {
-            alert("Camera is still loading. Please wait a moment and try again.");
-            return;
-        }
-        
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        
-        const context = canvas.getContext('2d');
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        const data = canvas.toDataURL('image/jpeg', 0.8);
-        selfieData.value = data;
-        preview.src = data;
-        
-        // Show preview, hide video
-        video.style.display = 'none';
-        preview.style.display = 'block';
-        captureBtn.style.display = 'none';
-        retakeBtn.style.display = 'flex';
-        
-        // Stop camera to save resources
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
-        
-        // Confirm capture
-        alert("✓ Selfie captured! Click 'Retake' if you need to take another.");
-    }
-    
-    function retakePhoto() {
-        const video = document.getElementById('video');
-        const preview = document.getElementById('photo-preview');
-        const captureBtn = document.getElementById('capture-photo');
-        const retakeBtn = document.getElementById('retake-photo');
-        const selfieData = document.getElementById('selfie_data');
-        const enableBtn = document.getElementById('enable-camera-btn');
-        
-        preview.style.display = 'none';
-        selfieData.value = '';
-        retakeBtn.style.display = 'none';
-        
-        if (enableBtn) enableBtn.style.display = 'block';
-        
-        startCamera();
     }
     
     document.addEventListener('DOMContentLoaded', toggleDriverFields);

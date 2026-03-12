@@ -1,134 +1,644 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row g-4 animate-up">
-    <div class="col-lg-5">
-        <div class="card p-4 border-0 shadow-sm">
-            <h3 class="fw-bold mb-4">Book a Delivery</h3>
-            <form id="bookingForm" method="POST">
-                <div class="mb-3 position-relative">
-                    <label class="form-label small text-uppercase fw-bold text-muted">Pickup Location</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-map-marker-alt text-success"></i></span>
-                        <input type="text" id="pickup_input" name="pickup_location" class="form-control floating-input border-start-0 ps-0" placeholder="Where should we pick up?" required autocomplete="off">
+<style>
+    .booking-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 0;
+    }
+    
+    .booking-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+        border: none;
+        overflow: hidden;
+    }
+    
+    .booking-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+        padding: 2rem;
+        color: white;
+    }
+    
+    .booking-header h2 {
+        font-weight: 700;
+        margin: 0;
+        font-size: 1.75rem;
+    }
+    
+    .booking-body {
+        padding: 2.5rem;
+    }
+    
+    .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+    
+    .step-indicator::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #e9ecef;
+        z-index: 0;
+    }
+    
+    .step {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .step-number {
+        width: 42px;
+        height: 42px;
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #adb5bd;
+        transition: all 0.3s ease;
+    }
+    
+    .step.active .step-number {
+        border-color: #0d6efd;
+        background: #0d6efd;
+        color: white;
+        box-shadow: 0 0 0 5px rgba(13, 110, 253, 0.15);
+    }
+    
+    .step.completed .step-number {
+        border-color: #198754;
+        background: #198754;
+        color: white;
+    }
+    
+    .step-label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #adb5bd;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .step.active .step-label {
+        color: #0d6efd;
+    }
+    
+    .form-section {
+        display: none;
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .form-section.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .input-group-custom {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .input-group-custom label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    .input-wrapper {
+        position: relative;
+    }
+    
+    .input-wrapper i {
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #adb5bd;
+        transition: color 0.3s ease;
+    }
+    
+    .input-wrapper input,
+    .input-wrapper select,
+    .input-wrapper textarea {
+        padding: 0.875rem 1rem 0.875rem 3rem;
+        border-radius: 14px;
+        border: 2px solid #f1f3f5;
+        background: #f8f9fa;
+        width: 100%;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    
+    .input-wrapper input:focus,
+    .input-wrapper select:focus,
+    .input-wrapper textarea:focus {
+        border-color: #0d6efd;
+        background: white;
+        box-shadow: 0 5px 15px rgba(13, 110, 253, 0.05);
+        outline: none;
+    }
+    
+    .input-wrapper input:focus + i {
+        color: #0d6efd;
+    }
+    
+    .location-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        max-height: 250px;
+        overflow-y: auto;
+        margin-top: 0.5rem;
+        border: 1px solid #eee;
+        display: none;
+    }
+    
+    .location-item {
+        padding: 0.75rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        border-bottom: 1px solid #f8f9fa;
+        font-size: 0.875rem;
+    }
+    
+    .location-item:hover {
+        background: #f1f3f5;
+    }
+    
+    .location-item:last-child {
+        border-bottom: none;
+    }
+    
+    .vehicle-option {
+        border: 2px solid #f1f3f5;
+        border-radius: 16px;
+        padding: 1.25rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        background: #f8f9fa;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .vehicle-option:hover {
+        border-color: #0d6efd;
+        transform: translateY(-5px);
+    }
+    
+    .vehicle-radio {
+        display: none;
+    }
+    
+    .vehicle-radio:checked + .vehicle-option {
+        border-color: #0d6efd;
+        background: rgba(13, 110, 253, 0.02);
+        box-shadow: 0 10px 25px rgba(13, 110, 253, 0.08);
+    }
+    
+    .vehicle-icon {
+        width: 60px;
+        height: 60px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #6c757d;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .vehicle-radio:checked + .vehicle-option .vehicle-icon {
+        background: #0d6efd;
+        color: white;
+    }
+    
+    .vehicle-name {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #1a1a2e;
+    }
+    
+    .vehicle-price {
+        font-size: 0.8125rem;
+        color: #6c757d;
+    }
+    
+    .service-card {
+        border: 2px solid #f1f3f5;
+        border-radius: 16px;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .service-card:hover {
+        border-color: #0d6efd;
+    }
+    
+    .service-check {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #dee2e6;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    
+    .service-input:checked + .service-card {
+        border-color: #0d6efd;
+        background: rgba(13, 110, 253, 0.02);
+    }
+    
+    .service-input:checked + .service-card .service-check {
+        background: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    .service-input:checked + .service-card .service-check::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: white;
+        font-size: 10px;
+    }
+    
+    .summary-card {
+        background: #f8f9fa;
+        border-radius: 20px;
+        padding: 1.5rem;
+        border: 1px dashed #dee2e6;
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        font-size: 0.9375rem;
+    }
+    
+    .summary-total {
+        border-top: 2px solid #e9ecef;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .total-amount {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #0d6efd;
+    }
+    
+    #map {
+        height: 400px;
+        border-radius: 20px;
+        margin-bottom: 1.5rem;
+        z-index: 1;
+    }
+    
+    .btn-nav {
+        padding: 0.875rem 2rem;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-prev {
+        background: white;
+        border: 2px solid #e9ecef;
+        color: #6c757d;
+    }
+    
+    .btn-prev:hover {
+        background: #f8f9fa;
+        color: #1a1a2e;
+    }
+</style>
+
+<div class="booking-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="booking-card">
+                <div class="booking-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fas fa-truck-loading fa-2x"></i>
+                        <div>
+                            <h2>Book a Delivery</h2>
+                            <p class="mb-0 opacity-75">Tell us what you're sending and where it's going</p>
+                        </div>
                     </div>
-                    <div id="pickup_results" class="list-group position-absolute w-100 z-3 shadow-lg"></div>
-                    <input type="hidden" id="pickup_lat" name="pickup_lat">
-                    <input type="hidden" id="pickup_lng" name="pickup_lng">
                 </div>
                 
-                <div class="mb-4 position-relative">
-                    <label class="form-label small text-uppercase fw-bold text-muted">Drop-off Location</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-flag-checkered text-danger"></i></span>
-                        <input type="text" id="dropoff_input" name="dropoff_location" class="form-control floating-input border-start-0 ps-0" placeholder="Where is it going?" required autocomplete="off">
-                    </div>
-                    <div id="dropoff_results" class="list-group position-absolute w-100 z-3 shadow-lg"></div>
-                    <input type="hidden" id="dropoff_lat" name="dropoff_lat">
-                    <input type="hidden" id="dropoff_lng" name="dropoff_lng">
-                </div>
-
-                <div class="row g-3 mb-3">
-                    <div class="col-md-12">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Pickup Date</label>
-                        <input type="date" name="pickup_date" class="form-control floating-input" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Pickup Time</label>
-                        <input type="time" name="pickup_time" class="form-control floating-input" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Expected Drop-off Time</label>
-                        <input type="time" name="dropoff_time" class="form-control floating-input">
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label small text-uppercase fw-bold text-muted">Goods Description</label>
-                    <textarea name="goods_description" class="form-control floating-input" rows="2" placeholder="What are you sending?" required></textarea>
-                </div>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Weight (kg)</label>
-                        <input type="number" name="weight" id="weight" class="form-control floating-input" step="0.1" placeholder="0.0">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small text-uppercase fw-bold text-muted">Vehicle Type</label>
-                        <select name="vehicle_type" id="vehicle_type" class="form-select floating-input">
-                            <option value="car" selected>Car (250 XAF/km)</option>
-                            <option value="van">Van (350 XAF/km)</option>
-                            <option value="truck">Truck (500 XAF/km)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label small text-uppercase fw-bold text-muted d-block mb-3">Service Options</label>
-                    <div class="d-flex flex-column gap-2">
-                        <div class="form-check custom-option p-3 border rounded-3 d-flex align-items-center">
-                            <input class="form-check-input cost-trigger ms-0 me-3" type="checkbox" name="heavy_goods" id="heavy_goods">
-                            <label class="form-check-label flex-grow-1" for="heavy_goods">
-                                <span class="d-block fw-bold">Heavy Goods</span>
-                                <small class="text-muted">+1,000 XAF</small>
-                            </label>
+                <div class="booking-body">
+                    <!-- Step Indicator -->
+                    <div class="step-indicator">
+                        <div class="step active" id="step1-indicator">
+                            <div class="step-number">1</div>
+                            <div class="step-label">Route</div>
                         </div>
-                        <div class="form-check custom-option p-3 border rounded-3 d-flex align-items-center">
-                            <input class="form-check-input cost-trigger ms-0 me-3" type="checkbox" name="fragile_goods" id="fragile_goods">
-                            <label class="form-check-label flex-grow-1" for="fragile_goods">
-                                <span class="d-block fw-bold">Fragile Handling</span>
-                                <small class="text-muted">+500 XAF</small>
-                            </label>
+                        <div class="step" id="step2-indicator">
+                            <div class="step-number">2</div>
+                            <div class="step-label">Details</div>
                         </div>
-                        <div class="form-check custom-option p-3 border rounded-3 d-flex align-items-center">
-                            <input class="form-check-input cost-trigger ms-0 me-3" type="checkbox" name="urgent_delivery" id="urgent_delivery">
-                            <label class="form-check-label flex-grow-1" for="urgent_delivery">
-                                <span class="d-block fw-bold">Urgent Delivery</span>
-                                <small class="text-muted">+1,000 XAF</small>
-                            </label>
+                        <div class="step" id="step3-indicator">
+                            <div class="step-number">3</div>
+                            <div class="step-label">Service</div>
+                        </div>
+                        <div class="step" id="step4-indicator">
+                            <div class="step-number">4</div>
+                            <div class="step-label">Confirm</div>
                         </div>
                     </div>
-                </div>
-
-                <div class="card bg-primary-subtle border-0 p-4 mb-4 rounded-4">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-primary fw-bold">Distance:</span>
-                        <div class="text-end">
-                            <span id="distance_text" class="fw-bold h5 mb-0 d-block">0 km</span>
-                            <small class="text-muted" style="font-size: 0.65rem;">(Min. 1 km charge applies)</small>
+                    
+                    <form id="bookingForm" method="POST">
+                        <!-- Step 1: Route Selection -->
+                        <div class="form-section active" id="section1">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="input-group-custom">
+                                        <label>Pickup Location</label>
+                                        <div class="input-wrapper">
+                                            <i class="fas fa-map-marker-alt text-success"></i>
+                                            <input type="text" id="pickup_input" name="pickup_location" placeholder="Where should we pick up?" required autocomplete="off">
+                                            <div id="pickup_results" class="location-results"></div>
+                                        </div>
+                                        <input type="hidden" id="pickup_lat" name="pickup_lat">
+                                        <input type="hidden" id="pickup_lng" name="pickup_lng">
+                                    </div>
+                                    
+                                    <div class="input-group-custom">
+                                        <label>Drop-off Location</label>
+                                        <div class="input-wrapper">
+                                            <i class="fas fa-flag-checkered text-danger"></i>
+                                            <input type="text" id="dropoff_input" name="dropoff_location" placeholder="Where is it going?" required autocomplete="off">
+                                            <div id="dropoff_results" class="location-results"></div>
+                                        </div>
+                                        <input type="hidden" id="dropoff_lat" name="dropoff_lat">
+                                        <input type="hidden" id="dropoff_lng" name="dropoff_lng">
+                                    </div>
+                                    
+                                    <div class="alert alert-info border-0 rounded-4 p-3 d-flex gap-3">
+                                        <i class="fas fa-info-circle mt-1"></i>
+                                        <small>Select locations from the dropdown or click on the map to set points.</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="map"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end mt-4">
+                                <button type="button" class="btn btn-primary btn-nav" onclick="nextStep(2)">
+                                    Continue <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-primary border-opacity-25">
-                        <span class="text-primary fw-bold">Total Cost:</span>
-                        <span id="total_cost_text" class="h4 fw-bold text-primary mb-0">500 XAF</span>
-                    </div>
-                    <input type="hidden" name="distance_km" id="distance_km" value="0">
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100 btn-lg rounded-pill py-3 fw-bold shadow">
-                    Confirm Booking
-                </button>
-            </form>
-        </div>
-    </div>
-    <div class="col-lg-7">
-        <div class="sticky-top" style="top: 100px;">
-            <div id="map" style="height: 650px;"></div>
-            <div class="card mt-3 border-0 shadow-sm p-3">
-                <div class="d-flex align-items-center text-muted small">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Select locations on the map or use the search box to calculate route and price.
+                        
+                        <!-- Step 2: Package Details -->
+                        <div class="form-section" id="section2">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="input-group-custom">
+                                        <label>Goods Description</label>
+                                        <div class="input-wrapper">
+                                            <i class="fas fa-box"></i>
+                                            <textarea name="goods_description" rows="3" placeholder="What are you sending? (e.g. 2 boxes of electronics)" required></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group-custom">
+                                        <label>Weight (kg)</label>
+                                        <div class="input-wrapper">
+                                            <i class="fas fa-weight-hanging"></i>
+                                            <input type="number" name="weight" id="weight" step="0.1" placeholder="Approximate weight">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <div class="input-group-custom">
+                                                <label>Pickup Date</label>
+                                                <div class="input-wrapper">
+                                                    <i class="fas fa-calendar"></i>
+                                                    <input type="date" id="pickup_date" name="pickup_date" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="input-group-custom">
+                                                <label>Pickup Time</label>
+                                                <div class="input-wrapper">
+                                                    <i class="fas fa-clock"></i>
+                                                    <input type="time" name="pickup_time" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-prev btn-nav" onclick="prevStep(1)">
+                                    <i class="fas fa-arrow-left me-2"></i> Back
+                                </button>
+                                <button type="button" class="btn btn-primary btn-nav" onclick="nextStep(3)">
+                                    Continue <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 3: Vehicle & Service Options -->
+                        <div class="form-section" id="section3">
+                            <label class="form-label small text-uppercase fw-bold text-muted mb-3 d-block">Select Vehicle Type</label>
+                            <div class="row g-4 mb-5">
+                                <div class="col-md-4">
+                                    <input type="radio" name="vehicle_type" id="car" value="car" class="vehicle-radio" checked onchange="updatePrice()">
+                                    <label for="car" class="vehicle-option">
+                                        <div class="vehicle-icon"><i class="fas fa-car"></i></div>
+                                        <div class="vehicle-name">Car</div>
+                                        <div class="vehicle-price">Up to 250kg • 250 XAF/km</div>
+                                    </label>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="radio" name="vehicle_type" id="van" value="van" class="vehicle-radio" onchange="updatePrice()">
+                                    <label for="van" class="vehicle-option">
+                                        <div class="vehicle-icon"><i class="fas fa-shuttle-van"></i></div>
+                                        <div class="vehicle-name">Van</div>
+                                        <div class="vehicle-price">Up to 1000kg • 350 XAF/km</div>
+                                    </label>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="radio" name="vehicle_type" id="truck" value="truck" class="vehicle-radio" onchange="updatePrice()">
+                                    <label for="truck" class="vehicle-option">
+                                        <div class="vehicle-icon"><i class="fas fa-truck"></i></div>
+                                        <div class="vehicle-name">Truck</div>
+                                        <div class="vehicle-price">Over 1000kg • 500 XAF/km</div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <label class="form-label small text-uppercase fw-bold text-muted mb-3 d-block">Additional Services</label>
+                            <div class="row g-4">
+                                <div class="col-md-4">
+                                    <input type="checkbox" name="heavy_goods" id="heavy_goods" class="service-input d-none cost-trigger" onchange="updatePrice()">
+                                    <label for="heavy_goods" class="service-card">
+                                        <div class="service-check"></div>
+                                        <div>
+                                            <div class="fw-bold small">Heavy Goods</div>
+                                            <div class="text-muted" style="font-size: 0.75rem;">+1,000 XAF</div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="checkbox" name="fragile_goods" id="fragile_goods" class="service-input d-none cost-trigger" onchange="updatePrice()">
+                                    <label for="fragile_goods" class="service-card">
+                                        <div class="service-check"></div>
+                                        <div>
+                                            <div class="fw-bold small">Fragile Handling</div>
+                                            <div class="text-muted" style="font-size: 0.75rem;">+500 XAF</div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="checkbox" name="urgent_delivery" id="urgent_delivery" class="service-input d-none cost-trigger" onchange="updatePrice()">
+                                    <label for="urgent_delivery" class="service-card">
+                                        <div class="service-check"></div>
+                                        <div>
+                                            <div class="fw-bold small">Urgent Delivery</div>
+                                            <div class="text-muted" style="font-size: 0.75rem;">+1,000 XAF</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-prev btn-nav" onclick="prevStep(2)">
+                                    <i class="fas fa-arrow-left me-2"></i> Back
+                                </button>
+                                <button type="button" class="btn btn-primary btn-nav" onclick="nextStep(4)">
+                                    Continue <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 4: Confirmation -->
+                        <div class="form-section" id="section4">
+                            <div class="row">
+                                <div class="col-md-7">
+                                    <div class="summary-card h-100">
+                                        <h5 class="fw-bold mb-4">Booking Summary</h5>
+                                        
+                                        <div class="summary-item">
+                                            <span class="text-muted">From:</span>
+                                            <span class="fw-bold text-end" id="sum-pickup">-</span>
+                                        </div>
+                                        <div class="summary-item">
+                                            <span class="text-muted">To:</span>
+                                            <span class="fw-bold text-end" id="sum-dropoff">-</span>
+                                        </div>
+                                        <div class="summary-item">
+                                            <span class="text-muted">Vehicle:</span>
+                                            <span class="fw-bold text-capitalize" id="sum-vehicle">-</span>
+                                        </div>
+                                        <div class="summary-item">
+                                            <span class="text-muted">Distance:</span>
+                                            <span class="fw-bold" id="distance_text">0 km</span>
+                                        </div>
+                                        
+                                        <div class="summary-total">
+                                            <span class="h5 fw-bold mb-0">Total Cost</span>
+                                            <div class="text-end">
+                                                <span id="total_cost_text" class="total-amount">500 XAF</span>
+                                                <small class="d-block text-muted" style="font-size: 0.7rem;">Includes VAT and insurance</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="p-3">
+                                        <div class="d-flex align-items-start gap-3 mb-4">
+                                            <div class="bg-primary-subtle p-2 rounded-3 text-primary">
+                                                <i class="fas fa-shield-alt"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold mb-1">Secure Handover</h6>
+                                                <p class="text-muted small mb-0">An OTP will be generated for both pickup and delivery points.</p>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-start gap-3 mb-4">
+                                            <div class="bg-success-subtle p-2 rounded-3 text-success">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold mb-1">Flexible Payment</h6>
+                                                <p class="text-muted small mb-0">Pay online via MoMo/Orange Money or Cash on delivery.</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow mt-3">
+                                            <i class="fas fa-check-circle me-2"></i> Confirm Booking
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-start mt-4">
+                                <button type="button" class="btn btn-prev btn-nav" onclick="prevStep(3)">
+                                    <i class="fas fa-arrow-left me-2"></i> Back
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" name="distance_km" id="distance_km" value="0">
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .custom-option { cursor: pointer; transition: all 0.2s ease; }
-    .custom-option:hover { background-color: #f8f9fa; border-color: var(--primary-color) !important; }
-    .form-check-input:checked + .form-check-label .fw-bold { color: var(--primary-color); }
-</style>
 {% endblock %}
 
 {% block scripts %}
@@ -136,8 +646,11 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 
 <script>
+    // Map Setup
     let map = L.map('map').setView([4.0511, 9.7679], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
 
     const greenIcon = new L.Icon({
         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
@@ -154,8 +667,67 @@
     let routingControl;
     let distanceKm = 0;
 
+    // Stepper Navigation
+    function nextStep(step) {
+        // Simple validation for required fields
+        const currentSection = document.querySelector('.form-section.active');
+        const requiredInputs = currentSection.querySelectorAll('[required]');
+        let valid = true;
+        
+        requiredInputs.forEach(input => {
+            if (!input.value) {
+                valid = false;
+                input.classList.add('is-invalid');
+                input.style.borderColor = '#dc3545';
+            } else {
+                input.classList.remove('is-invalid');
+                input.style.borderColor = '';
+            }
+        });
+        
+        if (step === 2 && (!document.getElementById('pickup_lat').value || !document.getElementById('dropoff_lat').value)) {
+            alert('Please select valid pickup and drop-off locations.');
+            return;
+        }
+
+        if (valid) {
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('section' + step).classList.add('active');
+            
+            document.querySelectorAll('.step').forEach((s, idx) => {
+                if (idx + 1 < step) s.classList.add('completed');
+                else s.classList.remove('completed');
+                
+                if (idx + 1 === step) s.classList.add('active');
+                else s.classList.remove('active');
+            });
+            
+            if (step === 4) updateSummary();
+        }
+    }
+
+    function prevStep(step) {
+        document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+        document.getElementById('section' + step).classList.add('active');
+        
+        document.querySelectorAll('.step').forEach((s, idx) => {
+            s.classList.remove('completed');
+            if (idx + 1 === step) s.classList.add('active');
+            else s.classList.remove('active');
+            if (idx + 1 < step) s.classList.add('completed');
+        });
+    }
+
+    function updateSummary() {
+        document.getElementById('sum-pickup').innerText = document.getElementById('pickup_input').value;
+        document.getElementById('sum-dropoff').innerText = document.getElementById('dropoff_input').value;
+        const vehicle = document.querySelector('input[name="vehicle_type"]:checked').value;
+        document.getElementById('sum-vehicle').innerText = vehicle;
+    }
+
+    // Price Calculation
     function updatePrice() {
-        const vehicleType = document.getElementById('vehicle_type').value;
+        const vehicleType = document.querySelector('input[name="vehicle_type"]:checked').value;
         const heavy = document.getElementById('heavy_goods').checked;
         const fragile = document.getElementById('fragile_goods').checked;
         const urgent = document.getElementById('urgent_delivery').checked;
@@ -177,34 +749,41 @@
         });
     }
 
+    // Search & Map Logic
     function searchLocation(query, resultsId, latId, lngId, inputId) {
-        if (query.length < 3) return;
+        const results = document.getElementById(resultsId);
+        if (query.length < 3) {
+            results.style.display = 'none';
+            return;
+        }
+        
         fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=cm`)
             .then(res => res.json())
             .then(data => {
-                const results = document.getElementById(resultsId);
                 results.innerHTML = '';
-                data.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'list-group-item list-group-item-action small py-2';
-                    div.innerText = item.display_name;
-                    div.onclick = () => {
-                        document.getElementById(inputId).value = item.display_name;
-                        document.getElementById(latId).value = item.lat;
-                        document.getElementById(lngId).value = item.lon;
-                        results.innerHTML = '';
-                        updateRoute();
-                    };
-                    results.appendChild(div);
-                });
+                if (data.length > 0) {
+                    results.style.display = 'block';
+                    data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'location-item';
+                        div.innerText = item.display_name;
+                        div.onclick = () => {
+                            document.getElementById(inputId).value = item.display_name;
+                            document.getElementById(latId).value = item.lat;
+                            document.getElementById(lngId).value = item.lon;
+                            results.style.display = 'none';
+                            updateRoute();
+                        };
+                        results.appendChild(div);
+                    });
+                } else {
+                    results.style.display = 'none';
+                }
             });
     }
 
-    document.getElementById('pickup_input').oninput = (e) => searchLocation(e.target.value, 'pickup_results', 'pickup_lat', 'pickup_lng', 'pickup_input');
-    document.getElementById('dropoff_input').oninput = (e) => searchLocation(e.target.value, 'dropoff_results', 'dropoff_lat', 'dropoff_lng', 'dropoff_input');
-
-    document.getElementById('vehicle_type').onchange = updatePrice;
-    document.querySelectorAll('.cost-trigger').forEach(el => el.onchange = updatePrice);
+    document.getElementById('pickup_input').addEventListener('input', (e) => searchLocation(e.target.value, 'pickup_results', 'pickup_lat', 'pickup_lng', 'pickup_input'));
+    document.getElementById('dropoff_input').addEventListener('input', (e) => searchLocation(e.target.value, 'dropoff_results', 'dropoff_lat', 'dropoff_lng', 'dropoff_input'));
 
     function updateRoute() {
         const pLat = document.getElementById('pickup_lat').value;
@@ -216,18 +795,9 @@
 
         if (pLat && pLng && dLat && dLng) {
             routingControl = L.Routing.control({
-                waypoints: [
-                    L.latLng(pLat, pLng),
-                    L.latLng(dLat, dLng)
-                ],
-                createMarker: function(i, wp) {
-                    return L.marker(wp.latLng, {
-                        icon: i === 0 ? greenIcon : redIcon
-                    });
-                },
-                lineOptions: {
-                    styles: [{ color: '#0d6efd', weight: 6, opacity: 0.8 }]
-                },
+                waypoints: [L.latLng(pLat, pLng), L.latLng(dLat, dLng)],
+                createMarker: (i, wp) => L.marker(wp.latLng, { icon: i === 0 ? greenIcon : redIcon }),
+                lineOptions: { styles: [{ color: '#0d6efd', weight: 6, opacity: 0.8 }] },
                 routeWhileDragging: false,
                 addWaypoints: false,
                 show: false
@@ -237,16 +807,29 @@
                 const routes = e.routes;
                 const summary = routes[0].summary;
                 distanceKm = (summary.totalDistance / 1000).toFixed(2);
-                document.getElementById('distance_text').innerText = distanceKm + ' km';
+                document.querySelectorAll('#distance_text').forEach(el => el.innerText = distanceKm + ' km');
                 document.getElementById('distance_km').value = distanceKm;
-                
-                // Fit map to route
-                const bounds = L.latLngBounds([L.latLng(pLat, pLng), L.latLng(dLat, dLng)]);
-                map.fitBounds(bounds, {padding: [50, 50]});
-                
+                map.fitBounds(L.latLngBounds([L.latLng(pLat, pLng), L.latLng(dLat, dLng)]), {padding: [50, 50]});
                 updatePrice();
             });
         }
     }
+
+    // Close results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.input-group-custom')) {
+            document.querySelectorAll('.location-results').forEach(el => el.style.display = 'none');
+        }
+    });
+
+    // Auto-fill today's date and set min date
+    window.onload = () => {
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('pickup_date');
+        if (dateInput) {
+            dateInput.value = today;
+            dateInput.min = today;
+        }
+    };
 </script>
 {% endblock %}

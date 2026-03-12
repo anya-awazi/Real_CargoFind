@@ -13,9 +13,6 @@ from models import db, User, Delivery, Notification, Wallet
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO, emit, join_room, leave_room
-import base64
-import numpy as np
-import cv2
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -43,60 +40,6 @@ def compress_image(image_path, quality=60, max_size=(800, 800)):
     except Exception as e:
         print(f"Compression error: {e}")
         return False
-
-def compare_faces(path1, path2):
-    """
-    Perform a robust face comparison using OpenCV-only methods.
-    Detects faces using Haar Cascades and compares them using Histogram similarity.
-    This is highly portable and doesn't require complex ML libraries.
-    """
-    # Load images
-    img1 = cv2.imread(path1)
-    img2 = cv2.imread(path2)
-    if img1 is None or img2 is None: return False
-
-    # Convert to grayscale for Haar cascade
-    gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-    gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-
-    # Load pre-trained face detector (Haar Cascade)
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-
-    # Detect faces
-    faces1 = face_cascade.detectMultiScale(gray1, 1.1, 4)
-    faces2 = face_cascade.detectMultiScale(gray2, 1.1, 4)
-
-    if len(faces1) == 0 or len(faces2) == 0:
-        return False
-
-    # Extract first face from each
-    (x1, y1, w1, h1) = faces1[0]
-    (x2, y2, w2, h2) = faces2[0]
-    face1 = gray1[y1:y1+h1, x1:x1+w1]
-    face2 = gray2[y2:y2+h2, x2:x2+w2]
-
-    # Resize to same dimensions for comparison
-    face1 = cv2.resize(face1, (100, 100))
-    face2 = cv2.resize(face2, (100, 100))
-
-    # Calculate histograms for comparison
-    hist1 = cv2.calcHist([face1], [0], None, [256], [0, 256])
-    hist2 = cv2.calcHist([face2], [0], None, [256], [0, 256])
-    cv2.normalize(hist1, hist1, 0, 1, cv2.NORM_MINMAX)
-    cv2.normalize(hist2, hist2, 0, 1, cv2.NORM_MINMAX)
-
-    # Compare histograms using correlation (closer to 1.0 means more similar)
-    similarity = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
-    
-    # Also perform a basic SSIM-like Structural similarity via absolute difference
-    diff = cv2.absdiff(face1, face2)
-    diff_score = 1.0 - (np.mean(diff) / 255.0)
-
-    # Combined score
-    final_score = (similarity * 0.7) + (diff_score * 0.3)
-    
-    # Threshold for matching faces (Adjusted to 42%)
-    return final_score > 0.42 
 
 def send_email(sender, receiver, subject, body):
     """
@@ -250,6 +193,11 @@ def register():
         full_name = request.form.get('full_name', '').strip()
         role = request.form.get('role', 'customer')
         
+        # Validate password length
+        if len(password) < 6:
+            flash('Password must be at least 6 characters.', 'danger')
+            return redirect(url_for('register'))
+        
         user_exists = User.query.filter((User.email == email) | (User.phone == phone)).first()
         if user_exists:
             flash('Email or phone already exists')
@@ -267,22 +215,12 @@ def register():
             new_user.vehicle_id = request.form.get('vehicle_id')
             
             # Handle document uploads
-            id_card_file = request.files.get('id_card')
             license_file = request.files.get('license')
-            selfie_data = request.form.get('selfie_data')
             
-            if not id_card_file or not license_file or not selfie_data:
-                flash('Please upload ID card, license, and take a live selfie.', 'danger')
+            if not license_file:
+                flash('Please upload your driver\'s license.', 'danger')
                 return redirect(url_for('register'))
             
-            # Save ID Card
-            id_ext = id_card_file.filename.split('.')[-1]
-            id_filename = secure_filename(f"driver_{email}_id.{id_ext}")
-            id_path = os.path.join(app.config['UPLOAD_FOLDER'], id_filename)
-            id_card_file.save(id_path)
-            compress_image(id_path) # Compress uploaded ID
-            new_user.id_card_url = id_filename
-
             # Save License
             lic_ext = license_file.filename.split('.')[-1]
             lic_filename = secure_filename(f"driver_{email}_license.{lic_ext}")
@@ -290,41 +228,9 @@ def register():
             license_file.save(lic_path)
             compress_image(lic_path) # Compress uploaded License
             new_user.license_url = lic_filename
-
-            # Process Selfie from Base64
-            try:
-                # Remove header from base64 string if present
-                if ';base64,' in selfie_data:
-                    format, imgstr = selfie_data.split(';base64,') 
-                else:
-                    imgstr = selfie_data
-                
-                selfie_filename = secure_filename(f"driver_{email}_selfie.jpg")
-                selfie_path = os.path.join(app.config['UPLOAD_FOLDER'], selfie_filename)
-                
-                with open(selfie_path, "wb") as f:
-                    f.write(base64.b64decode(imgstr))
-                
-                compress_image(selfie_path) # Compress uploaded Selfie
-                new_user.selfie_url = selfie_filename
-
-                # FACE COMPARISON USING MEDIAPIPE + ORB
-                match_confirmed = compare_faces(id_path, selfie_path)
-                
-                if not match_confirmed:
-                    flash('Security alert: Your live selfie does not match your ID card photo.', 'danger')
-                    # Cleanup failed attempt files
-                    for p in [id_path, lic_path, selfie_path]:
-                        if os.path.exists(p): os.remove(p)
-                    return render_template('register.html', form_data=request.form)
-                
-                new_user.is_verified = True
-                new_user.is_approved = False # Still needs admin approval
-                
-            except Exception as e:
-                print(f"Face Error: {e}")
-                flash('Security verification failed. Please ensure good lighting.')
-                return render_template('register.html', form_data=request.form)
+            
+            new_user.is_verified = True
+            new_user.is_approved = False # Still needs admin approval
             
             # Initialize wallet for driver
             wallet = Wallet(user=new_user)
@@ -929,7 +835,7 @@ def delete_user(user_id):
     
     # Delete driver files if they exist
     if user.role == 'driver':
-        for attr in ['id_card_url', 'license_url', 'selfie_url']:
+        for attr in ['license_url']:
             file_url = getattr(user, attr)
             if file_url:
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_url)
@@ -959,6 +865,49 @@ def admin_pending_drivers():
         return redirect(url_for('index'))
     pending_drivers = User.query.filter_by(role='driver', is_approved=False).all()
     return render_template('admin/pending_drivers.html', drivers=pending_drivers)
+
+@app.route('/admin/send_email', methods=['GET', 'POST'])
+@login_required
+def admin_send_email():
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        recipient_type = request.form.get('recipient_type')
+        subject = request.form.get('subject')
+        message_body = request.form.get('message')
+        
+        # Determine recipients
+        if recipient_type == 'customer':
+            recipients = User.query.filter_by(role='customer').all()
+        elif recipient_type == 'driver':
+            recipients = User.query.filter_by(role='driver').all()
+        else:
+            recipients = User.query.filter(User.role != 'admin').all()
+            
+        if not recipients:
+            flash('No recipients found for the selected group.', 'warning')
+            return redirect(url_for('admin_send_email'))
+            
+        # Send emails
+        sender = os.getenv('EMAIL_USER')
+        success_count = 0
+        fail_count = 0
+        
+        for user in recipients:
+            try:
+                # Custom greeting for each user
+                personalized_body = f"Hello {user.full_name},\n\n{message_body}\n\nBest regards,\nCargoFind Admin Team"
+                send_email(sender, user.email, subject, personalized_body)
+                success_count += 1
+            except Exception as e:
+                logger.error(f"Failed to send broadcast email to {user.email}: {e}")
+                fail_count += 1
+                
+        flash(f'Broadcast complete! {success_count} emails sent successfully. {fail_count} failures.', 'success')
+        return redirect(url_for('admin_dashboard'))
+        
+    return render_template('admin/send_email.html')
 
 @app.route('/admin/driver/approve/<int:user_id>')
 @login_required

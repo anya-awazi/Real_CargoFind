@@ -1,49 +1,127 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
-        <div class="card p-4 mb-4 border-primary">
-            <h3>Tracking Delivery #{{ delivery.id }}</h3>
-            <hr>
-            <div class="mb-3">
-                <h6>Status</h6>
+<!-- Mobile Layout -->
+<div class="d-md-none">
+    <!-- Map Section (Full Width) -->
+    <div class="position-relative mb-3" style="height: 50vh; min-height: 300px;">
+        <div id="trackMap" style="height: 100%; border-radius: 0 0 20px 20px;"></div>
+        
+        <!-- Floating Back Button -->
+        <a href="{{ url_for('customer_dashboard') }}" class="btn btn-light rounded-circle shadow position-absolute" style="top: 10px; left: 10px; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+
+    <!-- Delivery Info Card -->
+    <div class="card border-0 shadow-sm mb-3 mx-2">
+        <div class="card-body p-3">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0">Delivery #{{ delivery.id }}</h6>
                 <div class="d-flex align-items-center">
-                    <div id="statusPulse" class="spinner-grow spinner-grow-sm text-primary me-2"></div>
-                    <span id="statusText" class="fw-bold h5 mb-0">{{ delivery.status }}</span>
+                    <div id="statusPulse" class="spinner-grow spinner-grow-sm text-primary me-2" style="width: 0.75rem; height: 0.75rem;"></div>
+                    <span id="statusText" class="badge bg-primary px-3 py-2 rounded-pill">{{ delivery.status }}</span>
                 </div>
-            </div>
-            
-            <div class="mb-3">
-                <h6>Estimated Time</h6>
-                <p id="etaText" class="h4 text-primary">Calculating...</p>
             </div>
 
-            <div class="row small">
+            <!-- ETA Section -->
+            <div class="bg-primary bg-opacity-10 rounded-3 p-3 mb-3 text-center">
+                <small class="text-muted d-block mb-1">ESTIMATED ARRIVAL</small>
+                <p id="etaText" class="h5 fw-bold text-primary mb-0">Calculating...</p>
+            </div>
+
+            <!-- Locations -->
+            <div class="row g-2 mb-3">
                 <div class="col-6">
-                    <strong>Pickup:</strong><br>
-                    {{ delivery.pickup_location }}
+                    <div class="bg-success bg-opacity-10 rounded-3 p-2">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="fas fa-map-marker-alt text-success me-2"></i>
+                            <small class="text-muted fw-bold">PICKUP</small>
+                        </div>
+                        <small class="d-block fw-bold">{{ delivery.pickup_location }}</small>
+                    </div>
                 </div>
                 <div class="col-6">
-                    <strong>Drop-off:</strong><br>
-                    {{ delivery.dropoff_location }}
+                    <div class="bg-danger bg-opacity-10 rounded-3 p-2">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="fas fa-flag-checkered text-danger me-2"></i>
+                            <small class="text-muted fw-bold">DROP-OFF</small>
+                        </div>
+                        <small class="d-block fw-bold">{{ delivery.dropoff_location }}</small>
+                    </div>
                 </div>
             </div>
-            
-            <hr>
-            <div class="d-flex align-items-center">
-                <i class="fas fa-truck fa-2x text-primary me-3"></i>
-                <div>
-                    <h6 class="mb-0">{{ delivery.driver.full_name if delivery.driver else 'Waiting for driver...' }}</h6>
-                    <p class="text-muted small mb-0">{{ delivery.driver.vehicle_type | capitalize if delivery.driver }} - {{ delivery.driver.vehicle_id if delivery.driver }}</p>
+
+            <!-- Driver Info -->
+            <div class="bg-light rounded-3 p-3">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px; min-width: 45px;">
+                        <i class="fas fa-truck text-white"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-0 fw-bold">{{ delivery.driver.full_name if delivery.driver else 'Waiting for driver...' }}</h6>
+                        {% if delivery.driver %}
+                        <small class="text-muted">{{ delivery.driver.vehicle_type | capitalize }} • {{ delivery.driver.vehicle_id }}</small>
+                        {% endif %}
+                    </div>
+                    {% if delivery.driver %}
+                    <a href="tel:{{ delivery.driver.phone }}" class="btn btn-success btn-sm rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-phone"></i>
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        
-        <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary w-100">Back to Dashboard</a>
     </div>
-    <div class="col-md-8">
-        <div id="trackMap" style="height: 600px; border-radius: 15px;"></div>
+</div>
+
+<!-- Desktop Layout -->
+<div class="d-none d-md-block">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card p-4 mb-4 border-primary">
+                <h3>Tracking Delivery #{{ delivery.id }}</h3>
+                <hr>
+                <div class="mb-3">
+                    <h6>Status</h6>
+                    <div class="d-flex align-items-center">
+                        <div id="statusPulse-desktop" class="spinner-grow spinner-grow-sm text-primary me-2"></div>
+                        <span id="statusText-desktop" class="fw-bold h5 mb-0">{{ delivery.status }}</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Estimated Time</h6>
+                    <p id="etaText-desktop" class="h4 text-primary">Calculating...</p>
+                </div>
+
+                <div class="row small">
+                    <div class="col-6">
+                        <strong>Pickup:</strong><br>
+                        {{ delivery.pickup_location }}
+                    </div>
+                    <div class="col-6">
+                        <strong>Drop-off:</strong><br>
+                        {{ delivery.dropoff_location }}
+                    </div>
+                </div>
+                
+                <hr>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-truck fa-2x text-primary me-3"></i>
+                    <div>
+                        <h6 class="mb-0">{{ delivery.driver.full_name if delivery.driver else 'Waiting for driver...' }}</h6>
+                        <p class="text-muted small mb-0">{{ delivery.driver.vehicle_type | capitalize if delivery.driver }} - {{ delivery.driver.vehicle_id if delivery.driver }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary w-100">Back to Dashboard</a>
+        </div>
+        <div class="col-md-8">
+            <div id="trackMap-desktop" style="height: 600px; border-radius: 15px;"></div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -53,7 +131,11 @@
     const socket = io();
     const deliveryId = {{ delivery.id }};
     
-    let map = L.map('trackMap').setView([{{ delivery.pickup_lat }}, {{ delivery.pickup_lng }}], 14);
+    // Determine which map to use (mobile or desktop)
+    const isMobile = window.innerWidth < 768;
+    const mapId = isMobile ? 'trackMap' : 'trackMap-desktop';
+    
+    let map = L.map(mapId).setView([{{ delivery.pickup_lat }}, {{ delivery.pickup_lng }}], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     const greenIcon = new L.Icon({
@@ -121,19 +203,33 @@
             }).addTo(map);
         }
         
-        // Update Status & ETA
+        // Update Status & ETA (for both mobile and desktop)
         const statusLabel = data.status === 'moving' ? 'In Motion' : data.status;
+        
+        // Mobile elements
         if (document.getElementById('statusText')) {
             document.getElementById('statusText').innerText = statusLabel;
         }
         if (document.getElementById('statusPulse')) {
-            document.getElementById('statusPulse').className = data.status == 'moving' ? 
-                'spinner-grow spinner-grow-sm text-success me-2' : 
+            document.getElementById('statusPulse').className = data.status == 'moving' ?
+                'spinner-grow spinner-grow-sm text-success me-2' :
                 'spinner-grow spinner-grow-sm text-warning me-2';
         }
-        
         if (data.eta && document.getElementById('etaText')) {
             document.getElementById('etaText').innerText = `${data.eta} (${data.distance} away)`;
+        }
+        
+        // Desktop elements
+        if (document.getElementById('statusText-desktop')) {
+            document.getElementById('statusText-desktop').innerText = statusLabel;
+        }
+        if (document.getElementById('statusPulse-desktop')) {
+            document.getElementById('statusPulse-desktop').className = data.status == 'moving' ?
+                'spinner-grow spinner-grow-sm text-success me-2' :
+                'spinner-grow spinner-grow-sm text-warning me-2';
+        }
+        if (data.eta && document.getElementById('etaText-desktop')) {
+            document.getElementById('etaText-desktop').innerText = `${data.eta} (${data.distance} away)`;
         }
         
         // Keep driver and target in view

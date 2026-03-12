@@ -293,16 +293,6 @@
                 <div class="documents-section">
                     <div class="documents-title">Submitted Documents</div>
                     <div class="document-links">
-                        {% if driver.id_card_url %}
-                        <a href="{{ url_for('static', filename='uploads/' + driver.id_card_url) }}" target="_blank" class="doc-link">
-                            <i class="fas fa-id-card"></i> National ID
-                        </a>
-                        {% else %}
-                        <span class="doc-link missing">
-                            <i class="fas fa-times-circle"></i> National ID
-                        </span>
-                        {% endif %}
-                        
                         {% if driver.license_url %}
                         <a href="{{ url_for('static', filename='uploads/' + driver.license_url) }}" target="_blank" class="doc-link">
                             <i class="fas fa-id-badge"></i> License
@@ -310,16 +300,6 @@
                         {% else %}
                         <span class="doc-link missing">
                             <i class="fas fa-times-circle"></i> License
-                        </span>
-                        {% endif %}
-                        
-                        {% if driver.selfie_url %}
-                        <a href="{{ url_for('static', filename='uploads/' + driver.selfie_url) }}" target="_blank" class="doc-link">
-                            <i class="fas fa-user"></i> Selfie
-                        </a>
-                        {% else %}
-                        <span class="doc-link missing">
-                            <i class="fas fa-times-circle"></i> Selfie
                         </span>
                         {% endif %}
                     </div>

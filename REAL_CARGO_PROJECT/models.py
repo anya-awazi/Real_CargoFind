@@ -20,8 +20,6 @@ class User(UserMixin, db.Model):
     vehicle_id = db.Column(db.String(50))
     
     # Verification documents
-    id_card_url = db.Column(db.String(255))
-    selfie_url = db.Column(db.String(255))
     license_url = db.Column(db.String(255))
     is_verified = db.Column(db.Boolean, default=False)
     registration_otp = db.Column(db.String(6))

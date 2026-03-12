@@ -178,19 +178,129 @@
         
         /* Mobile Styles */
         @media (max-width: 991px) {
-            .navbar-collapse {
-                background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
-                padding: 1rem;
-                border-radius: 16px;
-                margin-top: 0.5rem;
+            .navbar {
+                padding: 0.5rem 0;
             }
             
-            .nav-link, .nav-user, .btn-signup {
-                margin: 0.25rem 0;
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+            
+            .navbar-brand i {
+                font-size: 1.3rem;
+            }
+            
+            .navbar-collapse {
+                background: white;
+                padding: 0;
+                border-radius: 0 0 20px 20px;
+                margin-top: 0.75rem;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+            
+            .navbar-nav {
+                padding: 1rem 0;
+            }
+            
+            .nav-item {
+                border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            }
+            
+            .nav-item:last-child {
+                border-bottom: none;
+            }
+            
+            .nav-link {
+                color: #212529 !important;
+                padding: 0.875rem 1.25rem !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                background: transparent !important;
+                display: flex;
+                align-items: center;
+                font-weight: 500;
+                transition: all 0.2s ease;
+            }
+            
+            .nav-link:hover, .nav-link:active {
+                background: rgba(13, 110, 253, 0.08) !important;
+                color: #0d6efd !important;
+            }
+            
+            .nav-link i {
+                width: 24px;
+                font-size: 1.1rem;
+                color: #0d6efd;
             }
             
             .nav-user {
-                justify-content: center;
+                background: rgba(13, 110, 253, 0.1) !important;
+                color: #0d6efd !important;
+                padding: 0.875rem 1.25rem !important;
+                border-radius: 0 !important;
+                justify-content: flex-start !important;
+                margin: 0 !important;
+            }
+            
+            .nav-user:hover {
+                background: rgba(13, 110, 253, 0.15) !important;
+            }
+            
+            .nav-user-avatar {
+                background: #0d6efd;
+                color: white;
+                margin-right: 0.75rem;
+            }
+            
+            .nav-user span {
+                display: inline !important;
+                font-weight: 600;
+            }
+            
+            .btn-signup {
+                background: #0d6efd !important;
+                color: white !important;
+                margin: 0.5rem 1.25rem !important;
+                padding: 0.75rem 1.5rem !important;
+                border-radius: 12px !important;
+                text-align: center;
+                font-weight: 600;
+            }
+            
+            .btn-signup:hover {
+                background: #0043a8 !important;
+                transform: none;
+            }
+            
+            .dropdown-menu {
+                border: none;
+                box-shadow: none;
+                background: #f8f9fa;
+                margin: 0;
+                padding: 0.5rem 0;
+                border-radius: 0;
+            }
+            
+            .dropdown-item {
+                padding: 0.75rem 2.5rem;
+                color: #495057;
+                border-radius: 0;
+            }
+            
+            .dropdown-item:hover {
+                background: rgba(13, 110, 253, 0.08);
+                color: #0d6efd;
+            }
+            
+            .dropdown-item.text-danger:hover {
+                background: rgba(220, 53, 69, 0.08);
+                color: #dc3545 !important;
+            }
+            
+            .notification-badge::after {
+                border-color: white;
             }
         }
         
@@ -274,7 +384,12 @@
         }
     </style>
 </head>
-<body>
+<body class="animate-fade-in">
+    <!-- Page Loader -->
+    <div id="page-loader" class="hidden">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">CargoFind</div>
+    </div>
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
@@ -409,72 +524,155 @@
 
     <footer class="footer bg-dark text-white pt-5 pb-4">
         <div class="container">
-            <div class="row">
-                <!-- Brand Column -->
-                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
-                    <a href="{{ url_for('index') }}" class="footer-brand d-flex align-items-center text-white text-decoration-none mb-3">
-                        <i class="fas fa-truck-moving fa-lg me-2"></i>
-                        <span class="fw-bold fs-5">CargoFind</span>
+            <!-- Mobile Footer Design -->
+            <div class="d-md-none">
+                <!-- Brand Section -->
+                <div class="text-center mb-4">
+                    <a href="{{ url_for('index') }}" class="footer-brand d-inline-flex align-items-center text-white text-decoration-none mb-3">
+                        <i class="fas fa-truck-moving fa-2x me-2"></i>
+                        <span class="fw-bold fs-4">CargoFind</span>
                     </a>
-                    <p class="text-white-50 mb-3">Fast & reliable logistics across Cameroon. Connecting businesses and individuals with trusted drivers for seamless deliveries.</p>
-                    <div class="d-flex gap-3">
-                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                    <p class="text-white-50 small px-3">Fast & reliable logistics across Cameroon</p>
+                </div>
+
+                <!-- Social Links -->
+                <div class="d-flex justify-content-center gap-3 mb-4">
+                    <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+
+                <!-- Quick Access Buttons -->
+                <div class="row g-2 mb-4 px-2">
+                    <div class="col-6">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm w-100 rounded-pill">
+                            <i class="fas fa-home me-1"></i> Home
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ url_for('contact') }}" class="btn btn-outline-light btn-sm w-100 rounded-pill">
+                            <i class="fas fa-envelope me-1"></i> Contact
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ url_for('testimonials') }}" class="btn btn-outline-light btn-sm w-100 rounded-pill">
+                            <i class="fas fa-star me-1"></i> Reviews
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-sm w-100 rounded-pill">
+                            <i class="fas fa-user-plus me-1"></i> Sign Up
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Contact Info Cards -->
+                <div class="row g-2 mb-4 px-2">
+                    <div class="col-12">
+                        <div class="bg-dark bg-opacity-50 rounded-3 p-3 border border-secondary border-opacity-25">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                <small class="text-white-50">Yaoundé, Cameroon</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-phone text-primary me-2"></i>
+                                <small class="text-white-50">+237 6XX XXX XXX</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-envelope text-primary me-2"></i>
+                                <small class="text-white-50">support@cargofind.cm</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Legal Links -->
+                <div class="text-center mb-3">
+                    <div class="d-flex flex-wrap justify-content-center gap-3 small">
+                        <a href="{{ url_for('privacy') }}" class="text-white-50 text-decoration-none">Privacy</a>
+                        <span class="text-white-50">•</span>
+                        <a href="{{ url_for('terms') }}" class="text-white-50 text-decoration-none">Terms</a>
+                        <span class="text-white-50">•</span>
+                        <a href="#" class="text-white-50 text-decoration-none">Cookies</a>
+                    </div>
+                </div>
+
+                <!-- Copyright -->
+                <div class="text-center">
+                    <p class="mb-0 text-white-50 small">&copy; 2026 CargoFind Cameroon</p>
+                </div>
+            </div>
+
+            <!-- Desktop Footer Design -->
+            <div class="d-none d-md-block">
+                <div class="row">
+                    <!-- Brand Column -->
+                    <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                        <a href="{{ url_for('index') }}" class="footer-brand d-flex align-items-center text-white text-decoration-none mb-3">
+                            <i class="fas fa-truck-moving fa-lg me-2"></i>
+                            <span class="fw-bold fs-5">CargoFind</span>
+                        </a>
+                        <p class="text-white-50 mb-3">Fast & reliable logistics across Cameroon. Connecting businesses and individuals with trusted drivers for seamless deliveries.</p>
+                        <div class="d-flex gap-3">
+                            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Links -->
+                    <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                        <h6 class="footer-heading text-uppercase fw-bold mb-3">Quick Links</h6>
+                        <ul class="list-unstyled footer-links">
+                            <li><a href="{{ url_for('index') }}" class="footer-link">Home</a></li>
+                            <li><a href="{{ url_for('testimonials') }}" class="footer-link">Testimonials</a></li>
+                            <li><a href="{{ url_for('contact') }}" class="footer-link">Contact</a></li>
+                            <li><a href="{{ url_for('login') }}" class="footer-link">Login</a></li>
+                            <li><a href="{{ url_for('register') }}" class="footer-link">Sign Up</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Services -->
+                    <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                        <h6 class="footer-heading text-uppercase fw-bold mb-3">Services</h6>
+                        <ul class="list-unstyled footer-links">
+                            <li><a href="{{ url_for('register') }}" class="footer-link">Book a Truck</a></li>
+                            <li><a href="{{ url_for('register') }}" class="footer-link">Become a Driver</a></li>
+                            <li><a href="{{ url_for('contact') }}" class="footer-link">Business Solutions</a></li>
+                            <li><a href="{{ url_for('contact') }}" class="footer-link">API Access</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Contact Info -->
+                    <div class="col-lg-4 col-md-6">
+                        <h6 class="footer-heading text-uppercase fw-bold mb-3">Contact Us</h6>
+                        <ul class="list-unstyled footer-contact">
+                            <li class="mb-3 d-flex align-items-start">
+                                <i class="fas fa-map-marker-alt mt-1 me-3 text-primary"></i>
+                                <span class="text-white-50">Yaoundé, Cameroon</span>
+                            </li>
+                            <li class="mb-3 d-flex align-items-center">
+                                <i class="fas fa-phone mt-1 me-3 text-primary"></i>
+                                <span class="text-white-50">+237 6XX XXX XXX</span>
+                            </li>
+                            <li class="mb-3 d-flex align-items-center">
+                                <i class="fas fa-envelope mt-1 me-3 text-primary"></i>
+                                <span class="text-white-50">support@cargofind.cm</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
                 
-                <!-- Quick Links -->
-                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
-                    <h6 class="footer-heading text-uppercase fw-bold mb-3">Quick Links</h6>
-                    <ul class="list-unstyled footer-links">
-                        <li><a href="{{ url_for('index') }}" class="footer-link">Home</a></li>
-                        <li><a href="{{ url_for('testimonials') }}" class="footer-link">Testimonials</a></li>
-                        <li><a href="{{ url_for('contact') }}" class="footer-link">Contact</a></li>
-                        <li><a href="{{ url_for('login') }}" class="footer-link">Login</a></li>
-                        <li><a href="{{ url_for('register') }}" class="footer-link">Sign Up</a></li>
-                    </ul>
-                </div>
-                
-                <!-- Services -->
-                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
-                    <h6 class="footer-heading text-uppercase fw-bold mb-3">Services</h6>
-                    <ul class="list-unstyled footer-links">
-                        <li><a href="{{ url_for('register') }}" class="footer-link">Book a Truck</a></li>
-                        <li><a href="{{ url_for('register') }}" class="footer-link">Become a Driver</a></li>
-                        <li><a href="{{ url_for('contact') }}" class="footer-link">Business Solutions</a></li>
-                        <li><a href="{{ url_for('contact') }}" class="footer-link">API Access</a></li>
-                    </ul>
-                </div>
-                
-                <!-- Contact Info -->
-                <div class="col-lg-4 col-md-6">
-                    <h6 class="footer-heading text-uppercase fw-bold mb-3">Contact Us</h6>
-                    <ul class="list-unstyled footer-contact">
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="fas fa-map-marker-alt mt-1 me-3 text-primary"></i>
-                            <span class="text-white-50">Yaoundé, Cameroon</span>
-                        </li>
-                        <li class="mb-3 d-flex align-items-center">
-                            <i class="fas fa-phone mt-1 me-3 text-primary"></i>
-                            <span class="text-white-50">+237 6XX XXX XXX</span>
-                        </li>
-                        <li class="mb-3 d-flex align-items-center">
-                            <i class="fas fa-envelope mt-1 me-3 text-primary"></i>
-                            <span class="text-white-50">support@cargofind.cm</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- Bottom Bar -->
-            <div class="footer-bottom border-top border-secondary mt-4 pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <p class="mb-2 mb-md-0 text-white-50">&copy; 2026 CargoFind Cameroon. All rights reserved.</p>
-                <div class="footer-bottom-links">
-                    <a href="{{ url_for('privacy') }}" class="text-white-50 text-decoration-none me-3">Privacy Policy</a>
-                    <a href="{{ url_for('terms') }}" class="text-white-50 text-decoration-none me-3">Terms of Service</a>
-                    <a href="#" class="text-white-50 text-decoration-none">Cookie Policy</a>
+                <!-- Bottom Bar -->
+                <div class="footer-bottom border-top border-secondary mt-4 pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
+                    <p class="mb-2 mb-md-0 text-white-50">&copy; 2026 CargoFind Cameroon. All rights reserved.</p>
+                    <div class="footer-bottom-links">
+                        <a href="{{ url_for('privacy') }}" class="text-white-50 text-decoration-none me-3">Privacy Policy</a>
+                        <a href="{{ url_for('terms') }}" class="text-white-50 text-decoration-none me-3">Terms of Service</a>
+                        <a href="#" class="text-white-50 text-decoration-none">Cookie Policy</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -490,10 +688,55 @@
             alerts.forEach(function(alert) {
                 setTimeout(function() {
                     const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
+                    if (bsAlert) bsAlert.close();
                 }, 5000);
             });
         });
+
+        // Page Loader Control
+        const showLoader = () => {
+            const loader = document.getElementById('page-loader');
+            if (loader) loader.classList.remove('hidden');
+        };
+
+        const hideLoader = () => {
+            const loader = document.getElementById('page-loader');
+            if (loader) loader.classList.add('hidden');
+        };
+
+        window.addEventListener('load', hideLoader);
+        window.addEventListener('pageshow', hideLoader); // Handle back/forward cache
+        window.addEventListener('beforeunload', showLoader);
+
+        // Show loader on form submission
+        document.addEventListener('submit', function(e) {
+            // Only show loader if form is valid (if it uses HTML5 validation)
+            if (!e.target.checkValidity || e.target.checkValidity()) {
+                showLoader();
+            }
+        });
+
+        // Special handling for links
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('a');
+            if (target && 
+                target.href && 
+                !target.getAttribute('target') && 
+                !target.href.includes('#') && 
+                !target.href.startsWith('javascript:') &&
+                !target.href.startsWith('mailto:') && 
+                !target.href.startsWith('tel:') &&
+                target.hostname === window.location.hostname) {
+                
+                // Don't show for downloads or specific classes if needed
+                if (!target.hasAttribute('download')) {
+                    showLoader();
+                }
+            }
+        });
+
+        // Safety timeout to hide loader if navigation takes too long or is cancelled
+        window.addEventListener('unload', hideLoader);
     </script>
     {% block scripts %}{% endblock %}
 </body>

@@ -17,138 +17,253 @@
 </section>
 
 <div class="container pb-5">
-    <div class="row g-4 mb-5">
-        <!-- Contact Form -->
-        <div class="col-lg-7">
-            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-                <div class="card-header bg-gradient-primary text-white py-4">
-                    <h4 class="mb-0 fw-bold"><i class="fas fa-paper-plane me-2"></i>Send us a Message</h4>
+    <!-- Mobile Layout -->
+    <div class="d-md-none">
+        <!-- Contact Info Cards (Mobile First) -->
+        <div class="row g-3 mb-4">
+            <!-- Phone Card -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-phone text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-0">Phone</h6>
+                                <p class="text-muted small mb-0">+237 670 89 04 64</p>
+                            </div>
+                            <a href="tel:+237670890464" class="btn btn-primary btn-sm rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-phone"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body p-4 p-md-5">
-                    <form action="{{ url_for('contact') }}" method="POST" class="contact-form">
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <label for="name" class="form-label fw-semibold">Full Name</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="fas fa-user text-muted"></i>
-                                    </span>
-                                    <input type="text" class="form-control form-control-lg border-0 bg-light" id="name" name="name" placeholder="John Doe" required>
-                                </div>
+            </div>
+
+            <!-- Email Card -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-envelope text-success"></i>
                             </div>
-                            <div class="col-md-6">
-                                <label for="email" class="form-label fw-semibold">Email Address</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="fas fa-envelope text-muted"></i>
-                                    </span>
-                                    <input type="email" class="form-control form-control-lg border-0 bg-light" id="email" name="email" placeholder="you@example.com" required>
-                                </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-0">Email</h6>
+                                <p class="text-muted small mb-0">support@cargofind.cm</p>
                             </div>
-                            <div class="col-12">
-                                <label for="subject" class="form-label fw-semibold">Subject</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0">
-                                        <i class="fas fa-tag text-muted"></i>
-                                    </span>
-                                    <input type="text" class="form-control form-control-lg border-0 bg-light" id="subject" name="subject" placeholder="How can we help?" required>
-                                </div>
+                            <a href="mailto:support@cargofind.cm" class="btn btn-success btn-sm rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Card -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-map-marker-alt text-warning"></i>
                             </div>
-                            <div class="col-12">
-                                <label for="message" class="form-label fw-semibold">Message</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-0 align-items-start pt-3">
-                                        <i class="fas fa-comment text-muted mt-1"></i>
-                                    </span>
-                                    <textarea class="form-control border-0 bg-light" id="message" name="message" rows="6" placeholder="Tell us more about what you need..." required></textarea>
-                                </div>
-                            </div>
-                            <div class="col-12 mt-4">
-                                <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm hover-lift">
-                                    <i class="fas fa-paper-plane me-2"></i>Send Message
-                                </button>
+                            <div>
+                                <h6 class="fw-bold mb-0">Office</h6>
+                                <p class="text-muted small mb-0">Yaoundé, Cameroon</p>
                             </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Contact Info Cards -->
-        <div class="col-lg-5">
-            <div class="row g-4">
-                <!-- Phone Card -->
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm rounded-4 h-100 contact-card hover-lift">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-box bg-primary-soft rounded-3 p-3 me-4">
-                                    <i class="fas fa-phone fa-lg text-primary"></i>
+        <!-- Contact Form (Mobile) -->
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="card-body p-3">
+                <h5 class="fw-bold mb-3"><i class="fas fa-paper-plane me-2 text-primary"></i>Send Message</h5>
+                <form action="{{ url_for('contact') }}" method="POST" class="contact-form">
+                    <div class="mb-3">
+                        <label for="name-mobile" class="form-label small fw-semibold">Full Name</label>
+                        <input type="text" class="form-control rounded-3" id="name-mobile" name="name" placeholder="John Doe" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email-mobile" class="form-label small fw-semibold">Email Address</label>
+                        <input type="email" class="form-control rounded-3" id="email-mobile" name="email" placeholder="you@example.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="subject-mobile" class="form-label small fw-semibold">Subject</label>
+                        <input type="text" class="form-control rounded-3" id="subject-mobile" name="subject" placeholder="How can we help?" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="message-mobile" class="form-label small fw-semibold">Message</label>
+                        <textarea class="form-control rounded-3" id="message-mobile" name="message" rows="5" placeholder="Tell us more..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">
+                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Social Media (Mobile) -->
+        <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-body p-3 text-center">
+                <h6 class="fw-bold mb-3">Follow Us</h6>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="#" class="social-btn facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="social-btn twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-btn instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="social-btn linkedin">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-md-block">
+        <div class="row g-4 mb-5">
+            <!-- Contact Form -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                    <div class="card-header bg-gradient-primary text-white py-4">
+                        <h4 class="mb-0 fw-bold"><i class="fas fa-paper-plane me-2"></i>Send us a Message</h4>
+                    </div>
+                    <div class="card-body p-4 p-md-5">
+                        <form action="{{ url_for('contact') }}" method="POST" class="contact-form">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label for="name" class="form-label fw-semibold">Full Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-user text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control form-control-lg border-0 bg-light" id="name" name="name" placeholder="John Doe" required>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h5 class="fw-bold mb-1">Phone</h5>
-                                    <p class="text-muted mb-0">+237 670 89 04 64</p>
-                                    <small class="text-muted">Mon-Fri, 9am-6pm</small>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label fw-semibold">Email Address</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-envelope text-muted"></i>
+                                        </span>
+                                        <input type="email" class="form-control form-control-lg border-0 bg-light" id="email" name="email" placeholder="you@example.com" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="subject" class="form-label fw-semibold">Subject</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-tag text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control form-control-lg border-0 bg-light" id="subject" name="subject" placeholder="How can we help?" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="message" class="form-label fw-semibold">Message</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0 align-items-start pt-3">
+                                            <i class="fas fa-comment text-muted mt-1"></i>
+                                        </span>
+                                        <textarea class="form-control border-0 bg-light" id="message" name="message" rows="6" placeholder="Tell us more about what you need..." required></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-4">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm hover-lift">
+                                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Info Cards -->
+            <div class="col-lg-5">
+                <div class="row g-4">
+                    <!-- Phone Card -->
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 contact-card hover-lift">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-box bg-primary-soft rounded-3 p-3 me-4">
+                                        <i class="fas fa-phone fa-lg text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-1">Phone</h5>
+                                        <p class="text-muted mb-0">+237 670 89 04 64</p>
+                                        <small class="text-muted">Mon-Fri, 9am-6pm</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Email Card -->
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm rounded-4 h-100 contact-card hover-lift">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-box bg-success-soft rounded-3 p-3 me-4">
-                                    <i class="fas fa-envelope fa-lg text-success"></i>
-                                </div>
-                                <div>
-                                    <h5 class="fw-bold mb-1">Email</h5>
-                                    <p class="text-muted mb-0">support@cargofind.cm</p>
-                                    <small class="text-muted">We reply within 24 hours</small>
+                    <!-- Email Card -->
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 contact-card hover-lift">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-box bg-success-soft rounded-3 p-3 me-4">
+                                        <i class="fas fa-envelope fa-lg text-success"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-1">Email</h5>
+                                        <p class="text-muted mb-0">support@cargofind.cm</p>
+                                        <small class="text-muted">We reply within 24 hours</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Location Card -->
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm rounded-4 h-100 contact-card hover-lift">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-box bg-warning-soft rounded-3 p-3 me-4">
-                                    <i class="fas fa-map-marker-alt fa-lg text-warning"></i>
-                                </div>
-                                <div>
-                                    <h5 class="fw-bold mb-1">Office</h5>
-                                    <p class="text-muted mb-0">Yaoundé, Cameroon</p>
-                                    <small class="text-muted">Come visit us</small>
+                    <!-- Location Card -->
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 contact-card hover-lift">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-box bg-warning-soft rounded-3 p-3 me-4">
+                                        <i class="fas fa-map-marker-alt fa-lg text-warning"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-1">Office</h5>
+                                        <p class="text-muted mb-0">Yaoundé, Cameroon</p>
+                                        <small class="text-muted">Come visit us</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Social Media -->
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-body p-4 text-center">
-                            <h5 class="fw-bold mb-3">Follow Us</h5>
-                            <div class="d-flex justify-content-center gap-3">
-                                <a href="#" class="social-btn facebook">
-                                    <i class="fab fa-facebook-f fa-lg"></i>
-                                </a>
-                                <a href="#" class="social-btn twitter">
-                                    <i class="fab fa-twitter fa-lg"></i>
-                                </a>
-                                <a href="#" class="social-btn instagram">
-                                    <i class="fab fa-instagram fa-lg"></i>
-                                </a>
-                                <a href="#" class="social-btn linkedin">
-                                    <i class="fab fa-linkedin-in fa-lg"></i>
-                                </a>
+                    <!-- Social Media -->
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-body p-4 text-center">
+                                <h5 class="fw-bold mb-3">Follow Us</h5>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <a href="#" class="social-btn facebook">
+                                        <i class="fab fa-facebook-f fa-lg"></i>
+                                    </a>
+                                    <a href="#" class="social-btn twitter">
+                                        <i class="fab fa-twitter fa-lg"></i>
+                                    </a>
+                                    <a href="#" class="social-btn instagram">
+                                        <i class="fab fa-instagram fa-lg"></i>
+                                    </a>
+                                    <a href="#" class="social-btn linkedin">
+                                        <i class="fab fa-linkedin-in fa-lg"></i>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -157,22 +272,6 @@
         </div>
     </div>
 
-    <!-- Map Section -->
-    <div class="row justify-content-center">
-        <div class="col-12">
-            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-                <div class="card-body p-0">
-                    <div class="map-placeholder bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
-                        <div class="text-center">
-                            <i class="fas fa-map-marked-alt fa-3x text-muted mb-3"></i>
-                            <p class="text-muted mb-0">Map integration available</p>
-                            <small class="text-muted">Add Google Maps API for live location</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <style>
