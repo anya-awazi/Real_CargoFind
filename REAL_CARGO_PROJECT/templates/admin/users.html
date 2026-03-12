@@ -253,9 +253,20 @@
     <div class="page-header">
         <div>
             <h2><i class="fas fa-users text-primary me-2"></i>User Management</h2>
-            <p class="text-muted small mb-0">Total of {{ users|length }} active and inactive users in the system.</p>
+            <p class="text-muted small mb-0">Total of {{ users|length }} matching users found.</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <form action="{{ url_for('admin_users') }}" method="GET" class="d-flex gap-2 me-2">
+                <input type="hidden" name="role" value="{{ request.args.get('role', '') }}">
+                <div class="input-group input-group-sm" style="width: 300px;">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Search name, email, phone..." value="{{ request.args.get('q', '') }}">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                {% if request.args.get('q') or request.args.get('role') %}
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center px-3">Reset</a>
+                {% endif %}
+            </form>
             <a href="{{ url_for('admin_send_email') }}" class="btn btn-primary rounded-pill px-4">
                 <i class="fas fa-paper-plane me-2"></i>Send Broadcast
             </a>
@@ -267,17 +278,14 @@
     
     <!-- User Tabs -->
     <div class="user-tabs">
-        <a class="user-tab active" onclick="showSection('all')">
+        <a href="{{ url_for('admin_users', q=request.args.get('q', '')) }}" class="user-tab {{ 'active' if not request.args.get('role') }}">
             All Users
-            <span class="badge bg-secondary">{{ users|length }}</span>
         </a>
-        <a class="user-tab" onclick="showSection('customer')">
+        <a href="{{ url_for('admin_users', role='customer', q=request.args.get('q', '')) }}" class="user-tab {{ 'active' if request.args.get('role') == 'customer' }}">
             Customers
-            <span class="badge bg-primary">{{ users|selectattr('role', 'equalto', 'customer')|list|length }}</span>
         </a>
-        <a class="user-tab" onclick="showSection('driver')">
+        <a href="{{ url_for('admin_users', role='driver', q=request.args.get('q', '')) }}" class="user-tab {{ 'active' if request.args.get('role') == 'driver' }}">
             Drivers
-            <span class="badge bg-warning">{{ users|selectattr('role', 'equalto', 'driver')|list|length }}</span>
         </a>
     </div>
     
@@ -342,161 +350,6 @@
             </table>
         </div>
     </div>
-    
-    <!-- Customers Only -->
-    <div id="customer" class="user-section">
-        <div class="users-card">
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th>Customer</th>
-                        <th>Contact</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users if user.role == 'customer' %}
-                    <tr>
-                        <td>
-                            <div class="user-info">
-                                <div class="user-avatar" style="background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);">{{ user.full_name[0]|upper }}</div>
-                                <div class="user-details">
-                                    <span class="user-name">{{ user.full_name }}</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="user-details">
-                                <span>{{ user.email }}</span>
-                                <span class="user-extra">{{ user.phone }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="status-badge {% if user.is_active %}active{% else %}inactive{% endif %}">
-                                <i class="fas {% if user.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
-                                {% if user.is_active %}Active{% else %}Suspended{% endif %}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <a href="{{ url_for('toggle_user_status', user_id=user.id) }}" class="btn-action {% if user.is_active %}suspend{% else %}activate{% endif %}">
-                                    <i class="fas {% if user.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
-                                    {% if user.is_active %}Suspend{% else %}Activate{% endif %}
-                                </a>
-                                <a href="{{ url_for('delete_user', user_id=user.id) }}" class="btn-action delete" onclick="return confirm('Are you sure?')">
-                                    <i class="fas fa-trash"></i>Delete
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4">
-                            <div class="empty-state">
-                                <i class="fas fa-users d-block mx-auto mb-2"></i>
-                                <p>No customers found</p>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    
-    <!-- Drivers Only -->
-    <div id="driver" class="user-section">
-        <div class="users-card">
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th>Driver</th>
-                        <th>Vehicle</th>
-                        <th>Contact</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users if user.role == 'driver' %}
-                    <tr>
-                        <td>
-                            <div class="user-info">
-                                <div class="user-avatar" style="background: linear-gradient(135deg, #fd7e14 0%, #d65a00 100%);">{{ user.full_name[0]|upper }}</div>
-                                <div class="user-details">
-                                    <span class="user-name">{{ user.full_name }}</span>
-                                    {% if user.is_approved %}
-                                        <span class="text-success"><i class="fas fa-check-circle"></i> Approved</span>
-                                    {% else %}
-                                        <span class="text-warning"><i class="fas fa-clock"></i> Pending</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="user-details">
-                                <span class="user-name">{{ user.vehicle_type|capitalize }}</span>
-                                <span class="user-extra">{{ user.vehicle_id }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="user-details">
-                                <span>{{ user.email }}</span>
-                                <span class="user-extra">{{ user.phone }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="status-badge {% if user.is_active %}active{% else %}inactive{% endif %}">
-                                <i class="fas {% if user.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
-                                {% if user.is_active %}Active{% else %}Suspended{% endif %}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <a href="{{ url_for('toggle_user_status', user_id=user.id) }}" class="btn-action {% if user.is_active %}suspend{% else %}activate{% endif %}">
-                                    <i class="fas {% if user.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
-                                    {% if user.is_active %}Suspend{% else %}Activate{% endif %}
-                                </a>
-                                <a href="{{ url_for('delete_user', user_id=user.id) }}" class="btn-action delete" onclick="return confirm('Are you sure?')">
-                                    <i class="fas fa-trash"></i>Delete
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="5">
-                            <div class="empty-state">
-                                <i class="fas fa-truck d-block mx-auto mb-2"></i>
-                                <p>No drivers found</p>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
 </div>
 
-<script>
-    function showSection(sectionId) {
-        // Hide all sections
-        document.querySelectorAll('.user-section').forEach(section => {
-            section.classList.remove('active');
-        });
-        
-        // Remove active from all tabs
-        document.querySelectorAll('.user-tab').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        
-        // Show selected section
-        document.getElementById(sectionId).classList.add('active');
-        
-        // Add active to clicked tab
-        event.target.classList.add('active');
-    }
-</script>
 {% endblock %}

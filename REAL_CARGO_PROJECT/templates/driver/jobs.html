@@ -1,58 +1,267 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-5">
-        <h2 class="mb-4">Available Delivery Jobs</h2>
-        <div class="alert alert-info py-2 small">
-            <i class="fas fa-info-circle"></i> Showing jobs for your <strong>{{ current_user.vehicle_type | capitalize }}</strong>
-        </div>
+<!-- Mobile Layout -->
+<div class="d-md-none">
+    <!-- Header -->
+    <div class="mb-3">
+        <h5 class="fw-bold mb-2">Available Jobs</h5>
         
-        <div id="jobList" class="overflow-auto" style="max-height: 700px;">
-            {% for job in jobs %}
-            <div class="card mb-3 job-card" id="job-{{ job.id }}" 
-                 data-lat="{{ job.pickup_lat }}" data-lng="{{ job.pickup_lng }}"
-                 data-dlat="{{ job.dropoff_lat }}" data-dlng="{{ job.dropoff_lng }}">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <h5 class="card-title text-primary">Job #{{ job.id }}</h5>
-                        <span class="badge bg-success h5">{{ job.total_cost|int }} XAF</span>
+        <!-- Filter Section Mobile -->
+        <div class="card border-0 shadow-sm mb-3 rounded-4 overflow-hidden">
+            <div class="card-body p-2 bg-light">
+                <form action="{{ url_for('available_jobs') }}" method="GET">
+                    <div class="input-group input-group-sm mb-2">
+                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" name="q" class="form-control border-start-0" placeholder="Search..." value="{{ request.args.get('q', '') }}">
                     </div>
-                    <hr class="my-2">
-                    <div class="mb-2 small">
-                        <p class="mb-1"><strong><i class="fas fa-map-marker-alt text-success"></i> Pickup:</strong> {{ job.pickup_location }}</p>
-                        <p class="mb-1"><strong><i class="fas fa-flag-checkered text-danger"></i> Drop-off:</strong> {{ job.dropoff_location }}</p>
-                        <p class="mb-1 text-primary"><strong><i class="far fa-clock"></i> Pickup At:</strong> {{ job.pickup_time.strftime('%d %b, %H:%M') }}</p>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <input type="date" name="date" class="form-control form-control-sm" value="{{ request.args.get('date', '') }}">
+                        </div>
+                        <div class="col-6">
+                            <select name="vtype" class="form-select form-select-sm">
+                                <option value="" {% if not request.args.get('vtype') %}selected{% endif %}>My Type</option>
+                                <option value="car" {% if request.args.get('vtype') == 'car' %}selected{% endif %}>Car</option>
+                                <option value="van" {% if request.args.get('vtype') == 'van' %}selected{% endif %}>Van</option>
+                                <option value="truck" {% if request.args.get('vtype') == 'truck' %}selected{% endif %}>Truck</option>
+                                <option value="all" {% if request.args.get('vtype') == 'all' %}selected{% endif %}>All</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="row small text-muted mb-2">
-                        <div class="col-6"><i class="fas fa-route"></i> {{ job.distance_km }} km</div>
-                        <div class="col-6"><i class="fas fa-weight-hanging"></i> {{ job.weight }} kg</div>
+                    <div class="row g-2">
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100">Filter</button>
+                        </div>
                     </div>
-                    <p class="small mb-1"><strong>Goods:</strong> {{ job.goods_description }}</p>
-                    <p class="small mb-3"><strong>Customer No:</strong> <a href="tel:{{ job.customer.phone }}" class="text-decoration-none">{{ job.customer.phone }}</a></p>
-                    
-                    <div class="d-flex gap-2">
-                        <button onclick="previewJob({{ job.id }})" class="btn btn-sm btn-outline-primary flex-grow-1">Preview Route</button>
-                        <a href="{{ url_for('accept_job', delivery_id=job.id) }}" class="btn btn-sm btn-primary flex-grow-1">Accept Job</a>
-                    </div>
-                    
-                    <div id="details-{{ job.id }}" class="mt-3 bg-light p-2 rounded small d-none">
-                        <p class="mb-1"><strong>ETA to Pickup:</strong> <span class="eta-pickup">Calculating...</span></p>
-                        <p class="mb-0"><strong>Total Trip Time:</strong> <span class="eta-total">Calculating...</span></p>
-                    </div>
-                </div>
+                </form>
             </div>
-            {% else %}
-            <div class="text-center py-5">
-                <p class="lead text-muted">No pending jobs for your vehicle type.</p>
-            </div>
-            {% endfor %}
+        </div>
+
+        <div class="alert alert-info py-2 small mb-0">
+            <i class="fas fa-truck me-1"></i> <strong>{{ current_user.vehicle_type | capitalize }}</strong> jobs
         </div>
     </div>
     
-    <div class="col-md-7">
-        <div class="card shadow-sm sticky-top" style="top: 20px; z-index: 1000;">
-            <div id="jobMap" style="height: 700px; border-radius: 15px;"></div>
+    <!-- Job Cards -->
+    <div id="jobList-mobile">
+        {% for job in jobs %}
+        <div class="card border-0 shadow-sm mb-3 job-card-mobile" id="job-mobile-{{ job.id }}"
+             data-lat="{{ job.pickup_lat }}" data-lng="{{ job.pickup_lng }}"
+             data-dlat="{{ job.dropoff_lat }}" data-dlng="{{ job.dropoff_lng }}">
+            <div class="card-body p-3">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0 text-primary">Job #{{ job.id }}</h6>
+                    <span class="badge bg-success px-3 py-2 rounded-pill">{{ job.total_cost|int }} XAF</span>
+                </div>
+                
+                <!-- Locations -->
+                <div class="mb-3">
+                    <div class="d-flex align-items-start mb-2">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; min-width: 32px;">
+                            <i class="fas fa-map-marker-alt text-success small"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">PICKUP</small>
+                            <small class="fw-bold">{{ job.pickup_location }}</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start">
+                        <div class="bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; min-width: 32px;">
+                            <i class="fas fa-flag-checkered text-danger small"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">DROP-OFF</small>
+                            <small class="fw-bold">{{ job.dropoff_location }}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Details Grid -->
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <div class="bg-light rounded-3 p-2 text-center">
+                            <i class="fas fa-route text-primary small"></i>
+                            <div class="fw-bold small">{{ job.distance_km }} km</div>
+                            <small class="text-muted" style="font-size: 0.7rem;">Distance</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-light rounded-3 p-2 text-center">
+                            <i class="fas fa-weight-hanging text-warning small"></i>
+                            <div class="fw-bold small">{{ job.weight }} kg</div>
+                            <small class="text-muted" style="font-size: 0.7rem;">Weight</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Additional Info -->
+                <div class="bg-light rounded-3 p-2 mb-3">
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="far fa-clock text-primary me-2 small"></i>
+                        <small><strong>Pickup:</strong> {{ job.pickup_time.strftime('%d %b, %H:%M') }}</small>
+                    </div>
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="fas fa-box text-info me-2 small"></i>
+                        <small><strong>Goods:</strong> {{ job.goods_description }}</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-phone text-success me-2 small"></i>
+                        <small><a href="tel:{{ job.customer.phone }}" class="text-decoration-none">{{ job.customer.phone }}</a></small>
+                    </div>
+                </div>
+                
+                <!-- ETA Details (Hidden by default) -->
+                <div id="details-mobile-{{ job.id }}" class="bg-primary bg-opacity-10 rounded-3 p-2 mb-3 d-none">
+                    <div class="d-flex justify-content-between small">
+                        <span><strong>ETA to Pickup:</strong></span>
+                        <span class="eta-pickup text-primary fw-bold">Calculating...</span>
+                    </div>
+                    <div class="d-flex justify-content-between small">
+                        <span><strong>Total Trip:</strong></span>
+                        <span class="eta-total text-primary fw-bold">Calculating...</span>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="d-flex gap-2">
+                    <button onclick="previewJobMobile({{ job.id }})" class="btn btn-outline-primary btn-sm rounded-pill flex-grow-1 fw-bold">
+                        <i class="fas fa-route me-1"></i>Preview
+                    </button>
+                    <a href="{{ url_for('accept_job', delivery_id=job.id) }}" class="btn btn-success btn-sm rounded-pill flex-grow-1 fw-bold">
+                        <i class="fas fa-check me-1"></i>Accept
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card border-0 shadow-sm p-4 text-center">
+            <i class="fas fa-inbox fa-3x text-muted opacity-50 mb-3"></i>
+            <p class="text-muted mb-0">No jobs available for your vehicle type</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Floating Map Button -->
+    {% if jobs %}
+    <button class="btn btn-primary rounded-circle shadow-lg position-fixed"
+            style="bottom: 20px; right: 20px; width: 56px; height: 56px; z-index: 1000;"
+            data-bs-toggle="modal" data-bs-target="#mapModal">
+        <i class="fas fa-map"></i>
+    </button>
+    
+    <!-- Map Modal -->
+    <div class="modal fade" id="mapModal" tabindex="-1">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title fw-bold">Job Locations</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="jobMap-mobile" style="height: 100%; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Desktop Layout -->
+<div class="d-none d-md-block">
+    <div class="row">
+        <div class="col-md-5">
+            <h2 class="mb-4">Available Delivery Jobs</h2>
+            
+            <!-- Filter Section -->
+            <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
+                <div class="card-body p-3 bg-light">
+                    <form action="{{ url_for('available_jobs') }}" method="GET" class="row g-2">
+                        <div class="col-12">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" name="q" class="form-control border-start-0" placeholder="Search location or goods..." value="{{ request.args.get('q', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <input type="date" name="date" class="form-control form-control-sm" value="{{ request.args.get('date', '') }}">
+                        </div>
+                        <div class="col-6">
+                            <select name="vtype" class="form-select form-select-sm">
+                                <option value="" {% if not request.args.get('vtype') %}selected{% endif %}>My Vehicle ({{ current_user.vehicle_type | capitalize }})</option>
+                                <option value="car" {% if request.args.get('vtype') == 'car' %}selected{% endif %}>Car</option>
+                                <option value="van" {% if request.args.get('vtype') == 'van' %}selected{% endif %}>Van</option>
+                                <option value="truck" {% if request.args.get('vtype') == 'truck' %}selected{% endif %}>Truck</option>
+                                <option value="all" {% if request.args.get('vtype') == 'all' %}selected{% endif %}>Show All Jobs</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <select name="sort" class="form-select form-select-sm">
+                                <option value="newest" {% if request.args.get('sort') == 'newest' %}selected{% endif %}>Newest first</option>
+                                <option value="price_high" {% if request.args.get('sort') == 'price_high' %}selected{% endif %}>Highest Price</option>
+                                <option value="weight_high" {% if request.args.get('sort') == 'weight_high' %}selected{% endif %}>Heavy Load</option>
+                                <option value="distance_short" {% if request.args.get('sort') == 'distance_short' %}selected{% endif %}>Shortest distance</option>
+                            </select>
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm flex-grow-1 rounded-pill">Apply Filters</button>
+                            <a href="{{ url_for('available_jobs') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Reset</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="alert alert-info py-2 small">
+                <i class="fas fa-info-circle"></i> Showing jobs for your <strong>{{ current_user.vehicle_type | capitalize }}</strong>
+            </div>
+            
+            <div id="jobList" class="overflow-auto" style="max-height: 700px;">
+                {% for job in jobs %}
+                <div class="card mb-3 job-card" id="job-{{ job.id }}"
+                     data-lat="{{ job.pickup_lat }}" data-lng="{{ job.pickup_lng }}"
+                     data-dlat="{{ job.dropoff_lat }}" data-dlng="{{ job.dropoff_lng }}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="card-title text-primary">Job #{{ job.id }}</h5>
+                            <span class="badge bg-success h5">{{ job.total_cost|int }} XAF</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="mb-2 small">
+                            <p class="mb-1"><strong><i class="fas fa-map-marker-alt text-success"></i> Pickup:</strong> {{ job.pickup_location }}</p>
+                            <p class="mb-1"><strong><i class="fas fa-flag-checkered text-danger"></i> Drop-off:</strong> {{ job.dropoff_location }}</p>
+                            <p class="mb-1 text-primary"><strong><i class="far fa-clock"></i> Pickup At:</strong> {{ job.pickup_time.strftime('%d %b, %H:%M') }}</p>
+                        </div>
+                        <div class="row small text-muted mb-2">
+                            <div class="col-6"><i class="fas fa-route"></i> {{ job.distance_km }} km</div>
+                            <div class="col-6"><i class="fas fa-weight-hanging"></i> {{ job.weight }} kg</div>
+                        </div>
+                        <p class="small mb-1"><strong>Goods:</strong> {{ job.goods_description }}</p>
+                        <p class="small mb-3"><strong>Customer No:</strong> <a href="tel:{{ job.customer.phone }}" class="text-decoration-none">{{ job.customer.phone }}</a></p>
+                        
+                        <div class="d-flex gap-2">
+                            <button onclick="previewJob({{ job.id }})" class="btn btn-sm btn-outline-primary flex-grow-1">Preview Route</button>
+                            <a href="{{ url_for('accept_job', delivery_id=job.id) }}" class="btn btn-sm btn-primary flex-grow-1">Accept Job</a>
+                        </div>
+                        
+                        <div id="details-{{ job.id }}" class="mt-3 bg-light p-2 rounded small d-none">
+                            <p class="mb-1"><strong>ETA to Pickup:</strong> <span class="eta-pickup">Calculating...</span></p>
+                            <p class="mb-0"><strong>Total Trip Time:</strong> <span class="eta-total">Calculating...</span></p>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <p class="lead text-muted">No pending jobs for your vehicle type.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="col-md-7">
+            <div class="card shadow-sm sticky-top" style="top: 20px; z-index: 1000;">
+                <div id="jobMap" style="height: 700px; border-radius: 15px;"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -78,7 +287,7 @@
         iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
     });
 
-    let driverMarker, routingControl;
+    let driverMarker, routingControl, routingControlMobile, mobileMap;
     let jobMarkers = {};
     let currentPos = null;
 
@@ -159,6 +368,95 @@
             details.querySelector('.eta-total').innerText = `${totalMins} mins (${(summary.totalDistance / 1000).toFixed(1)} km total)`;
         });
     }
+    
+    // Mobile preview function
+    function previewJobMobile(jobId) {
+        // Show details box
+        document.querySelectorAll('[id^="details-mobile-"]').forEach(d => d.classList.add('d-none'));
+        const details = document.getElementById(`details-mobile-${jobId}`);
+        details.classList.remove('d-none');
+        
+        // Open map modal
+        const mapModal = new bootstrap.Modal(document.getElementById('mapModal'));
+        mapModal.show();
+        
+        // Wait for modal to show before adding route
+        document.getElementById('mapModal').addEventListener('shown.bs.modal', function onModalShown() {
+            const card = document.getElementById(`job-mobile-${jobId}`);
+            const jobData = card.dataset;
+            const pickup = [parseFloat(jobData.lat), parseFloat(jobData.lng)];
+            const dropoff = [parseFloat(jobData.dlat), parseFloat(jobData.dlng)];
+
+            if (routingControlMobile) mobileMap.removeControl(routingControlMobile);
+
+            const waypoints = [
+                L.latLng(pickup[0], pickup[1]),
+                L.latLng(dropoff[0], dropoff[1])
+            ];
+
+            if (currentPos) {
+                waypoints.unshift(L.latLng(currentPos[0], currentPos[1]));
+            }
+
+            routingControlMobile = L.Routing.control({
+                waypoints: waypoints,
+                lineOptions: {
+                    styles: [{ color: '#0d6efd', weight: 6 }]
+                },
+                createMarker: function(i, wp, n) {
+                    if (i === 0 && currentPos) return L.marker(wp.latLng, { 
+                        icon: L.icon({
+                            iconUrl: 'https://cdn-icons-png.flaticon.com/512/2555/2555013.png',
+                            iconSize: [32, 32]
+                        }) 
+                    }).bindPopup('You');
+                    if (i === waypoints.length - 1) return L.marker(wp.latLng, {icon: redIcon}).bindPopup('Drop-off');
+                    return L.marker(wp.latLng, {icon: greenIcon}).bindPopup('Pickup');
+                },
+                show: false,
+                addWaypoints: false
+            }).addTo(mobileMap);
+
+            routingControlMobile.on('routesfound', function(e) {
+                const routes = e.routes;
+                const summary = routes[0].summary;
+                const totalMins = Math.round(summary.totalTime / 60);
+                const pickupMins = Math.round(routes[0].instructions[0].time / 60) || 5;
+
+                details.querySelector('.eta-pickup').innerText = `${pickupMins} mins`;
+                details.querySelector('.eta-total').innerText = `${totalMins} mins (${(summary.totalDistance / 1000).toFixed(1)} km total)`;
+            });
+            
+            // Remove listener so it doesn't fire multiple times
+            this.removeEventListener('shown.bs.modal', onModalShown);
+        });
+    }
+    
+    // Initialize mobile map when modal is shown
+    document.getElementById('mapModal')?.addEventListener('shown.bs.modal', function () {
+        if (!mobileMap) {
+            mobileMap = L.map('jobMap-mobile').setView([4.0511, 9.7679], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mobileMap);
+            
+            // Add markers for all jobs
+            {% for job in jobs %}
+                L.marker([{{ job.pickup_lat }}, {{ job.pickup_lng }}], {icon: greenIcon})
+                    .addTo(mobileMap)
+                    .bindPopup('Job #{{ job.id }} - {{ job.total_cost|int }} XAF');
+            {% endfor %}
+            
+            // Add driver location if available
+            if (currentPos) {
+                L.marker(currentPos, {
+                    icon: L.icon({
+                        iconUrl: 'https://cdn-icons-png.flaticon.com/512/2555/2555013.png',
+                        iconSize: [32, 32]
+                    })
+                }).addTo(mobileMap).bindPopup('Your Location');
+            }
+        }
+        setTimeout(() => mobileMap.invalidateSize(), 100);
+    });
 </script>
 
 <style>
@@ -169,3 +467,4 @@
     #jobList::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 10px; }
 </style>
 {% endblock %}
+

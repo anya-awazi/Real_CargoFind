@@ -7,9 +7,10 @@ from dotenv import load_dotenv
 # Explicitly load .env from current directory
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Delivery, Notification, Wallet
+from sqlalchemy import or_
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO, emit, join_room, leave_room
@@ -18,6 +19,9 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from PIL import Image
 import io
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
 
 def compress_image(image_path, quality=60, max_size=(800, 800)):
     """
@@ -704,6 +708,170 @@ def driver_dashboard():
                            completed_count=len(history_jobs), 
                            earnings=total_earnings)
 
+@app.route('/driver/invoice/<int:delivery_id>')
+@login_required
+def download_invoice(delivery_id):
+    if current_user.role != 'driver':
+        return redirect(url_for('index'))
+    
+    job = Delivery.query.get_or_404(delivery_id)
+    if job.driver_id != current_user.id:
+        flash("You do not have permission to access this invoice.")
+        return redirect(url_for('driver_dashboard'))
+    
+    # Create a file-like buffer to receive PDF data.
+    buffer = io.BytesIO()
+
+    # Create the PDF object, using the buffer as its "file."
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # --- Header with Blue Background ---
+    p.setFillColorRGB(0.05, 0.43, 0.99)  # #0d6efd approx
+    p.rect(0, height - 120, width, 120, fill=1, stroke=0)
+    
+    p.setFillColor(colors.white)
+    p.setFont("Helvetica-Bold", 28)
+    p.drawString(50, height - 60, "CargoFind")
+    
+    p.setFont("Helvetica", 12)
+    p.drawString(50, height - 85, "Fast & Reliable Logistics in Cameroon")
+    
+    p.setFont("Helvetica-Bold", 14)
+    p.drawRightString(width - 50, height - 60, "INVOICE")
+    
+    # --- Invoice Details Section ---
+    p.setFillColor(colors.black)
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(50, height - 150, "INVOICE NUMBER")
+    p.drawString(width/2 + 50, height - 150, "DATE")
+    
+    p.setFont("Helvetica", 12)
+    p.drawString(50, height - 170, f"#CF-{job.id}")
+    p.drawString(width/2 + 50, height - 170, job.created_at.strftime('%B %d, %Y'))
+    
+    p.setStrokeColor(colors.lightgrey)
+    p.line(50, height - 185, width - 50, height - 185)
+    
+    # --- Locations Section ---
+    y = height - 210
+    p.setFont("Helvetica-Bold", 10)
+    p.setFillColor(colors.grey)
+    p.drawString(50, y, "PICKUP LOCATION")
+    p.drawString(width/2 + 50, y, "DELIVERY LOCATION")
+    
+    y -= 20
+    p.setFont("Helvetica", 11)
+    p.setFillColor(colors.black)
+    
+    # Handle long addresses with simple wrapping
+    pickup_text = job.pickup_location
+    if len(pickup_text) > 40: pickup_text = pickup_text[:37] + "..."
+    p.drawString(50, y, pickup_text)
+    
+    dropoff_text = job.dropoff_location
+    if len(dropoff_text) > 40: dropoff_text = dropoff_text[:37] + "..."
+    p.drawString(width/2 + 50, y, dropoff_text)
+    
+    y -= 25
+    p.line(50, y, width - 50, y)
+    
+    # --- Parties Section ---
+    y -= 25
+    p.setFont("Helvetica-Bold", 10)
+    p.setFillColor(colors.grey)
+    p.drawString(50, y, "CUSTOMER")
+    p.drawString(width/2 + 50, y, "TRANSPORTER")
+    
+    y -= 20
+    p.setFont("Helvetica-Bold", 11)
+    p.setFillColor(colors.black)
+    p.drawString(50, y, job.customer.full_name)
+    p.drawString(width/2 + 50, y, job.driver.full_name)
+    
+    y -= 15
+    p.setFont("Helvetica", 10)
+    p.setFillColor(colors.darkgrey)
+    p.drawString(50, y, job.customer.phone)
+    p.drawString(width/2 + 50, y, f"{job.driver.vehicle_type.capitalize()} - {job.driver.vehicle_id}")
+    
+    y -= 12
+    p.drawString(50, y, job.customer.email)
+    p.drawString(width/2 + 50, y, job.driver.phone)
+    
+    y -= 25
+    p.line(50, y, width - 50, y)
+    
+    # --- Table Header ---
+    y -= 30
+    p.setFillColorRGB(0.97, 0.98, 0.98) # #f8f9fa
+    p.rect(50, y - 5, width - 100, 25, fill=1, stroke=0)
+    
+    p.setFillColor(colors.grey)
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(60, y + 5, "DESCRIPTION")
+    p.drawString(width - 250, y + 5, "DISTANCE")
+    p.drawRightString(width - 60, y + 5, "AMOUNT")
+    
+    # --- Table Body ---
+    y -= 35
+    p.setFillColor(colors.black)
+    p.setFont("Helvetica-Bold", 11)
+    p.drawString(60, y, "Cargo Delivery Service")
+    p.setFont("Helvetica", 10)
+    p.drawString(width - 250, y, f"{job.distance_km} km")
+    p.drawRightString(width - 60, y, f"{job.total_cost:,.0f} XAF")
+    
+    y -= 15
+    p.setFillColor(colors.grey)
+    p.setFont("Helvetica", 9)
+    p.drawString(60, y, "Standard delivery service")
+    
+    # --- Total Section ---
+    y -= 50
+    p.setFillColorRGB(0.97, 0.98, 0.98) # #f8f9fa
+    p.rect(50, y - 15, width - 100, 45, fill=1, stroke=0)
+    
+    p.setFillColor(colors.black)
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(60, y + 5, "Total Amount")
+    
+    p.setFillColorRGB(0.05, 0.43, 0.99)
+    p.setFont("Helvetica-Bold", 20)
+    p.drawRightString(width - 60, y, f"{job.total_cost:,.0f} XAF")
+    
+    # --- Status Section ---
+    y -= 60
+    status = job.payment_status.upper()
+    if status == 'PAID':
+        p.setFillColorRGB(0.82, 0.91, 0.87) # light green
+    else:
+        p.setFillColorRGB(1.0, 0.95, 0.8) # light yellow
+        
+    p.roundRect(width/2 - 60, y, 120, 25, 12, fill=1, stroke=0)
+    
+    if status == 'PAID':
+        p.setFillColorRGB(0.06, 0.32, 0.2) # dark green
+    else:
+        p.setFillColorRGB(0.4, 0.3, 0.0) # dark yellow
+        
+    p.setFont("Helvetica-Bold", 10)
+    p.drawCentredString(width/2, y + 8, f"STATUS: {status}")
+    
+    # --- Footer ---
+    p.setFillColor(colors.grey)
+    p.setFont("Helvetica-Oblique", 10)
+    p.drawCentredString(width/2, 50, "Thank you for choosing CargoFind for your logistics needs!")
+
+    # Close the PDF object cleanly, and we're done.
+    p.showPage()
+    p.save()
+
+    # FileResponse sets the Content-Disposition header.
+    # as_attachment=False allows the browser to show the PDF in a viewer.
+    buffer.seek(0)
+    return send_file(buffer, as_attachment=False, mimetype='application/pdf')
+
 @app.route('/driver/jobs')
 @login_required
 def available_jobs():
@@ -714,11 +882,56 @@ def available_jobs():
         flash('You must be approved by an administrator before you can accept jobs.')
         return redirect(url_for('driver_dashboard'))
     
-    # Filter jobs by driver's vehicle type to ensure relevance
-    jobs = Delivery.query.filter_by(status='Pending', vehicle_type=current_user.vehicle_type).all()
-    general_jobs = Delivery.query.filter_by(status='Pending', vehicle_type=None).all()
-    
-    all_jobs = jobs + general_jobs
+    # Get filter parameters
+    query = request.args.get('q', '')
+    filter_date = request.args.get('date', '')
+    sort_by = request.args.get('sort', 'newest')
+    vtype = request.args.get('vtype', '')
+
+    # Base query: Pending jobs
+    jobs_query = Delivery.query.filter(Delivery.status == 'Pending')
+
+    # Filter by vehicle type
+    if vtype == 'all':
+        # Show all jobs regardless of vehicle type
+        pass
+    elif vtype:
+        # Show specific vehicle type or general jobs
+        jobs_query = jobs_query.filter(or_(Delivery.vehicle_type == vtype, Delivery.vehicle_type == None))
+    else:
+        # Default: Filter by driver's own vehicle type or general jobs
+        jobs_query = jobs_query.filter(or_(Delivery.vehicle_type == current_user.vehicle_type, Delivery.vehicle_type == None))
+
+    # Search by location or goods
+    if query:
+        jobs_query = jobs_query.filter(
+            or_(
+                Delivery.pickup_location.ilike(f'%{query}%'),
+                Delivery.dropoff_location.ilike(f'%{query}%'),
+                Delivery.goods_description.ilike(f'%{query}%')
+            )
+        )
+
+    # Filter by date
+    if filter_date:
+        try:
+            # Match only the date part of pickup_time
+            date_obj = datetime.strptime(filter_date, '%Y-%m-%d').date()
+            jobs_query = jobs_query.filter(db.func.date(Delivery.pickup_time) == date_obj)
+        except ValueError:
+            pass
+
+    # Sorting
+    if sort_by == 'price_high':
+        jobs_query = jobs_query.order_by(Delivery.total_cost.desc())
+    elif sort_by == 'weight_high':
+        jobs_query = jobs_query.order_by(Delivery.weight.desc())
+    elif sort_by == 'distance_short':
+        jobs_query = jobs_query.order_by(Delivery.distance_km.asc())
+    else: # newest
+        jobs_query = jobs_query.order_by(Delivery.created_at.desc())
+
+    all_jobs = jobs_query.all()
     return render_template('driver/jobs.html', jobs=all_jobs)
 
 @app.route('/driver/accept/<int:delivery_id>')
@@ -804,7 +1017,25 @@ def admin_dashboard():
 def admin_users():
     if current_user.role != 'admin':
         return redirect(url_for('index'))
-    users = User.query.all()
+    
+    query = request.args.get('q', '')
+    role_filter = request.args.get('role', '')
+    
+    user_query = User.query
+    
+    if query:
+        user_query = user_query.filter(
+            or_(
+                User.full_name.ilike(f'%{query}%'),
+                User.email.ilike(f'%{query}%'),
+                User.phone.ilike(f'%{query}%')
+            )
+        )
+    
+    if role_filter:
+        user_query = user_query.filter(User.role == role_filter)
+        
+    users = user_query.order_by(User.id.desc()).all()
     return render_template('admin/users.html', users=users)
 
 @app.route('/admin/user/toggle/<int:user_id>')
@@ -863,7 +1094,21 @@ def delete_user(user_id):
 def admin_pending_drivers():
     if current_user.role != 'admin':
         return redirect(url_for('index'))
-    pending_drivers = User.query.filter_by(role='driver', is_approved=False).all()
+    
+    query = request.args.get('q', '')
+    
+    driver_query = User.query.filter_by(role='driver', is_approved=False)
+    
+    if query:
+        driver_query = driver_query.filter(
+            or_(
+                User.full_name.ilike(f'%{query}%'),
+                User.email.ilike(f'%{query}%'),
+                User.phone.ilike(f'%{query}%')
+            )
+        )
+        
+    pending_drivers = driver_query.order_by(User.id.desc()).all()
     return render_template('admin/pending_drivers.html', drivers=pending_drivers)
 
 @app.route('/admin/send_email', methods=['GET', 'POST'])

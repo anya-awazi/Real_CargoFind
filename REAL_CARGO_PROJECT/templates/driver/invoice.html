@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .invoice-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+    
+    .invoice-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .invoice-header {
+        background: linear-gradient(135deg, #198754 0%, #0f5132 100%);
+        padding: 2rem;
+        color: white;
+    }
+    
+    .invoice-header h2 {
+        margin: 0;
+        font-weight: 700;
+    }
+    
+    .invoice-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+    }
+    
+    .invoice-section {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .invoice-section:last-of-type {
+        border-bottom: none;
+    }
+    
+    .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #6c757d;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+    
+    .info-item {
+        margin-bottom: 0.75rem;
+    }
+    
+    .info-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+    
+    .earnings-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .earnings-table th {
+        background: #f8f9fa;
+        padding: 1rem;
+        text-align: left;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        font-weight: 600;
+    }
+    
+    .earnings-table th:last-child,
+    .earnings-table td:last-child {
+        text-align: right;
+    }
+    
+    .earnings-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .earnings-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .total-section {
+        background: linear-gradient(135deg, #198754 0%, #0f5132 100%);
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+    }
+    
+    .total-label {
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .total-amount {
+        font-size: 1.75rem;
+        font-weight: 800;
+    }
+    
+    .footer-section {
+        padding: 1.5rem 2rem;
+        background: #f8f9fa;
+        text-align: center;
+    }
+    
+    .payment-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .payment-status.paid {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .payment-status.pending {
+        background: #fff3cd;
+        color: #664d03;
+    }
+    
+    .action-buttons {
+        padding: 1.5rem 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .btn-invoice {
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .highlight-box {
+        background: #d1e7dd;
+        border-left: 4px solid #198754;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+    
+    @media (max-width: 576px) {
+        .invoice-container {
+            margin: 1rem;
+            padding: 0;
+        }
+        
+        .invoice-header {
+            padding: 1.5rem 1rem;
+        }
+        
+        .invoice-section {
+            padding: 1rem;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .earnings-table {
+            display: block;
+            overflow-x: auto;
+        }
+        
+        .total-section {
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: center;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            padding: 1rem;
+        }
+        
+        .btn-invoice {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    
+    @media print {
+        .no-print { display: none !important; }
+        body { background: white; }
+        .invoice-container { margin: 0; }
+        .invoice-card { box-shadow: none; }
+    }
+</style>
+
+<div class="invoice-container">
+    <div class="invoice-card">
+        <!-- Header -->
+        <div class="invoice-header">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h2><i class="fas fa-truck-moving me-2"></i>CargoFind</h2>
+                    <p class="mb-0 opacity-75">Driver Earnings Statement</p>
+                </div>
+                <div class="invoice-badge">
+                    <i class="fas fa-receipt me-1"></i> EARNINGS
+                </div>
+            </div>
+        </div>
+        
+        <!-- Invoice Details -->
+        <div class="invoice-section">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <div class="info-label">Statement Number</div>
+                        <div class="info-value">#DR-{{ delivery.id }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <div class="info-label">Date</div>
+                        <div class="info-value">{{ delivery.created_at.strftime('%B %d, %Y') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Driver Info -->
+        <div class="invoice-section">
+            <div class="section-title">
+                <i class="fas fa-user-circle me-1"></i> Driver Information
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <div class="info-label">Name</div>
+                        <div class="info-value">{{ delivery.driver.full_name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Phone</div>
+                        <div class="info-value">{{ delivery.driver.phone }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <div class="info-label">Vehicle Type</div>
+                        <div class="info-value">{{ delivery.driver.vehicle_type | capitalize }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Vehicle ID</div>
+                        <div class="info-value">{{ delivery.driver.vehicle_id }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Delivery Route -->
+        <div class="invoice-section">
+            <div class="section-title">
+                <i class="fas fa-route me-1"></i> Delivery Route
+            </div>
+            <div class="info-grid">
+                <div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-success rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                            <i class="fas fa-map-marker-alt text-white small"></i>
+                        </div>
+                        <div>
+                            <div class="info-label">Pickup Location</div>
+                            <div class="info-value">{{ delivery.pickup_location }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-danger rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                            <i class="fas fa-flag-checkered text-white small"></i>
+                        </div>
+                        <div>
+                            <div class="info-label">Drop-off Location</div>
+                            <div class="info-value">{{ delivery.dropoff_location }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customer Info -->
+        <div class="invoice-section">
+            <div class="section-title">
+                <i class="fas fa-user me-1"></i> Customer Information
+            </div>
+            <div class="info-value">{{ delivery.customer.full_name }}</div>
+            <div class="text-muted small">{{ delivery.customer.phone }}</div>
+        </div>
+        
+        <!-- Earnings Breakdown -->
+        <div class="invoice-section">
+            <div class="section-title">
+                <i class="fas fa-calculator me-1"></i> Earnings Breakdown
+            </div>
+            <table class="earnings-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Details</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <strong>Delivery Service</strong>
+                            <div class="text-muted small">Base fare + Distance</div>
+                        </td>
+                        <td>{{ delivery.distance_km }} km</td>
+                        <td><strong>{{ "{:,}".format(delivery.total_cost|int) }} XAF</strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Platform Fee</strong>
+                            <div class="text-muted small">CargoFind service charge (10%)</div>
+                        </td>
+                        <td>-</td>
+                        <td class="text-danger"><strong>-{{ "{:,}".format((delivery.total_cost * 0.10)|int) }} XAF</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="highlight-box">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small text-muted">Your Net Earnings</div>
+                        <div class="fw-bold text-success h5 mb-0">{{ "{:,}".format((delivery.total_cost * 0.90)|int) }} XAF</div>
+                    </div>
+                    <i class="fas fa-wallet fa-2x text-success"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Earnings -->
+        <div class="total-section">
+            <span class="total-label">Total Earnings (After Platform Fee)</span>
+            <span class="total-amount">{{ "{:,}".format((delivery.total_cost * 0.90)|int) }} XAF</span>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer-section">
+            <span class="payment-status {% if delivery.payment_status == 'Paid' %}paid{% else %}pending{% endif %}">
+                <i class="fas {% if delivery.payment_status == 'Paid' %}fa-check-circle{% else %}fa-clock{% endif %}"></i>
+                {% if delivery.payment_status == 'Paid' %}
+                    PAYMENT RECEIVED
+                {% else %}
+                    PAYMENT PENDING
+                {% endif %}
+            </span>
+            <p class="text-muted small mt-3 mb-0">Thank you for being a valued CargoFind driver partner!</p>
+            <p class="text-muted small mb-0">Earnings will be transferred to your account within 24-48 hours after delivery completion.</p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons no-print">
+            <a href="{{ url_for('driver_dashboard') }}" class="btn btn-outline-secondary btn-invoice">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <button onclick="window.print()" class="btn btn-success btn-invoice">
+                <i class="fas fa-print"></i> Print Statement
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

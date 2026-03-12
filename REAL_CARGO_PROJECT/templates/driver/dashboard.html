@@ -342,8 +342,70 @@
 </style>
 
 <div class="driver-dashboard">
-    <!-- Welcome Section -->
-    <div class="welcome-card">
+    <!-- Mobile Welcome Section -->
+    <div class="d-md-none mb-3">
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+            <div class="card-body p-3" style="background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                        <i class="fas fa-truck text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-0 text-white">Hi, {{ current_user.full_name.split()[0] }}! 👋</h6>
+                        <small class="text-white-50">Ready to deliver?</small>
+                    </div>
+                </div>
+                <a href="{{ url_for('available_jobs') }}" class="btn btn-light w-100 rounded-pill py-2 fw-bold {% if not current_user.is_approved %}disabled{% endif %}">
+                    <i class="fas fa-search me-2"></i>Find Jobs
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Stats Grid -->
+    <div class="d-md-none mb-3">
+        <div class="row g-2">
+            <div class="col-6">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-3 text-center" style="background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);">
+                        <i class="fas fa-wallet fa-lg text-white mb-2"></i>
+                        <h5 class="fw-bold mb-0 text-white">{{ "{:,}".format(earnings|int) }}</h5>
+                        <small class="text-white-50">Earnings (XAF)</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-3 text-center">
+                        <i class="fas fa-check-circle fa-lg text-success mb-2"></i>
+                        <h5 class="fw-bold mb-0">{{ completed_count }}</h5>
+                        <small class="text-muted">Completed</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-3 text-center">
+                        <i class="fas fa-clock fa-lg text-warning mb-2"></i>
+                        <h5 class="fw-bold mb-0">{{ active_jobs|length + unpaid_jobs|length }}</h5>
+                        <small class="text-muted">Active Jobs</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-3 text-center">
+                        <i class="fas fa-star fa-lg text-primary mb-2"></i>
+                        <h5 class="fw-bold mb-0">4.9</h5>
+                        <small class="text-muted">Rating</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Welcome Section -->
+    <div class="welcome-card d-none d-md-block">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
                 <h1><i class="fas fa-truck-moving me-2"></i>Welcome back, {{ current_user.full_name.split()[0] }}!</h1>
@@ -355,8 +417,8 @@
         </div>
     </div>
     
-    <!-- Stats Grid -->
-    <div class="stats-grid">
+    <!-- Desktop Stats Grid -->
+    <div class="stats-grid d-none d-md-grid">
         <div class="stat-card primary">
             <div class="stat-icon">
                 <i class="fas fa-wallet"></i>
@@ -403,7 +465,12 @@
                 {% for job in active_jobs %}
                 <div class="job-card active">
                     <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="job-id">Delivery #{{ job.id }}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="job-id">Delivery #{{ job.id }}</span>
+                            <a href="{{ url_for('download_invoice', delivery_id=job.id) }}" target="_blank" class="text-primary small text-decoration-none">
+                                <i class="fas fa-file-pdf"></i> Invoice
+                            </a>
+                        </div>
                         <span class="status-badge {% if job.status == 'Driver Accepted' %}pending{% else %}active{% endif %}">
                             {{ job.status }}
                         </span>
@@ -476,11 +543,16 @@
                         </div>
                         <div class="text-end">
                             <div class="stat-value" style="font-size: 1.25rem;">{{ "{:,}".format(job.total_cost|int) }} XAF</div>
-                            <form action="{{ url_for('mark_paid', delivery_id=job.id) }}" method="POST">
-                                <button type="submit" class="btn btn-success btn-sm rounded-pill mt-2">
-                                    <i class="fas fa-check"></i> Confirm Payment
-                                </button>
-                            </form>
+                            <div class="d-flex flex-column gap-2 mt-2">
+                                <form action="{{ url_for('mark_paid', delivery_id=job.id) }}" method="POST" class="m-0">
+                                    <button type="submit" class="btn btn-success btn-sm rounded-pill w-100">
+                                        <i class="fas fa-check"></i> Confirm Payment
+                                    </button>
+                                </form>
+                                <a href="{{ url_for('download_invoice', delivery_id=job.id) }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill">
+                                    <i class="fas fa-file-pdf"></i> View Invoice
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -573,6 +645,11 @@
                                 <div class="text-end">
                                     <div class="text-success fw-bold">{{ "{:,}".format(job.total_cost|int) }} XAF</div>
                                     <small class="text-muted">{{ job.created_at.strftime('%d %b') }}</small>
+                                    <div class="mt-2">
+                                        <a href="{{ url_for('download_invoice', delivery_id=job.id) }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill py-0 px-2" style="font-size: 0.7rem;">
+                                            <i class="fas fa-file-pdf"></i> View
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
