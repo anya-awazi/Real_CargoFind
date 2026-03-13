@@ -126,6 +126,13 @@ def clear_notifications():
 
 @app.route('/')
 def index():
+    if current_user.is_authenticated:
+        if current_user.role == 'admin':
+            return redirect(url_for('admin_dashboard'))
+        elif current_user.role == 'driver':
+            return redirect(url_for('driver_dashboard'))
+        else:
+            return redirect(url_for('customer_dashboard'))
     return render_template('index.html')
 
 @app.route('/testimonials')
@@ -994,10 +1001,11 @@ def admin_dashboard():
     
     total_users = User.query.count()
     total_customers = User.query.filter_by(role='customer').count()
-    total_drivers = User.query.filter_by(role='driver').count()
+    total_drivers = User.query.filter_by(role='driver', is_approved=True).count()
     pending_drivers = User.query.filter_by(role='driver', is_approved=False).count()
     
-    active_deliveries = Delivery.query.filter(Delivery.status != 'Delivered').all()
+    active_deliveries = Delivery.query.filter(Delivery.status != 'Delivered').order_by(Delivery.id.desc()).all()
+    recent_activities = Delivery.query.order_by(Delivery.id.desc()).limit(5).all()
     completed_deliveries = Delivery.query.filter_by(status='Delivered').all()
     
     total_revenue = int(sum(d.total_cost for d in completed_deliveries if d.payment_status == 'Paid'))
@@ -1010,7 +1018,8 @@ def admin_dashboard():
                            active_count=len(active_deliveries),
                            completed_count=len(completed_deliveries),
                            revenue=total_revenue,
-                           active_deliveries=active_deliveries)
+                           active_deliveries=active_deliveries,
+                           recent_activities=recent_activities)
 
 @app.route('/admin/users')
 @login_required
@@ -1037,6 +1046,32 @@ def admin_users():
         
     users = user_query.order_by(User.id.desc()).all()
     return render_template('admin/users.html', users=users)
+
+@app.route('/admin/deliveries')
+@login_required
+def admin_deliveries():
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+    
+    query = request.args.get('q', '')
+    status_filter = request.args.get('status', '')
+    
+    delivery_query = Delivery.query
+    
+    if query:
+        delivery_query = delivery_query.filter(
+            or_(
+                Delivery.pickup_location.ilike(f'%{query}%'),
+                Delivery.dropoff_location.ilike(f'%{query}%'),
+                Delivery.goods_description.ilike(f'%{query}%')
+            )
+        )
+    
+    if status_filter:
+        delivery_query = delivery_query.filter(Delivery.status == status_filter)
+        
+    deliveries = delivery_query.order_by(Delivery.id.desc()).all()
+    return render_template('admin/deliveries.html', deliveries=deliveries)
 
 @app.route('/admin/user/toggle/<int:user_id>')
 @login_required

@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .delivery-management {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .page-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .deliveries-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+    
+    .deliveries-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .deliveries-table th {
+        background: #f8f9fa;
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        font-weight: 600;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .deliveries-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+    
+    .deliveries-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .deliveries-table tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .status-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    
+    .status-badge.active {
+        background: #cff4fc;
+        color: #055160;
+    }
+    
+    .status-badge.pending {
+        background: #fff3cd;
+        color: #664d03;
+    }
+    
+    .status-badge.completed {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .status-badge.cancelled {
+        background: #f8d7da;
+        color: #842029;
+    }
+    
+    .empty-state {
+        padding: 3rem;
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+    
+    @media (max-width: 992px) {
+        .deliveries-table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+</style>
+
+<div class="delivery-management">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-shipping-fast text-primary me-2"></i>All Deliveries</h2>
+            <p class="text-muted small mb-0">{{ deliveries|length }} total deliveries found.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <form action="{{ url_for('admin_deliveries') }}" method="GET" class="d-flex gap-2 me-2">
+                <div class="input-group input-group-sm" style="width: 300px;">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Search locations, goods..." value="{{ request.args.get('q', '') }}">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </form>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary rounded-pill">
+                <i class="fas fa-arrow-left me-2"></i>Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <div class="deliveries-card">
+        {% if deliveries %}
+        <table class="deliveries-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Route</th>
+                    <th>Customer / Driver</th>
+                    <th>Cost</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in deliveries %}
+                <tr>
+                    <td><strong>#{{ d.id }}</strong></td>
+                    <td>
+                        <div class="small">
+                            <i class="fas fa-map-marker-alt text-success me-1"></i> {{ d.pickup_location[:40] }}...<br>
+                            <i class="fas fa-flag-checkered text-danger me-1"></i> {{ d.dropoff_location[:40] }}...
+                        </div>
+                    </td>
+                    <td>
+                        <div class="small">
+                            {% if d.customer %}
+                            <div><i class="fas fa-user me-1 text-muted"></i> {{ d.customer.full_name }}</div>
+                            {% endif %}
+                            {% if d.driver %}
+                            <div><i class="fas fa-truck me-1 text-muted"></i> {{ d.driver.full_name }} ({{ d.driver.vehicle_type }})</div>
+                            {% else %}
+                            <div class="text-muted italic"><i class="fas fa-clock me-1"></i> No driver assigned</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>{{ "{:,}".format(d.total_cost|int) }} XAF</td>
+                    <td>
+                        <span class="status-badge 
+                            {% if d.status == 'Delivered' %}completed
+                            {% elif d.status == 'Cancelled' %}cancelled
+                            {% elif d.status in ['Driver Accepted', 'Accepted', 'Picked Up', 'In Transit'] %}active
+                            {% else %}pending{% endif %}">
+                            {{ d.status }}
+                        </span>
+                    </td>
+                    <td><small class="text-muted">{{ d.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-truck-loading"></i>
+            <p>No deliveries found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

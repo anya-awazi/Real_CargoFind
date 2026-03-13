@@ -379,9 +379,9 @@
                     <h3><i class="fas fa-history text-primary"></i> Recent Activities</h3>
                 </div>
                 <div class="card-body-custom">
-                    {% if active_deliveries %}
+                    {% if recent_activities %}
                     <ul class="activity-list">
-                        {% for d in active_deliveries %}
+                        {% for d in recent_activities %}
                         <li class="activity-item">
                             <div class="activity-info">
                                 <span class="activity-id">Delivery #{{ d.id }}</span>
@@ -406,6 +406,11 @@
                         </li>
                         {% endfor %}
                     </ul>
+                    <div class="p-3 border-top text-center">
+                        <a href="{{ url_for('admin_deliveries') }}" class="btn btn-sm btn-outline-primary rounded-pill px-4">
+                            <i class="fas fa-external-link-alt me-1"></i> See More
+                        </a>
+                    </div>
                     {% else %}
                     <div class="empty-state">
                         <p>No recent activities</p>
