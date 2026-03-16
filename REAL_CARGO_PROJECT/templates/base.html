@@ -401,19 +401,11 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-lg-center">
-                    {% if not current_user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('index') }}">
                             <i class="fas fa-home me-1 d-lg-none"></i> Home
                         </a>
                     </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% if current_user.role == 'admin' %}{{ url_for('admin_dashboard') }}{% elif current_user.role == 'driver' %}{{ url_for('driver_dashboard') }}{% else %}{{ url_for('customer_dashboard') }}{% endif %}">
-                            <i class="fas fa-tachometer-alt me-1 d-lg-none"></i> Dashboard
-                        </a>
-                    </li>
-                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('testimonials') }}">
                             <i class="fas fa-star me-1 d-lg-none"></i> Testimonials
