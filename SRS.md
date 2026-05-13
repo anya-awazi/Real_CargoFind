@@ -260,3 +260,162 @@ A Use Case diagram is a graphic depiction that illustrates the various ways in w
 - **Conditions Verification**: Guarantees that system behavior complies with anticipated user interactions for a seamless logistics experience.
 
 The interactions between the three main characters (Admins, Drivers, and Customers) and the operation of the system are thoroughly mapped out to provide precise instructions for implementation and testing.
+
+---
+
+## 8. Class Diagram
+
+### 8.1 Overview
+A Class Diagram is one of the most important diagrams in object-oriented design. It shows the structure of a system by representing classes, their attributes (properties), methods (actions), and the relationships between them. A class serves as a blueprint or template for creating objects in a system, defining what properties and actions each entity possesses.
+
+### 8.2 Core System Classes
+
+#### 1. User Management
+**User Class**
+- **Attributes**: id, email, phone, password_hash, full_name, address, role, vehicle_type, vehicle_id, license_url, is_verified, is_active, is_approved, current_lat, current_lng.
+- **Methods**: set_password(), check_password(), get_reset_token(), verify_reset_token().
+- **Purpose**: Central class representing all system users (Customer, Driver, and Admin) and handling authentication and role-specific data.
+
+#### 2. Logistics System
+**Delivery Class**
+- **Attributes**: id, customer_id, driver_id, pickup_location, pickup_lat/lng, dropoff_location, dropoff_lat/lng, goods_description, pickup_time, status, distance_km, total_cost, pickup_otp, delivery_otp, rating.
+- **Methods**: calculate_cost(), update_status(), generate_otp(), assign_driver().
+- **Purpose**: Manages the lifecycle of a delivery request from booking to completion and handover.
+
+#### 3. Communication & Finance
+**Wallet Class**
+- **Attributes**: id, user_id, balance, total_earned, updated_at.
+- **Methods**: update_balance(), get_transaction_history().
+- **Purpose**: Tracks driver earnings and financial settlements within the platform.
+
+**Notification Class**
+- **Attributes**: id, user_id, message, is_read, created_at, link.
+- **Methods**: mark_as_read(), send_push_notification().
+- **Purpose**: System-generated alerts for status updates, job assignments, and account verifications.
+
+### 8.3 Important Associations
+
+#### Primary Associations
+- **User ↔ Delivery (Customer)**: One-to-many (A customer can book multiple deliveries).
+- **User ↔ Delivery (Driver)**: One-to-many (A driver can accept multiple delivery jobs).
+- **User ↔ Wallet**: One-to-one (Each driver/user has a unique financial wallet).
+- **User ↔ Notification**: One-to-many (Users receive multiple system alerts).
+
+#### Logic Dependencies
+- **Delivery ↔ User (Driver)**: A delivery's lifecycle is dependent on an approved and verified driver accepting the job.
+- **Delivery ↔ Wallet**: Completion of a delivery triggers a balance update in the respective driver's wallet.
+
+### 8.4 Advantages for System Development
+- **Code Organization**: Provides a clearly defined framework for implementing the Flask backend logic and SQLAlchemy models.
+- **Database Design**: Serves as a direct guide for building the relational database structure (SQLite/PostgreSQL).
+- **Entity Relationships**: Clarifies dependencies and data flow, especially for the multi-role User model.
+- **Scalability**: Provides a foundation for system expansions, such as adding new vehicle types or payment integrations.
+
+### 8.5 Quality Assurance
+- **Testing Framework**: Each class and method serves as a base for unit tests (e.g., verifying cost calculation or password hashing).
+- **Implementation of Security**: Essential for planning role-based access control and secure data handling for sensitive information like OTPs and financial records.
+
+The **CargoFind Class Diagram** ensures a seamless data flow by clearly defining the links between all system components, from registration and booking to successful delivery and payment.
+
+---
+
+## 9. Sequence Diagram
+
+### 9.1 Overview
+A Sequence Diagram shows how several system components work together in a particular user scenario. It illustrates the step-by-step communication process by showing the chronological flow of messages and activities between different system components throughout time.
+
+### 9.2 System Components
+- **User (Customer/Driver)**: The person using the end-user interface.
+- **Frontend**: HTML, CSS, JavaScript (Bootstrap 5, Leaflet.js, Socket.io Client).
+- **Backend**: Flask (Python) server-side processing and logic.
+- **Database**: SQLite (via SQLAlchemy) for persistent data storage.
+- **Socket Server**: Flask-SocketIO for real-time bidirectional communication.
+
+### 9.3 Detailed Operational Flow
+
+#### Phase 1: Authentication & Session Management
+1.  **Navigation**: The user opens the browser and accesses the login page.
+2.  **Submission**: User enters credentials (Email/Password) into the frontend form.
+3.  **Request Processing**: The browser sends an HTTP POST request to the `/login` route.
+4.  **Database Inquiry**: The Backend queries the Database to find the user by email.
+5.  **Password Verification**: The system verifies the hashed password using `check_password_hash()`.
+6.  **Session Creation**: Upon success, Flask-Login establishes a session and provides a session cookie.
+7.  **Redirection**: The user is successfully redirected to their role-specific dashboard (Customer/Driver).
+
+#### Phase 2: Delivery Booking (Customer)
+1.  **Location Selection**: Customer picks pickup and drop-off points on the Leaflet.js map.
+2.  **Cost Estimation**: Frontend sends coordinates to the Backend for distance calculation and pricing.
+3.  **Booking Submission**: Customer selects vehicle type and submits the delivery request.
+4.  **Data Persistence**: Backend inserts a new `Delivery` record into the Database with "Pending" status.
+5.  **Broadcast**: Backend triggers the Socket Server to notify all available drivers in the area.
+
+#### Phase 3: Job Acceptance & Live Tracking (Driver/Customer)
+1.  **Job Selection**: Driver views the job pool and clicks "Accept" on a specific request.
+2.  **Matching Logic**: Backend validates driver status and updates the `Delivery` record.
+3.  **Tracking Initiation**: Socket Server creates a dedicated room for the delivery ID.
+4.  **Coordinate Sync**: Driver's browser periodically sends GPS updates to the Socket Server.
+5.  **Live Update**: Socket Server broadcasts coordinates to the Customer's map in real-time.
+
+#### Phase 4: Completion & Settlement
+1.  **Secure Pickup**: Driver enters the Customer's OTP to verify goods pickup.
+2.  **Delivery Finalization**: Driver reaches destination and enters the final Delivery OTP.
+3.  **Wallet Update**: Backend calculates the driver's cut and updates the `Wallet` record in the database.
+4.  **Invoice Generation**: System uses ReportLab to generate a PDF invoice and sends it to the Customer.
+5.  **Notification**: A final notification is sent to both parties confirming successful completion.
+
+### 9.4 Benefits of Sequence Visualization
+- **Data Flow Visualization**: Provides a clear picture of information movement through system layers.
+- **Error Identification**: Pinpoints potential failure points in the interaction chain (e.g., OTP mismatch).
+- **Component Dependencies**: Shows how system parts (SocketIO vs. REST API) rely on each other.
+- **User Experience Verification**: Confirms a smooth interaction flow from initial booking to financial settlement.
+
+This sequential visualization ensures that every system component works cohesively to deliver a secure, efficient, and reliable logistics experience.
+
+---
+
+## 10. Activity Diagram
+
+### 10.1 Overview
+An Activity Diagram is a type of UML (Unified Modeling Language) behavioral diagram that visually represents the flow of activities, actions, and decisions within the **CargoFind** logistics platform. It shows the step-by-step progression of the delivery lifecycle, from initial user authentication to the final financial settlement.
+
+### 10.2 Key Characteristics
+- **Purpose**: Shows the sequence of activities from start to finish, illustrating how work flows through the logistics system.
+- **Focus**: Emphasizes the control flow and logic of processes (e.g., booking and verification) rather than individual objects.
+- **Visual Elements**:
+    - **Start/End nodes**: Circular symbols marking beginning and completion.
+    - **Activities**: Rounded rectangles representing actions like "Book Delivery" or "Update Wallet."
+    - **Decision diamonds**: Points where the flow branches based on conditions (e.g., "Is OTP valid?").
+    - **Merge points**: Where parallel flows rejoin.
+    - **Swim lanes**: Vertical sections showing which actor (Customer, Driver, or System) performs each activity.
+
+### 10.3 CargoFind Process Flow
+The whole user path through the CargoFind application—from login to booking, real-time tracking, and settlement—is depicted in the activity diagram.
+
+### 10.4 Important Process Flow
+- **Business Process Modeling**: Recording the logistics workflows and secure handover procedures.
+- **Software Development**: Organizing user interactions and real-time SocketIO system behavior.
+- **System Analysis**: Studying how various parts (Maps, OTP, Wallet) interact with one another.
+- **Communication**: Giving stakeholders an explanation of the intricate delivery lifecycle.
+
+### 10.5 Core Logistics Logic
+1.  **Authentication**: When a user logs in, the system verifies their credentials. Access is permitted or forbidden.
+2.  **Booking**: The Customer selects locations, chooses a vehicle, and confirms the request.
+3.  **Assignment**: The request enters the job pool; a verified Driver accepts the job.
+4.  **Verification (Pickup)**: The Driver meets the Customer and enters the pickup OTP. If correct, transit begins.
+5.  **Transit**: Real-time GPS updates are sent to the system and broadcast to the Customer.
+6.  **Verification (Delivery)**: Upon arrival, the Driver enters the delivery OTP. If correct, the job is finalized.
+7.  **Settlement**: The system updates the Driver's wallet and generates a PDF invoice.
+
+### 10.6 Crucial Points for Decision-Making
+- **Authentication**: Success or failure of login (determines dashboard access).
+- **Driver Verification**: Admin approval (determines job pool access).
+- **OTP Validation**: Correct or incorrect handover codes (determines flow progression).
+
+### 10.7 Advantages of This Diagram
+- **Clarity**: Makes difficult logistics procedures simple to comprehend.
+- **Error Detection**: Assists in discovering workflow flaws or inefficiencies in the handover process.
+- **Documentation**: Offers precise implementation references for backend developers.
+- **Motivation**: Demonstrates how the system offers structured feedback (notifications) and financial motivation (wallet updates).
+
+### 10.8 Core Value
+This diagram makes sure that every part of the CargoFind system functions as a whole to produce a safe, engaging, and efficient logistics environment.
